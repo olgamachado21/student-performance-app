@@ -1,0 +1,2498 @@
+/* ============================================================
+   StudentPerfomance — Desempenho Académico & Hábitos de Estudo — estilo global
+   Paleta: indigo (primária), neutros claros, cartões com sombra
+   ============================================================ */
+
+:root {
+  /* Diz ao motor do browser (Chromium, via pywebview) se deve desenhar os
+     controlos nativos — ícone do calendário/relógio, scrollbars, caixas de
+     seleção — no estilo claro ou escuro do sistema. Trocado em applyTheme()
+     (main.js) conforme o "mode" do tema atual escolhido em Configurações. */
+  color-scheme: light;
+  --primary: #4F46E5;
+  --primary-dark: #4338CA;
+  --primary-light: #EEF0FF;
+  --positive: #059669;
+  --positive-bg: #DCFCE7;
+  --negative: #DC2626;
+  --negative-bg: #FEE2E2;
+  --warning-bg: #FEF9C3;
+  --bg: #F7F8FA;
+  --card-bg: #FFFFFF;
+  /* Fundo de botões/campos/etiquetas "sobre" um cartão (inputs, textareas,
+     chips, botões pequenos, seletores da Esquema Mental, etc.) — antes era
+     sempre um branco fixo (#fff/#FBFBFD), por isso no tema escuro ficava
+     texto/ícone claro sobre fundo branco fixo (ilegível). Cada tema define o
+     seu próprio valor (ver applyTheme em main.js); isto é só o valor por
+     omissão antes de o tema carregar. */
+  --surface-2: #FBFBFD;
+  --text-main: #1E293B;
+  --text-muted: #64748B;
+  --border: #E7E9EE;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.10);
+  --transition: all 0.18s ease-in-out;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.4rem 0;
+}
+h3 { font-size: 1.05rem; margin-bottom: 1rem; }
+h4 { font-size: 0.95rem; color: var(--text-main); }
+p { color: var(--text-muted); margin: 0; }
+
+/* ============================================================
+   Layout geral
+   ============================================================ */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width, 260px);
+  flex-shrink: 0;
+  background-color: var(--card-bg);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1.1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  transition: width 0.2s ease, padding 0.2s ease;
+}
+/* Durante o próprio arrastar de redimensionamento desliga-se a transição de
+   "width" (senão o menu fica sempre a "correr atrás" do rato) e trava-se a
+   seleção de texto na página inteira, tal como um redimensionamento nativo. */
+.sidebar.resizing { transition: none; }
+body.sidebar-resizing { cursor: col-resize; user-select: none; }
+body.sidebar-resizing .sidebar-resize-handle { background: var(--primary-light); }
+
+/* Faixa fina agarrada ao limite direito da sidebar: ao passar o rato por
+   cima mostra o cursor de redimensionamento (col-resize) e pode arrastar-se
+   para aumentar/diminuir a largura do menu. Só existe com o menu aberto —
+   colapsado tem largura fixa (só ícones), não faz sentido redimensionar. */
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 25;
+  transition: background 0.15s ease;
+}
+.sidebar-resize-handle:hover { background: var(--primary-light); }
+.sidebar.collapsed .sidebar-resize-handle { display: none; }
+
+/* Botão para abrir/fechar o menu — fica sempre visível, meio dentro/meio
+   fora da borda direita da sidebar, independentemente do estado. */
+.sidebar-toggle-btn {
+  position: absolute;
+  top: 1.7rem;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  z-index: 30;
+  transition: var(--transition);
+}
+.sidebar-toggle-btn:hover { color: var(--primary); border-color: var(--primary); transform: scale(1.08); }
+.sidebar-toggle-btn svg { transition: transform 0.2s ease; }
+
+/* Estado colapsado: só ícones, sem texto */
+.sidebar.collapsed { width: 76px; padding-left: 0.5rem; padding-right: 0.5rem; }
+.sidebar.collapsed .sidebar-toggle-btn svg { transform: rotate(180deg); }
+.sidebar.collapsed .brand { justify-content: center; gap: 0; }
+.sidebar.collapsed .brand-text,
+.sidebar.collapsed .nav-section-label,
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .nav-item .nav-badge,
+.sidebar.collapsed .sidebar-footer {
+  display: none;
+}
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.65rem 0.4rem;
+}
+.sidebar.collapsed .nav-item:hover { transform: none; }
+/* Com o menu recolhido a só ícones, o destaque de "página ativa" já é o
+   próprio fundo sólido do botão (ver .nav-item.active) — sem precisar de
+   nenhuma barra/traço extra, só um brilho a condizer para se notar bem
+   de relance mesmo numa coluna estreita. */
+.sidebar.collapsed .nav-item.active { box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); }
+
+/* "Modo foco": o menu fica completamente escondido (nem a coluna só de
+   ícones do estado colapsado) — usado pelo editor do Esquema Mental para dar
+   o máximo de espaço possível ao canvas, tal como um programa de desenho
+   (Figma, Miro). Reabre-se com o botão flutuante (.sidebar-expand-fab) que
+   aparece no canto superior esquerdo enquanto este estado estiver ativo.
+   Ver setSidebarFocusMode em main.js. */
+.sidebar.fully-hidden {
+  width: 0;
+  min-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right: none;
+  overflow: hidden;
+}
+.sidebar-expand-fab {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  transition: var(--transition);
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+}
+.sidebar-expand-fab.visible { opacity: 1; transform: translateX(0); pointer-events: auto; }
+.sidebar-expand-fab:hover { color: var(--primary); border-color: var(--primary); transform: scale(1.08); }
+.sidebar-expand-fab.visible:hover { transform: scale(1.08); }
+
+/* Duas manchas de cor bem suaves, fixas no topo da área de conteúdo — só
+   para o fundo deixar de ser um branco chapado atrás dos cabeçalhos/
+   cartões, sem nunca interferir com a leitura (por isso "no-repeat": só
+   aparecem uma vez, perto do topo, nunca a repetir ao longo do scroll). */
+.content {
+  flex: 1;
+  /* min-width: 0 substitui o "min-width: auto" que os itens flex têm por
+     omissão. Sem isto, o browser nunca deixa esta área encolher abaixo da
+     largura mínima do que está lá dentro (uma tabela larga, um cartão com
+     texto comprido, etc.) — em vez de esse elemento ganhar o seu próprio
+     scroll interno (como já estava previsto em regras como .table-wrap),
+     era a página INTEIRA (app + sidebar) a crescer e a ganhar scroll
+     horizontal sempre que se mudava para uma página com conteúdo mais
+     largo. Esta é a causa raiz do scroll horizontal reportado em toda a
+     app — uma única linha resolve-a globalmente. */
+  min-width: 0;
+  padding: 1.3rem 1.7rem 2.2rem;
+  max-width: 1280px;
+  background-image:
+    radial-gradient(560px circle at 100% 0, color-mix(in srgb, var(--primary) 7%, transparent) 0%, transparent 70%),
+    radial-gradient(420px circle at 0 380px, color-mix(in srgb, var(--primary) 4%, transparent) 0%, transparent 70%);
+  background-repeat: no-repeat;
+}
+/* No "Modo foco" (sidebar escondida — ver setSidebarFocusMode em main.js,
+   usado pelo editor do Esquema Mental) o limite de 1280px deixava uma faixa
+   enorme de espaço vazio à direita, já que o menu lateral não está a ocupar
+   esse espaço. Sem sidebar, deixa de fazer sentido limitar a largura — o
+   conteúdo passa a esticar-se pela janela toda. */
+.content.content-wide { max-width: none; }
+
+/* Também no modo foco (ver setSidebarFocusMode em main.js): o cabeçalho
+   grande da página some por completo, para o Esquema Mental aproveitar essa
+   altura toda para o canvas — a identidade da página fica só na barra fina
+   do topo do editor (.mindmap-topbar) enquanto isto estiver ativo. */
+.page-header.page-header-hidden { display: none; }
+
+/* ============================================================
+   Sidebar
+   ============================================================ */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+}
+/* O mark do logótipo (círculo "zen" + visto) usa currentColor — herda o
+   branco definido acima, sem precisar de mais nenhuma cor à parte. */
+.brand-icon svg { width: 20px; height: 20px; }
+/* "StudentPerfomance" é bem mais comprido do que o nome anterior do projeto,
+   pelo que o tamanho de letra e o espaçamento entre letras foram reduzidos
+   ligeiramente para continuar a caber numa só linha na barra lateral. */
+.brand-title { font-weight: 800; font-size: 0.88rem; letter-spacing: -0.01em; line-height: 1.15; white-space: nowrap; }
+.brand-text { min-width: 0; }
+
+/* ============================================================
+   Caixa de pesquisa global (sidebar) — encontra uma página pelo nome ou por
+   uma palavra relacionada, sem ser preciso saber em que grupo do menu está.
+   ============================================================ */
+.sidebar-search { position: relative; margin-bottom: 0.9rem; flex-shrink: 0; }
+.sidebar-search-icon {
+  position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%);
+  width: 15px; height: 15px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+/* Nota: o seletor usa "input.sidebar-search-input[type=text]" (não só
+   ".sidebar-search-input") de propósito — uma classe sozinha tem MENOS
+   especificidade CSS do que a regra genérica "input[type=text]" mais abaixo
+   (elemento+atributo conta mais do que uma classe sozinha), por isso essa
+   regra genérica estava a "ganhar" e a anular o padding-left/border-radius
+   próprios desta caixa, fazendo o ícone da lupa ficar por cima do texto. */
+input.sidebar-search-input[type="text"] {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.6rem 0.5rem 2rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: var(--surface-2);
+  color: var(--text-main);
+  transition: var(--transition), box-shadow 0.2s ease-out;
+}
+input.sidebar-search-input[type="text"]::placeholder { color: var(--text-muted); }
+input.sidebar-search-input[type="text"]:hover { border-color: var(--primary); }
+input.sidebar-search-input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--card-bg);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.16);
+}
+/* O ícone de lupa acompanha o foco — um pequeno toque "vivo" em vez de
+   ficar sempre estático, para o campo parecer mais convidativo a usar. */
+input.sidebar-search-input[type="text"]:focus ~ .sidebar-search-icon { color: var(--primary); transform: translateY(-50%) scale(1.08); }
+.sidebar-search-results {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 0.3rem;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.sidebar-search-results.hidden { display: none; }
+.sidebar-search-result {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 500;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  cursor: pointer;
+}
+.sidebar-search-result.active, .sidebar-search-result:hover { background: var(--primary-light); color: var(--primary-dark); }
+.sidebar-search-empty { padding: 0.5rem 0.6rem; font-size: 0.82rem; color: var(--text-muted); }
+/* Colapsado (menu só com ícones): a caixa de pesquisa não cabe — some-se,
+   tal como o texto dos rótulos do menu. */
+.sidebar.collapsed .sidebar-search { display: none; }
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+/* Barra de scroll discreta, só dentro do menu — rolar aqui nunca desloca
+   o resto da página, mesmo quando o menu chega ao topo/fundo da lista. */
+.nav::-webkit-scrollbar { width: 5px; }
+.nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+.nav::-webkit-scrollbar-track { background: transparent; }
+
+.nav-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 0.9rem 0.8rem 0.3rem;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.nav-section-label:hover { color: var(--text-main); }
+.nav-section-label:first-child { padding-top: 0.2rem; }
+.nav-section-chevron { transition: transform 0.18s ease; flex-shrink: 0; }
+.nav-section-label.collapsed .nav-section-chevron { transform: rotate(-90deg); }
+
+/* flex-shrink:0 em todos os níveis é essencial: sem isto, o Flexbox
+   comprime (corta) os itens para caberem no espaço visível em vez de
+   deixar o "overflow-y: auto" do .nav criar scroll — era essa a causa dos
+   submenus a aparecerem cortados/em falta. */
+.nav-section-items {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 0.15rem;
+  overflow: hidden;
+}
+.nav-section-items.collapsed { display: none; }
+/* Com o menu recolhido a apenas ícones, os submenus mostram-se sempre —
+   não há como os reabrir sem primeiro expandir o menu inteiro. */
+.sidebar.collapsed .nav-section-items.collapsed { display: flex; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+.nav-item .nav-badge {
+  margin-left: auto;
+  background: var(--negative);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.05rem 0.42rem;
+  border-radius: 999px;
+}
+.nav-item.active .nav-badge { background: rgba(255,255,255,0.25); }
+.nav-item:hover {
+  background-color: var(--primary-light);
+  transform: translateX(2px);
+}
+.nav-item.active {
+  background-color: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
+}
+.nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.nav-item.active .nav-icon { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.nav-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; }
+
+/* Pega para reorganizar os submenus (ver initSidebarReorder em main.js):
+   posicionada em absoluto sobre o padding esquerdo do botão, para nunca
+   empurrar o ícone/etiqueta nem mudar o alinhamento habitual — só aparece
+   ao passar o rato pelo item, para não poluir visualmente o menu o resto
+   do tempo. A área que reage ao rato/dedo ocupa a altura toda do item (não
+   só o ícone pequeno lá dentro) — um alvo tão fino como o ícone sozinho era
+   fácil de "falhar" ao tentar agarrar, o que parecia que o arrastar não
+   funcionava mesmo estando tudo ligado. */
+.nav-drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  cursor: grab;
+  touch-action: none;
+  transition: opacity 0.15s ease;
+}
+.nav-item:hover .nav-drag-handle,
+.nav-item-dragging .nav-drag-handle {
+  opacity: 0.55;
+}
+.nav-drag-handle:hover { opacity: 1 !important; }
+.nav-drag-handle svg { width: 8px; height: 14px; fill: currentColor; }
+.nav-item.active .nav-drag-handle { color: rgba(255, 255, 255, 0.85); }
+/* Com o menu recolhido a só ícones não há espaço (nem sentido) para
+   reordenar — a pega fica escondida. */
+.sidebar.collapsed .nav-drag-handle { display: none; }
+/* Item a ser arrastado: fica destacado (sombra + leve transparência) para
+   se perceber claramente qual é, enquanto os outros vão trocando de posição
+   à sua volta em tempo real. */
+.nav-item-dragging {
+  opacity: 0.75;
+  box-shadow: var(--shadow-md);
+  z-index: 5;
+}
+/* Enquanto se arrasta um item, o cursor mantém-se "a agarrar" mesmo que o
+   rato passe momentaneamente por cima de texto ou de outro botão. */
+body.nav-reordering { cursor: grabbing; }
+body.nav-reordering .nav-item { cursor: grabbing; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  margin-bottom: 0.6rem;
+}
+.status-loading { background: var(--warning-bg); color: #92400E; }
+.status-ok { background: var(--positive-bg); color: var(--positive); }
+.status-error { background: var(--negative-bg); color: var(--negative); }
+.sidebar-meta { color: var(--text-muted); font-size: 0.76rem; line-height: 1.5; }
+
+.sidebar-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+.sidebar-quick-btn {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.sidebar-quick-btn:hover { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-dark); }
+.sidebar-quick-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.sidebar-zoom-group { display: flex; gap: 0.2rem; margin-left: auto; }
+.sidebar-zoom-btn { padding: 0.35rem 0.5rem; min-width: 30px; text-align: center; }
+.sidebar.collapsed .sidebar-quick-actions { display: none; }
+
+/* ============================================================
+   Páginas (SPA — só uma visível de cada vez)
+   ============================================================ */
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.25s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* O cabeçalho passou a ser um pequeno "banner": um painel próprio com fundo
+   em degradê suave na cor da página, sombra e brilhos decorativos animados
+   — antes era só texto sobre o fundo branco da página, separado por uma
+   linha fina, o que deixava a zona entre o título e o resto do conteúdo
+   com pouco "corpo" visual. */
+.page-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  padding: 1.3rem 1.5rem;
+  border-radius: var(--radius);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent, var(--primary)) 10%, var(--card-bg)) 0%, var(--card-bg) 65%);
+  box-shadow: var(--shadow-sm);
+}
+/* Título da página: maior, mais pesado, e "pintado" com um degradê em dois
+   tons da própria cor de destaque (var(--accent)) via background-clip —
+   fica muito mais presente do que um simples texto escuro, mantendo-se
+   "monocromático" (elegante/minimalista, não é multicolor). Mantém sempre
+   uma cor sólida de reserva (color:), para navegadores sem suporte a
+   background-clip:text nunca ficarem com texto invisível. */
+.page-header h1 {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  font-size: 1.95rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.18;
+  color: var(--accent, var(--primary));
+  background: linear-gradient(100deg, var(--accent, var(--primary)) 0%, color-mix(in srgb, var(--accent, var(--primary)) 78%, black) 45%, var(--accent, var(--primary)) 90%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: pageTitleShine 7s ease-in-out infinite;
+}
+/* Um brilho lento e contínuo a percorrer o texto do título — discreto o
+   suficiente para não distrair a leitura, mas dá aquele toque "vivo" que
+   faltava a um simples texto estático. Desliga-se para quem preferir menos
+   movimento no ecrã (ver prefers-reduced-motion mais abaixo). */
+@keyframes pageTitleShine {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-header h1 { animation: none; }
+}
+.page-header p { position: relative; z-index: 1; font-size: 0.92rem; margin-top: 0.15rem; }
+.page-header-text { position: relative; z-index: 1; flex: 1; min-width: 0; }
+
+/* Cada página tem a sua própria cor de destaque (--accent, definida no
+   próprio <section class="page">, ver index.html) — a mesma já usada no
+   cartão dessa funcionalidade na página Início e no ícone do menu lateral.
+   O emblema do ícone segue exatamente a mesma linguagem visual dos
+   home-feature-icon (fundo sólido, ícone a branco), para a página se sentir
+   uma continuação natural do cartão que a abriu, não uma página à parte. */
+.page-header-icon {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  background: linear-gradient(140deg, var(--accent, var(--primary)) 0%, color-mix(in srgb, var(--accent, var(--primary)) 78%, black) 100%);
+  box-shadow: 0 6px 16px -4px color-mix(in srgb, var(--accent, var(--primary)) 65%, transparent);
+  margin-top: 0.1rem;
+  animation: pageHeaderIconFloat 5s ease-in-out infinite;
+}
+.page-header-icon svg { width: 25px; height: 25px; stroke: #fff; fill: none; }
+@keyframes pageHeaderIconFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(-2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-header-icon { animation: none; }
+}
+/* Dois brilhos decorativos animados atrás do cabeçalho, na cor da página —
+   o mesmo truque visual do canto dos home-feature-card, mas maior e a
+   "respirar" lentamente, para o painel parecer vivo mesmo parado. */
+.page-header::before,
+.page-header::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent, var(--primary));
+  z-index: 0;
+  pointer-events: none;
+  animation: pageHeaderGlowPulse 6s ease-in-out infinite;
+}
+.page-header::before {
+  top: -50px;
+  left: -40px;
+  width: 220px;
+  height: 220px;
+  opacity: 0.08;
+}
+.page-header::after {
+  bottom: -60px;
+  right: 8%;
+  width: 140px;
+  height: 140px;
+  opacity: 0.06;
+  animation-delay: 1.6s;
+}
+@keyframes pageHeaderGlowPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-header::before, .page-header::after { animation: none; }
+}
+
+/* ============================================================
+   Botão de informação (ícone "i") + caixa (popover) — a explicação de cada
+   página (ou de qualquer outra ajuda, ex.: Esquema Mental) deixa de ficar
+   sempre visível e passa a aparecer só ao clicar. Ver initPageHeaderInfo()
+   e buildInfoButton() em main.js.
+   ============================================================ */
+.page-header-title-row { display: flex; align-items: flex-start; gap: 0.5rem; }
+/* O botão de informação sobe um pouco para acompanhar visualmente a letra
+   do título maior/mais pesado, em vez de ficar "preso" ao fundo da caixa
+   (que agora inclui a etiqueta colorida por baixo do texto). */
+.page-header-title-row .page-info-wrap { margin-top: 0.3rem; }
+.page-info-wrap { position: relative; display: inline-flex; }
+.page-info-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.page-info-btn svg { width: 15px; height: 15px; }
+.page-info-btn:hover { color: var(--primary); border-color: var(--primary); background: var(--primary-light); }
+/* Posição "fixed" (não "absolute") de propósito: este é o único popover da
+   app, partilhado por todos os botões "i" e anexado diretamente ao <body>
+   (ver getGlobalInfoPopover em main.js) — assim nunca fica sujeito ao
+   "overflow: hidden" do cabeçalho de cada página (que existe para conter os
+   brilhos decorativos de fundo e continua exatamente igual), o que antes
+   cortava a caixa a meio do texto sempre que a explicação era mais longa. A
+   posição (top/left) é calculada em JavaScript, junto ao botão clicado. */
+.page-info-popover {
+  position: fixed;
+  z-index: 300;
+  width: max-content;
+  max-width: min(420px, calc(100vw - 24px));
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 0.7rem 0.85rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+.page-info-popover.hidden { display: none; }
+
+/* ============================================================
+   Cartões / grelhas
+   ============================================================ */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.15rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  margin-bottom: 1rem;
+}
+/* Brilho colorido em vez de contorno: ao passar o rato, a sombra ganha um
+   toque da cor de destaque da página — sem tocar na borda do cartão. */
+.card:hover {
+  box-shadow: 0 12px 26px -8px color-mix(in srgb, var(--accent, var(--primary)) 22%, transparent), var(--shadow-md);
+}
+/* Pequeno marcador de cor antes do título de cada cartão — retoma a cor de
+   destaque da página (ver .page-header-icon acima), para o olho ligar
+   visualmente cada cartão à secção onde está, mesmo sem reler o cabeçalho. */
+.card h3::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent, var(--primary));
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 980px) {
+  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   KPI cards
+   ============================================================ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 980px) {
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+.kpi-card {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1.05rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+/* Brilho decorativo no canto, na cor de destaque da página, em vez de uma
+   barra — mesma linguagem visual dos home-feature-card/note-card/alert-card,
+   sem qualquer linha/traço. O valor em si é que fica pintado na cor da
+   página, para dar destaque imediato sem precisar de um traço à parte. */
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: -26px;
+  right: -26px;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: var(--accent, var(--primary));
+  opacity: 0.09;
+  pointer-events: none;
+}
+.kpi-card:hover {
+  box-shadow: 0 14px 28px -8px color-mix(in srgb, var(--accent, var(--primary)) 30%, transparent);
+  transform: translateY(-3px);
+}
+.kpi-card:hover::before { opacity: 0.16; transform: scale(1.12); }
+.kpi-label {
+  position: relative;
+  z-index: 1;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 0.35rem;
+}
+.kpi-value {
+  position: relative;
+  z-index: 1;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--accent, var(--text-main));
+}
+.kpi-delta {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+}
+.kpi-delta.positive { color: var(--positive); }
+.kpi-delta.negative { color: var(--negative); }
+
+.skeleton {
+  background: linear-gradient(90deg, #F1F2F5 25%, #E9EBEF 37%, #F1F2F5 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  min-height: 84px;
+}
+.kpi-card.skeleton::before, .card.skeleton::before { display: none; }
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* ============================================================
+   Gráficos
+   ============================================================ */
+.chart-wrap {
+  position: relative;
+  height: 320px;
+  border-radius: var(--radius-sm);
+  /* Fundo em degradê muito subtil, na cor da página — enche visualmente a
+     área do gráfico sem nunca competir com os dados desenhados por cima. */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent, var(--primary)) 5%, transparent) 0%, transparent 55%);
+}
+.chart-wrap-wide { height: 300px; }
+
+/* ============================================================
+   Badges de significância estatística
+   ============================================================ */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+.badge-positive { background-color: var(--positive-bg); color: var(--positive); }
+.badge-negative { background-color: var(--negative-bg); color: var(--negative); }
+.badge-neutral { background-color: var(--border); color: var(--text-muted); }
+
+/* ============================================================
+   Avisos e Alertas
+   ============================================================ */
+/* Severidade sem linhas/traços: em vez de uma barra à esquerda, cada nível
+   ganha um leve "banho" de cor de fundo (em degradê, a esmorecer para o
+   fundo normal do cartão) mais um brilho decorativo no canto — a mesma
+   linguagem visual dos home-feature-card — e o pontinho (.alert-icon) passa
+   a ter um halo suave em vez de ser um círculo plano. */
+.alert-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--card-bg);
+  margin-bottom: 0.9rem;
+  transition: var(--transition);
+}
+.alert-card::before {
+  content: "";
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--severity-color, var(--border));
+  opacity: 0.1;
+  pointer-events: none;
+}
+.alert-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.alert-card:hover::before { opacity: 0.16; transform: scale(1.12); }
+.alert-card.severity-urgente { --severity-color: var(--negative); background: linear-gradient(135deg, color-mix(in srgb, var(--negative) 6%, var(--card-bg)) 0%, var(--card-bg) 60%); }
+.alert-card.severity-aviso { --severity-color: #D97706; background: linear-gradient(135deg, color-mix(in srgb, #D97706 6%, var(--card-bg)) 0%, var(--card-bg) 60%); }
+.alert-card.severity-info { --severity-color: var(--primary); background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 6%, var(--card-bg)) 0%, var(--card-bg) 60%); }
+
+.alert-icon {
+  position: relative;
+  z-index: 1;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+  background: var(--border);
+  box-shadow: 0 0 0 5px transparent;
+  transition: box-shadow 0.2s ease;
+}
+.alert-icon.severity-urgente { background: var(--negative); box-shadow: 0 0 0 5px color-mix(in srgb, var(--negative) 16%, transparent); }
+.alert-icon.severity-aviso { background: #D97706; box-shadow: 0 0 0 5px color-mix(in srgb, #D97706 16%, transparent); }
+.alert-icon.severity-info { background: var(--primary); box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 16%, transparent); }
+.alert-body { flex: 1; }
+.alert-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+.alert-description { font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 0.5rem; }
+.alert-action {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.83rem;
+  cursor: pointer;
+  padding: 0;
+  transition: var(--transition);
+}
+.alert-action:hover { color: var(--primary-dark); text-decoration: underline; }
+
+.severity-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.severity-pill.severity-urgente { background: var(--negative-bg); color: var(--negative); }
+.severity-pill.severity-aviso { background: #FEF3C7; color: #B45309; }
+.severity-pill.severity-info { background: var(--primary-light); color: var(--primary-dark); }
+
+.alert-dismiss-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.alert-dismiss-btn:hover { background: var(--negative-bg); color: var(--negative); }
+
+/* ============================================================
+   Segmentação de Perfis
+   ============================================================ */
+.segment-controls { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.9rem; }
+.segment-controls label { font-size: 0.85rem; font-weight: 600; }
+
+.segment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.9rem;
+}
+.segment-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.segment-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+.segment-name { font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; line-height: 1.3; }
+.segment-size { color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0.8rem; }
+.segment-traits { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.segment-trait {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+.segment-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+.segment-stat-label { font-size: 0.72rem; color: var(--text-muted); }
+.segment-stat-value { font-size: 1.05rem; font-weight: 700; }
+
+/* Micro-hábitos sugeridos: bloco separado dentro do segment-card, com uma
+   linha divisória subtil para não se confundir com as estatísticas acima. */
+.segment-suggestions { margin-top: 0.9rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+.segment-suggestions-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 0.4rem; }
+.segment-suggestions ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.segment-suggestions li { font-size: 0.82rem; line-height: 1.45; color: var(--text-main); }
+
+.highlight-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 0.35rem; }
+.highlight-text { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+
+/* Comparação Antes/Depois (Simulador "e se"): guardar previsão + histórico
+   previsto vs. real. Reaproveita as cores já usadas nos badges/status-pill
+   do resto da app em vez de inventar uma paleta nova. */
+.prediction-save-row { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+.prediction-save-row input[type="text"] { flex: 1; min-width: 220px; }
+.prediction-status-badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.prediction-status-badge.status-melhor { background: var(--positive-bg); color: var(--positive); }
+.prediction-status-badge.status-pior { background: var(--negative-bg); color: var(--negative); }
+.prediction-status-badge.status-igual { background: var(--border); color: var(--text-muted); }
+.prediction-status-badge.status-pendente { background: #FEF3C7; color: #B45309; }
+.prediction-actual-input-row { display: flex; gap: 0.4rem; align-items: center; }
+.prediction-actual-input-row input[type="number"] { width: 72px; }
+.prediction-actual-input.input-error { border-color: var(--negative); }
+
+/* Validação do modelo com dados reais (ver renderValidationSummary em
+   prediction.js) — um resumo compacto acima da tabela de histórico, não
+   outra tabela, porque o objetivo é um número imediato ("erro médio
+   real"), não uma leitura linha a linha. */
+.validation-summary-box { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.8rem; background: var(--bg); border-radius: 10px; padding: 0.8rem 1rem; margin-bottom: 1rem; }
+.validation-summary-stat { display: flex; flex-direction: column; gap: 0.15rem; }
+.validation-summary-value { font-size: 1.4rem; font-weight: 800; }
+.validation-summary-label { font-size: 0.78rem; color: var(--text-muted); }
+.validation-summary-breakdown { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.validation-summary-breakdown .badge { margin-top: 0; }
+
+/* Checklist "última semana antes do exame": lista ordenada (a ordem É a
+   prioridade), cada item com a ação concreta e o ganho estimado lado a
+   lado — não é uma lista de bullets genérica, a ordem importa. */
+.examweek-checklist { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: column; gap: 0.55rem; }
+.examweek-item { display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; font-size: 0.88rem; line-height: 1.45; }
+.examweek-item-action { color: var(--text-main); }
+.examweek-item-gain { flex-shrink: 0; font-weight: 700; color: var(--positive); white-space: nowrap; font-size: 0.85rem; }
+
+/* ============================================================
+   Heatmap de correlação (grelha CSS, sem dependências extra)
+   ============================================================ */
+.heatmap-wrap {
+  overflow-x: auto;
+}
+.heatmap-table {
+  border-collapse: collapse;
+  font-size: 0.68rem;
+  width: 100%;
+}
+.heatmap-table th, .heatmap-table td {
+  padding: 0.35rem 0.45rem;
+  text-align: center;
+  white-space: nowrap;
+}
+.heatmap-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.65rem;
+}
+.heatmap-cell {
+  border-radius: 4px;
+  font-weight: 600;
+  transition: transform 0.12s ease;
+  cursor: default;
+}
+.heatmap-cell:hover { transform: scale(1.12); }
+
+/* ============================================================
+   Qualidade do modelo (métricas de treino: R²/MAE/RMSE, Accuracy/F1/
+   ROC-AUC, validação cruzada) — ver renderModelMetrics em risk.js
+   ============================================================ */
+.model-metrics-summary {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.1rem;
+}
+.model-metrics-summary strong { color: var(--text-main); }
+.model-metrics-group { margin-bottom: 1.3rem; overflow-x: auto; }
+.model-metrics-group:last-child { margin-bottom: 0; }
+.model-metrics-group h4 { font-size: 0.85rem; margin: 0 0 0.5rem; color: var(--text-main); }
+.model-metrics-table { min-width: 480px; }
+.model-metrics-table th, .model-metrics-table td { text-align: left; padding: 0.5rem 0.6rem; }
+.model-metrics-table td:not(:first-child), .model-metrics-table th:not(:first-child) { text-align: right; }
+
+/* Comparação contra o baseline "ingénuo" — ver renderBaselineComparison em
+   risk.js. Um cartão próprio (não outra tabela) porque o objetivo aqui é
+   dar um número imediato e comparável, não uma leitura tabular. */
+.baseline-compare-card { background: var(--bg); border-radius: 10px; padding: 0.9rem 1rem; margin-bottom: 1.1rem; }
+.baseline-compare-card h4 { font-size: 0.85rem; margin: 0 0 0.3rem; color: var(--text-main); }
+.baseline-compare-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: 0.8rem; }
+.baseline-compare-item { display: flex; flex-direction: column; gap: 0.3rem; background: var(--card-bg); border-radius: 8px; padding: 0.7rem 0.8rem; }
+.baseline-compare-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+.baseline-compare-value { font-size: 1.1rem; font-weight: 700; }
+.baseline-compare-item .badge { align-self: flex-start; margin-top: 0; }
+.model-metrics-best-row { background: var(--positive-bg); }
+.model-metrics-best-row td:first-child { font-weight: 700; }
+
+/* Perfis atípicos (outliers) — ver renderOutliers em risk.js */
+.outliers-table { overflow-x: auto; }
+.outlier-positive { color: var(--positive); font-weight: 700; }
+.outlier-negative { color: var(--negative); font-weight: 700; }
+
+/* Percentil do estudante (nota final) na tabela de Perfil do Estudante —
+   ver percentileCellHtml em profile.js. */
+.percentile-cell { display: flex; align-items: center; gap: 0.4rem; cursor: help; }
+.percentile-label { font-size: 0.78rem; font-weight: 700; min-width: 28px; }
+.percentile-bar-track {
+  display: inline-block;
+  width: 56px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+.percentile-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  border-radius: 999px;
+}
+
+/* ============================================================
+   Formulários / inputs
+   ============================================================ */
+.field { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.table-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.field-inline { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1rem; }
+.field-inline label { font-size: 0.85rem; font-weight: 600; }
+
+select, input[type="number"], input[type="text"], input[type="email"],
+input[type="datetime-local"], input[type="date"], input[type="time"], input[type="password"] {
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: var(--surface-2);
+  color: var(--text-main);
+  transition: var(--transition);
+}
+select:hover, input[type="number"]:hover, input[type="text"]:hover, input[type="email"]:hover,
+input[type="datetime-local"]:hover, input[type="date"]:hover, input[type="time"]:hover, input[type="password"]:hover {
+  border-color: var(--accent, var(--primary));
+}
+/* O anel de foco segue a cor de destaque da própria página em vez de ser
+   sempre índigo — um pequeno detalhe que faz cada página parecer pensada
+   para si, não um formulário genérico repetido por toda a app. */
+select:focus, input[type="number"]:focus, input[type="text"]:focus, input[type="email"]:focus,
+input[type="datetime-local"]:focus, input[type="date"]:focus, input[type="time"]:focus, input[type="password"]:focus {
+  outline: none;
+  border-color: var(--accent, var(--primary));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, var(--primary)) 20%, transparent);
+}
+
+input[type="range"] {
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* Sugestão de valor provável (Adicionar Dados): aparece por baixo de um
+   campo ainda vazio, calculada a partir de estudantes semelhantes aos
+   dados já preenchidos no resto do formulário (ver src/suggestions.py). */
+.field-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  align-self: flex-start;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+.field-suggestion:hover { color: var(--accent, var(--primary)); }
+.field-suggestion .field-suggestion-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent, var(--primary));
+  flex: none;
+}
+.field-suggestion strong { color: var(--text-main); font-weight: 600; }
+.field-suggestion.hidden { display: none; }
+
+/* Botão discreto em estilo de link — "ver estudantes semelhantes",
+   "ver detalhe", etc. Sem fundo nem contorno, só o texto a destacar-se. */
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent, var(--primary));
+  cursor: pointer;
+  text-align: left;
+}
+.link-button:hover { text-decoration: underline; }
+
+/* Adicionar Dados: pré-visualização dos estudantes usados para calcular a
+   sugestão de valores (transparência do algoritmo de semelhança). */
+#adddata-similar-box { margin: 0.9rem 0; }
+#adddata-similar-box.hidden { display: none; }
+#adddata-similar-table { margin-top: 0.6rem; overflow-x: auto; }
+#adddata-similar-table.hidden { display: none; }
+.similar-students-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.similar-students-table th, .similar-students-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.similar-students-table th { font-weight: 600; color: var(--text-main); }
+
+/* Adicionar Dados: avisos de valores pouco habituais/inconsistentes —
+   nunca bloqueiam a submissão, só chamam a atenção antes de gravar. */
+#adddata-warnings { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.9rem 0; }
+#adddata-warnings.hidden { display: none; }
+.field-warning-item {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--warning, #B45309) 10%, transparent);
+  color: var(--text-main);
+  font-size: 0.85rem;
+}
+.field-warning-item .field-warning-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warning, #B45309);
+  margin-top: 0.35rem;
+  flex: none;
+}
+.field-warning-item.severity-info {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+.field-warning-item.severity-info .field-warning-dot { background: var(--primary); }
+
+/* Adicionar Dados: importação em lote via CSV — carregar vários estudantes
+   de uma só vez em vez de um a um no formulário (ver src/bulk_import.py). */
+#adddata-bulk-card { margin-top: 1.2rem; }
+.form-help-text { color: var(--text-secondary); font-size: 0.85rem; margin: 0.3rem 0 0.9rem; }
+.bulk-import-controls { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.bulk-import-controls input[type="file"] {
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+#adddata-bulk-result { margin-top: 0.9rem; }
+#adddata-bulk-result.hidden { display: none; }
+.bulk-import-summary {
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+.bulk-import-errors { display: flex; flex-direction: column; gap: 0.4rem; }
+.bulk-import-error-item {
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--warning, #B45309) 10%, transparent);
+  font-size: 0.8rem;
+  color: var(--text-main);
+}
+
+/* Dados (explorador): botão "Exportar CSV" alinhado com os outros filtros
+   (ver src/data_export.py) — respeita os mesmos filtros já aplicados. */
+.data-export-field .btn-small { width: 100%; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+
+.form-grid { display: grid; gap: 0.85rem; margin-bottom: 0.5rem; }
+.form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.form-grid-4 { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 980px) {
+  .form-grid-3, .form-grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.form-card h4 { margin-top: 1.2rem; margin-bottom: 0.8rem; }
+.form-card h4:first-child { margin-top: 0; }
+
+.toggle-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.toggle-field:hover { border-color: var(--primary); background-color: var(--primary-light); }
+.toggle-field input { display: none; }
+.toggle-visual {
+  width: 34px;
+  height: 19px;
+  border-radius: 999px;
+  background-color: #D1D5DB;
+  position: relative;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.toggle-visual::after {
+  content: "";
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  transition: var(--transition);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+}
+.toggle-field input:checked + .toggle-visual { background-color: var(--primary); }
+.toggle-field input:checked + .toggle-visual::after { transform: translateX(15px); }
+
+/* ============================================================
+   Botões
+   ============================================================ */
+.btn-primary {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.7rem;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  margin-top: 0.6rem;
+}
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.30);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+/* ============================================================
+   Filtros (perfil do estudante)
+   ============================================================ */
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+}
+@media (max-width: 980px) {
+  .filters-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.checkbox-row { display: flex; gap: 1rem; }
+.checkbox-row label {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.85rem; font-weight: 500; cursor: pointer;
+}
+.checkbox-row-wrap { flex-wrap: wrap; row-gap: 0.5rem; column-gap: 1.2rem; }
+.checkbox-row label.checkbox-disabled { opacity: 0.45; cursor: not-allowed; }
+.segment-feature-warning { font-size: 0.78rem; color: var(--negative); margin: 0.4rem 0 0; }
+.range-row { display: flex; flex-direction: column; gap: 0.3rem; }
+.range-row input { width: 100%; }
+
+/* ============================================================
+   Tabela
+   ============================================================ */
+.table-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+thead th {
+  position: sticky; top: 0;
+  background-color: var(--card-bg);
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+tbody td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr { transition: background-color 0.12s ease; }
+tbody tr:hover { background-color: var(--primary-light); }
+
+.pill { padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.pill-yes { background: var(--positive-bg); color: var(--positive); }
+.pill-no { background: var(--negative-bg); color: var(--negative); }
+
+/* Nota de cautela sob um destaque estatístico (ex.: correlação vs.
+   causalidade no apoio educativo) — mesma família visual do card-subtitle,
+   mas com destaque próprio por viver dentro de um cartão de highlight. */
+.highlight-caveat { margin: 0.5rem 0 0; font-size: 0.78rem; color: var(--text-muted); font-style: italic; line-height: 1.4; }
+
+/* Cenários lado a lado (Simulador "e se") */
+.scenario-col-header { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; font-weight: 600; color: var(--text); }
+.scenario-best-col { background: var(--positive-bg); color: var(--positive); font-weight: 600; }
+thead th.scenario-best-col { background-color: var(--positive-bg); }
+
+/* ============================================================
+   Gauges (previsão de notas) — CSS conic-gradient
+   ============================================================ */
+.gauge-card { text-align: center; }
+.gauge {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  margin: 0.8rem auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background: conic-gradient(var(--border) 0deg 360deg);
+  position: relative;
+  transition: background 0.6s ease;
+}
+.gauge::before {
+  content: "";
+  position: absolute;
+  width: 148px; height: 148px;
+  border-radius: 50%;
+  background: var(--card-bg);
+}
+.gauge-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  z-index: 1;
+  letter-spacing: -0.03em;
+}
+.gauge-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  z-index: 1;
+  font-weight: 600;
+}
+.gauge-margin-note { margin: 0.5rem 0 0; font-size: 0.75rem; color: var(--text-muted); }
+
+.prediction-results.hidden { display: none; }
+.hidden { display: none !important; }
+
+/* Simulador "e se": qualquer campo do formulário recalcula a previsão
+   sozinho (ver prediction.js) — o botão "Recalcular agora" fica só como
+   atalho manual, e este texto ao lado mostra quando um recálculo automático
+   está em curso, sem bloquear nem desativar os controlos. */
+.prediction-form-footer { display: flex; align-items: center; gap: 0.7rem; margin-top: 0.4rem; }
+.prediction-live-hint { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; opacity: 0; transition: opacity 0.15s ease; }
+.prediction-live-hint.visible { opacity: 1; }
+
+/* ============================================================
+   Paginação (Explorador de Dados)
+   ============================================================ */
+.pagination-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+/* Formulário "Ir para a página": campo numérico pequeno + botão, para saltar
+   direto a uma página sem clicar em "Seguinte" repetidamente. */
+.pagination-goto {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.pagination-goto input[type="number"] {
+  width: 4.2rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: center;
+}
+.pagination-goto input[type="number"]:focus { outline: none; border-color: var(--primary); }
+.pagination-row button {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.8rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.pagination-row button:hover:not(:disabled) {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+.pagination-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pagination-row button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pagination-info { font-size: 0.82rem; color: var(--text-muted); }
+
+/* ============================================================
+   Formatação condicional (Explorador de Dados)
+   ============================================================ */
+.band-pill { padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.band-Insuficiente { background: var(--negative-bg); color: var(--negative); }
+.band-Suficiente { background: #FEF3C7; color: #B45309; }
+.band-Bom { background: var(--primary-light); color: var(--primary-dark); }
+.band-Excelente { background: var(--positive-bg); color: var(--positive); }
+
+.recommendations-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text-main);
+}
+
+/* Explicabilidade da previsão (Simulador "e se"): ao contrário de
+   /feature-importance (que é sempre igual para toda a gente), esta lista
+   mostra o efeito, para ESTE estudante em concreto, de cada fator estar
+   acima/abaixo do valor típico do dataset — ver explain_prediction em
+   src/predict.py. */
+.prediction-explain-intro { font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; margin: 0 0 0.8rem; }
+.prediction-explain-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.explain-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+.explain-item.positive { background: var(--positive-bg); }
+.explain-item.negative { background: var(--negative-bg); }
+.explain-item-label { font-weight: 700; color: var(--text-main); flex: 1 1 auto; min-width: 140px; }
+.explain-item-detail { color: var(--text-muted); font-size: 0.78rem; flex: 2 1 auto; }
+.explain-item-impact { font-weight: 800; font-variant-numeric: tabular-nums; }
+.explain-item.positive .explain-item-impact { color: var(--positive); }
+.explain-item.negative .explain-item-impact { color: var(--negative); }
+.explain-item-neutral { list-style: none; font-size: 0.85rem; color: var(--text-muted); padding: 0.4rem 0; }
+
+/* Comparação com pares reais (Simulador "e se"): esta era antes uma
+   comparação escondida dentro do PDF da Ficha de Desempenho — aqui fica à
+   vista, sempre que o simulador recalcula, ancorada em estudantes reais do
+   dataset com o mesmo nível de tempo de estudo (ver /students no backend,
+   já existia e já devolve estas médias — não precisou de endpoint novo). */
+.peer-compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.4rem; }
+.peer-compare-stat { display: flex; flex-direction: column; gap: 0.15rem; }
+.peer-compare-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 600; }
+.peer-compare-value { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-main); }
+.peer-compare-diff { font-size: 0.78rem; font-weight: 600; }
+.peer-compare-diff.positive { color: var(--positive); }
+.peer-compare-diff.negative { color: var(--negative); }
+.peer-compare-note { font-size: 0.78rem; color: var(--text-muted); margin: 0.9rem 0 0; }
+
+.info-box {
+  background-color: var(--primary-light);
+  border: 1px solid #C7D2FE;
+  color: var(--primary-dark);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.send-status.error { color: var(--negative); }
+
+.btn-small {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-small:hover:not(:disabled) { background: var(--primary-light); border-color: var(--primary-light); color: var(--primary-dark); }
+.btn-small:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-small-danger { color: var(--negative); border-color: var(--negative-bg); }
+.btn-small-danger:hover:not(:disabled) { background: var(--negative-bg); }
+.status-pill.status-pendente { background: #FEF3C7; color: #B45309; }
+
+@media (max-width: 640px) {
+  .calendar-month-grid { grid-auto-rows: minmax(48px, auto); }
+  .calendar-day-number { min-width: 18px; height: 18px; font-size: 0.7rem; }
+  .calendar-weekday-label { font-size: 0.6rem; }
+}
+.card-subtitle { font-size: 0.82rem; color: var(--text-muted); margin: -0.3rem 0 0.8rem; line-height: 1.4; }
+
+@media (max-width: 640px) {
+  .type-preview-flashcards { grid-template-columns: 1fr; }
+}
+
+textarea {
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: var(--surface-2);
+  color: var(--text-main);
+  resize: vertical;
+}
+
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.9rem; margin-top: 0.8rem; }
+.theme-option {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.theme-option:hover { box-shadow: var(--shadow-sm); }
+.theme-option.selected { border-color: var(--primary); }
+.theme-swatch-row { display: flex; gap: 0.3rem; margin-bottom: 0.6rem; }
+.theme-swatch { width: 22px; height: 22px; border-radius: 50%; }
+.theme-option-name { font-size: 0.82rem; font-weight: 600; }
+.theme-option-mode { font-size: 0.72rem; color: var(--text-muted); }
+
+/* ============================================================
+   Janela de confirmação com o estilo da app (substitui o confirm() nativo)
+   ============================================================ */
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 1.2rem;
+  animation: appModalFadeIn 0.15s ease;
+}
+@keyframes appModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.app-modal {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.28);
+  padding: 1.4rem 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  animation: appModalPopIn 0.16s ease;
+}
+@keyframes appModalPopIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.app-modal-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+.app-modal-message { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; white-space: pre-line; }
+
+/* ============================================================
+   Tour de boas-vindas (onboarding) — reaproveita .app-modal-overlay/
+   .app-modal (ver acima), só um pouco mais largo e centrado em ícone +
+   título + texto, com pontos de progresso em vez de conteúdo tabular.
+   ============================================================ */
+.onboarding-modal {
+  max-width: 440px;
+  text-align: center;
+  position: relative;
+  padding-top: 2rem;
+}
+.onboarding-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+.onboarding-close:hover { color: var(--text-main); }
+.onboarding-step-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 0.9rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.onboarding-step-icon svg { width: 26px; height: 26px; fill: none; stroke: currentColor; }
+.onboarding-modal .app-modal-title { font-size: 1.1rem; }
+.onboarding-text {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0 0 1.1rem;
+}
+.onboarding-dots { display: flex; justify-content: center; gap: 0.4rem; margin-bottom: 1.2rem; }
+.onboarding-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: var(--transition);
+}
+.onboarding-dot.active { background: var(--primary); width: 18px; border-radius: 4px; }
+.onboarding-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.onboarding-actions .onboarding-skip { background: none; border: none; color: var(--text-muted); }
+.onboarding-actions .onboarding-skip:hover { color: var(--text-main); }
+.onboarding-actions .onboarding-next { flex: 1; max-width: 160px; margin-left: auto; }
+
+/* Banner discreto na Início que oferece o tour sem o impor (ver
+   initOnboardingBanner em home.js) — uma faixa fina, não um cartão/popup,
+   para não competir visualmente com o resto da página. */
+.onboarding-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 1rem;
+}
+.onboarding-banner-icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+.onboarding-banner-icon svg { width: 18px; height: 18px; }
+.onboarding-banner-text { flex: 1; font-size: 0.85rem; color: var(--primary-dark); font-weight: 500; }
+.onboarding-banner .btn-small { flex: none; }
+.onboarding-banner-close {
+  flex: none;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--primary-dark);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+}
+.onboarding-banner-close:hover { opacity: 1; }
+
+/* ============================================================
+   Heatmap clicável -> scatter plot (Fatores de Risco) e cartões de cluster
+   clicáveis -> lista de estudantes (Segmentação de Perfis) — ambos
+   reaproveitam o .app-modal-overlay/.app-modal da janela de confirmação
+   acima, só com modificadores de largura e conteúdo próprio.
+   ============================================================ */
+.heatmap-cell-clickable { cursor: pointer; }
+
+.scatter-modal, .cluster-students-modal { max-width: 560px; }
+
+.scatter-modal-body { margin-top: 0.4rem; }
+.scatter-modal-loading { color: var(--text-muted); font-size: 0.85rem; padding: 2rem 0; text-align: center; }
+.scatter-modal-canvas-wrap { height: 320px; margin-bottom: 0.6rem; }
+.scatter-modal-summary { font-size: 0.82rem; color: var(--text-muted); margin: 0; text-align: center; }
+
+/* ============================================================
+   Comentários por estudante (ver openStudentNotesModal em main.js) —
+   também reaproveita .app-modal-overlay/.app-modal, com uma lista de
+   comentários já guardados e um formulário curto para acrescentar um novo.
+   ============================================================ */
+.student-notes-modal { max-width: 480px; }
+
+.student-notes-list {
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0.8rem 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.student-note-item {
+  background: var(--bg, #F8FAFC);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+}
+.student-note-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.student-note-date { font-size: 0.72rem; color: var(--text-muted); }
+.pill-context {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.student-note-delete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  flex: none;
+}
+.student-note-delete:hover { color: var(--negative); }
+.student-note-text { margin: 0; font-size: 0.86rem; line-height: 1.45; color: var(--text-main); white-space: pre-line; }
+
+.student-notes-form { display: flex; flex-direction: column; gap: 0.5rem; }
+.student-notes-textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.7rem;
+  font-family: inherit;
+  font-size: 0.86rem;
+  color: var(--text-main);
+  resize: vertical;
+  min-height: 52px;
+}
+.student-notes-textarea:focus { outline: none; border-color: var(--primary); }
+.student-notes-form .btn-primary { align-self: flex-end; }
+
+/* Botão discreto "+ nota" usado nas tabelas (Perfil do Estudante, Avisos e
+   Alertas) para abrir o modal de comentários de um estudante específico. */
+.table-note-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.table-note-btn:hover { background: var(--primary-light); border-color: var(--primary-light); }
+
+.segment-card-clickable { cursor: pointer; }
+.segment-card-clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.segment-card-hint {
+  margin-top: 0.9rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.cluster-students-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 0.6rem;
+  padding-top: 0.2rem;
+}
+.cluster-student-chip {
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  border: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.cluster-student-chip:hover { background: var(--primary); color: #fff; }
+/* Coluna cujo nome tem espaços (não pode ser usada diretamente numa fórmula
+   personalizada) — ver renderCustomFormulaColumnChips em customdataset.js. */
+.cluster-student-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.cluster-student-chip:disabled:hover { background: var(--primary-light); color: var(--primary-dark); }
+
+/* Checkboxes de colunas-recurso na página Treinar Modelo (Dataset
+   Personalizado) — mesmo visual de "chip" usado nas colunas clicáveis, mas
+   com uma checkbox real lá dentro em vez de um botão. */
+.checkbox-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--primary-light);
+  color: var(--primary-dark);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.checkbox-chip input[type="checkbox"] { accent-color: var(--primary); cursor: pointer; }
+
+/* ============================================================
+   Página: Início (dashboard de abertura / página principal)
+   ============================================================ */
+.nav-item-home { margin-bottom: 0.4rem; }
+
+/* Faixa de topo em gradiente (segue sempre o tema de cores atual, porque
+   usa var(--primary)/var(--primary-dark) tal como o resto da app) — com
+   umas formas decorativas em SVG por trás, subtis, nunca fotografias/
+   emojis, para se manter fiel ao visual limpo e "vetorial" da aplicação. */
+.home-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: var(--radius);
+  padding: 2rem 2.2rem;
+  margin-bottom: 1.3rem;
+  box-shadow: var(--shadow-md);
+}
+.home-hero-deco {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.home-hero-deco svg { width: 100%; height: 100%; }
+.home-hero-content { position: relative; z-index: 1; flex: 1 1 380px; min-width: 0; }
+.home-hero-eyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.14);
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  margin-bottom: 0.7rem;
+}
+.home-hero-title { color: #fff; font-size: 2.1rem; font-weight: 800; line-height: 1.15; margin: 0; letter-spacing: -0.01em; }
+/* A frase que identifica a app ("Desempenho Académico & Hábitos de Estudo")
+   deixou de estar na sidebar (onde passava despercebida, pequena e cinzenta)
+   e ganha aqui todo o destaque — em forma de emblema com ícone, sobre o
+   próprio hero, tal como pedido ("mais destacada e apelativa"). */
+.home-hero-tagline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0.6rem 0 1.05rem;
+  padding: 0.4rem 0.9rem 0.4rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.home-hero-tagline-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--primary-dark);
+  flex-shrink: 0;
+}
+.home-hero-tagline-icon svg { width: 11px; height: 11px; }
+.home-hero-text { color: rgba(255, 255, 255, 0.92); font-size: 0.94rem; line-height: 1.6; max-width: 46em; margin: 0 0 1.1rem; }
+.home-hero-actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.home-hero .btn-primary {
+  background: #fff;
+  color: var(--primary-dark);
+  margin-top: 0;
+}
+.home-hero .btn-primary:hover { background: #fff; color: var(--primary-dark); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22); }
+.home-hero-btn-secondary {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1.5rem;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.home-hero-btn-secondary:hover { background: rgba(255, 255, 255, 0.24); transform: translateY(-2px); }
+
+/* Pequenas etiquetas de destaque por baixo do texto — um toque a mais de
+   "isto é uma app completa", sem escrever mais um parágrafo. */
+.home-hero-highlights { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 1.2rem; padding: 0; list-style: none; }
+.home-hero-highlights li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem 0.3rem 0.6rem;
+}
+.home-hero-highlights li svg { width: 13px; height: 13px; stroke: #fff; fill: none; flex-shrink: 0; }
+
+/* Faixa de estatísticas rápidas, em "vidro" translúcido sobre o gradiente. */
+.home-hero-stats {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 320px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.7rem;
+}
+.home-hero-stat {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  backdrop-filter: blur(2px);
+}
+.home-hero-stat.skeleton { background: rgba(255, 255, 255, 0.14); animation: none; min-height: 62px; }
+.home-hero-stat-value { color: #fff; font-size: 1.35rem; font-weight: 800; line-height: 1.15; }
+.home-hero-stat-label { color: rgba(255, 255, 255, 0.85); font-size: 0.74rem; font-weight: 600; margin-top: 0.2rem; }
+
+.home-intro { font-size: 0.92rem; line-height: 1.6; color: var(--text-muted); max-width: 64em; margin: 0 0 1.5rem; }
+.home-intro strong { color: var(--text-main); }
+
+.home-section { margin-bottom: 1.8rem; }
+.home-section-header { margin-bottom: 0.8rem; }
+/* Cada bloco de secção do Início (Análise de Dados, Gestão de Estudantes,
+   Ferramentas de Estudo, Configurações) tem a sua própria --accent, definida
+   em index.html — em vez de uma barrinha ao lado, o próprio título fica
+   "pintado" num degradê nessa cor (mesmo tratamento dos títulos de página),
+   para se ler o índice de cores sem qualquer linha/traço. */
+.home-section-header h2 {
+  display: inline-block;
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0 0 0.2rem;
+  color: var(--accent, var(--primary));
+  background: linear-gradient(120deg, var(--accent, var(--primary)) 0%, color-mix(in srgb, var(--accent, var(--primary)) 78%, black) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.home-section-header p { font-size: 0.85rem; color: var(--text-muted); margin: 0; }
+
+.home-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
+}
+/* Cada cartão define a sua própria cor de destaque via style="--accent:...".
+   Sem linhas/molduras coloridas — o destaque vem do emblema do ícone
+   (fundo sólido na cor, ícone a branco: bem mais percetível do que um
+   ícone fino sobre um fundo claro) e de um brilho decorativo subtil no
+   canto, não de uma barra ou contorno. */
+.home-feature-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  text-align: left;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.15rem 1.2rem 1.1rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.home-feature-card::before {
+  content: "";
+  position: absolute;
+  top: -34px;
+  right: -34px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--accent, var(--primary));
+  opacity: 0.08;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.home-feature-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  border-color: var(--accent, var(--primary));
+}
+.home-feature-card:hover::before { opacity: 0.16; transform: scale(1.15); }
+
+/* Emblema do ícone: fundo sólido na cor de destaque do cartão, ícone a
+   branco — máximo contraste, para nunca mais ficar "imperceptível". Forma
+   de "quadrado arredondado" (não círculo), mais parecido com um ícone de
+   app do que com um simples ponto colorido. */
+.home-feature-icon {
+  position: relative;
+  z-index: 1;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--accent, var(--primary));
+  box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.28);
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.home-feature-icon svg { width: 27px; height: 27px; stroke: #fff; fill: none; }
+.home-feature-card:hover .home-feature-icon { transform: scale(1.08) rotate(-3deg); }
+
+.home-feature-body { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; width: 100%; }
+.home-feature-title { font-weight: 700; font-size: 0.98rem; color: var(--text-main); }
+.home-feature-desc { position: relative; z-index: 1; font-size: 0.81rem; color: var(--text-muted); line-height: 1.5; }
+/* Seta que aparece ao passar o rato — pequeno reforço de "isto é clicável",
+   sem precisar de um botão "Abrir" explícito em cada cartão. */
+.home-feature-arrow {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--accent, var(--primary));
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.home-feature-arrow svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+.home-feature-card:hover .home-feature-arrow { opacity: 1; transform: translateX(0); }
+
+/* ============================================================
+   Responsividade
+   Regras acrescentadas por cima de tudo o resto (nunca substituem nada em
+   ecrã largo — só entram em ação abaixo de cada ponto de quebra), para
+   adaptar a app a ecrãs mais pequenos sem alterar o aspeto em desktop.
+   Muita coisa já era responsiva antes disto (grelhas com auto-fit/auto-fill,
+   tabelas com scroll horizontal, .mindmap-toolbar com flex-wrap, etc.) —
+   esta secção cobre o que ainda faltava: a sidebar em ecrãs estreitos, e
+   grelhas/paineis fixos que ainda não se adaptavam.
+   ============================================================ */
+
+/* Tablet / janela estreita: a sidebar passa a um painel sobreposto (em vez
+   de empurrar o conteúdo), escondido por omissão e aberto com o mesmo botão
+   que em ecrã largo abre/fecha o modo "só ícones". Nunca fica ao mesmo
+   tempo "sobreposta" e "só ícones" (ver initSidebarToggle em main.js, que
+   evita essa combinação), por isso aqui não é preciso anular as regras do
+   modo colapsado — chegam as regras da própria sidebar. */
+@media (max-width: 860px) {
+  .app { position: relative; }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(280px, 84vw) !important;
+    transform: translateX(-100%);
+    transition: transform 0.24s ease;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar.sidebar-mobile-open { transform: translateX(0); }
+  .sidebar-resize-handle { display: none; }
+
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 90;
+  }
+  .sidebar-backdrop.visible { display: block; }
+
+  .sidebar-expand-fab { top: 0.7rem; left: 0.7rem; }
+
+  .content { max-width: 100%; padding: 1.1rem 1.1rem 1.8rem; }
+
+  .home-hero { padding: 1.5rem 1.4rem; }
+  .home-hero-title { font-size: 1.5rem; }
+}
+
+/* Telemóvel: grelhas de duas/três/quatro colunas passam a uma coluna só, e
+   reduz-se um pouco o texto/espaçamento dos cabeçalhos e painéis flutuantes
+   para caberem confortavelmente num ecrã estreito. */
+@media (max-width: 640px) {
+  .content { padding: 0.9rem 0.8rem 1.6rem; }
+  .page-header { padding: 1rem 1.1rem; gap: 0.7rem; }
+  .page-header h1 { font-size: 1.3rem; }
+  .page-header p { font-size: 0.85rem; }
+  .page-header-icon { width: 38px; height: 38px; border-radius: 12px; }
+  .page-header-icon svg { width: 20px; height: 20px; }
+  .page-info-popover { max-width: calc(100vw - 4rem); font-size: 0.82rem; }
+
+  .kpi-row { grid-template-columns: 1fr; }
+  .form-grid-3, .form-grid-4 { grid-template-columns: 1fr; }
+  .filters-grid { grid-template-columns: 1fr; }
+  .segment-stats { grid-template-columns: 1fr 1fr; }
+  .baseline-compare-grid { grid-template-columns: 1fr; }
+
+  .home-hero-stats { grid-template-columns: 1fr 1fr; }
+  .home-hero-actions { flex-direction: column; align-items: stretch; }
+  .home-feature-grid { grid-template-columns: 1fr; }
+}
+.app-modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.3rem; }
+
+/* ============================================================
+   Notificações toast — feedback discreto para ações (adicionar, guardar,
+   importar, etc.), ver showToast() em main.js.
+   ============================================================ */
+#toast-container {
+  position: fixed;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  z-index: 600;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+  max-width: min(360px, calc(100vw - 2.2rem));
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  padding: 0.7rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-main);
+  animation: toast-enter 0.22s ease;
+}
+.toast-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--primary); }
+.toast-success .toast-dot { background: var(--positive); }
+.toast-error .toast-dot { background: var(--negative); }
+.toast-warning .toast-dot { background: #D97706; }
+.toast-message { flex: 1; line-height: 1.4; }
+.toast-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.2rem;
+  flex: none;
+}
+.toast-close:hover { color: var(--text-main); }
+.toast-leaving { animation: toast-leave 0.2s ease forwards; }
+@keyframes toast-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-leave {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+/* ============================================================
+   Micro-celebração (ver celebrate()/celebrateAt() em main.js) — pontos
+   coloridos que saltam a partir de um elemento e desvanecem, usados em
+   marcos do dataset e previsões que saíram melhor do que o esperado.
+   ============================================================ */
+.celebrate-layer { position: fixed; inset: 0; pointer-events: none; z-index: 550; }
+.celebrate-piece {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  animation: celebrate-burst 0.85s ease-out forwards;
+}
+@keyframes celebrate-burst {
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+/* Simulador "vivo" (ver flashGaugeOnChange em prediction.js) — um breve
+   pulso colorido no anel do gauge sempre que o valor sobe ou desce. */
+.gauge-flash-up { animation: gauge-pulse-up 0.65s ease; }
+.gauge-flash-down { animation: gauge-pulse-down 0.65s ease; }
+@keyframes gauge-pulse-up {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--positive) 55%, transparent); }
+  100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--positive) 0%, transparent); }
+}
+@keyframes gauge-pulse-down {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--negative) 55%, transparent); }
+  100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--negative) 0%, transparent); }
+}
+
+/* Atualização automática (ver startAutoRefresh em main.js) — legenda
+   discreta junto ao estado da API, mostra que os dados se atualizam
+   sozinhos sem ser preciso fazer nada. */
+.sidebar-last-refresh {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+/* ============================================================
+   Assistente da StudentPerfomance — botão flutuante + painel de conversa (ver
+   js/chatbot.js). Baseado em regras (src/chatbot.py), sem LLM externo.
+   ============================================================ */
+.chatbot-fab {
+  position: fixed;
+  right: 1.3rem;
+  bottom: 1.3rem;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  z-index: 580;
+  transition: var(--transition);
+}
+.chatbot-fab:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18); }
+.chatbot-fab.chatbot-fab-active { background: var(--text-main); }
+.chatbot-fab-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 50%;
+  background: var(--negative);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg);
+}
+
+.chatbot-panel {
+  position: fixed;
+  right: 1.3rem;
+  bottom: 5.4rem;
+  width: min(380px, calc(100vw - 2.2rem));
+  height: min(560px, calc(100vh - 7.5rem));
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 580;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+.chatbot-panel.open { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.chatbot-panel.hidden { display: none; }
+.chatbot-panel.open.hidden { display: flex; }
+
+.chatbot-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: #fff;
+  flex: none;
+}
+.chatbot-panel-title { display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+.chatbot-panel-title-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chatbot-panel-title-text { font-weight: 700; font-size: 0.92rem; line-height: 1.2; }
+.chatbot-panel-subtitle { font-size: 0.7rem; opacity: 0.85; margin-top: 0.1rem; }
+.chatbot-panel-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  opacity: 0.85;
+  flex: none;
+}
+.chatbot-panel-close:hover { opacity: 1; }
+
+.chatbot-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.chatbot-msg {
+  max-width: 88%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.83rem;
+  line-height: 1.45;
+  white-space: normal;
+}
+.chatbot-msg-assistant {
+  align-self: flex-start;
+  background: var(--surface-2);
+  color: var(--text-main);
+  border-bottom-left-radius: 3px;
+}
+.chatbot-msg-user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  border-bottom-right-radius: 3px;
+}
+.chatbot-msg-typing { display: flex; align-items: center; gap: 4px; padding: 0.7rem 0.85rem; }
+.chatbot-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: chatbot-typing-bounce 1s infinite ease-in-out;
+}
+.chatbot-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.chatbot-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes chatbot-typing-bounce {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+.chatbot-input-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border);
+  flex: none;
+}
+.chatbot-input-row input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.7rem;
+  font-size: 0.85rem;
+  background: var(--surface-2);
+  color: var(--text-main);
+}
+.chatbot-input-row input:focus { outline: none; border-color: var(--primary); }
+.chatbot-input-row .btn-primary { flex: none; padding: 0.5rem 0.9rem; font-size: 0.82rem; }
+
+@media (max-width: 520px) {
+  .chatbot-panel { right: 0.6rem; left: 0.6rem; width: auto; bottom: 4.9rem; }
+  .chatbot-fab { right: 0.9rem; bottom: 0.9rem; }
+}

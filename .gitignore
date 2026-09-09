@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+*.egg-info/
+.DS_Store
+
+# Segredos locais (nunca enviar para o repositório/serviço de alojamento;
+# as variáveis de ambiente reais definem-se no painel do serviço escolhido).
+.env
+
+# Cópias de segurança da base de dados geradas automaticamente pela app
+# (src/backup.py) — não fazem parte do código-fonte, não devem ser enviadas.
+backups/*.db

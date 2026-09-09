@@ -1,0 +1,41 @@
+# Dependências para correr a app na web (API + interface), incluindo num
+# serviço de alojamento na nuvem (Render, Railway, etc.).
+#
+# Notas:
+# - Versões fixas (==) porque foi com estas que a app foi construída e
+#   testada — evita que uma atualização automática de uma biblioteca
+#   quebre algo sem aviso.
+# - NÃO inclui pywebview / pythonnet / clr_loader (só servem para a app de
+#   desktop correr no Windows — ver desktop_app.py) nem pyodbc (só
+#   necessário se DB_DRIVER=mssql; por omissão a app usa SQLite, que não
+#   precisa de nada extra). Um serviço de alojamento normal só corre a
+#   versão web (src/api.py), por isso estes não fazem falta.
+# - matplotlib/seaborn só são usados pelo pipeline offline (main.py, para
+#   gerar os gráficos em reports/) — não são chamados pela API em runtime,
+#   mas ficam incluídos para o caso de se querer voltar a correr o pipeline
+#   completo a partir do servidor.
+
+# --- Servidor web / API ---
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
+pydantic==2.13.4
+python-multipart==0.0.32
+SQLAlchemy==2.0.51
+
+# --- Dados e Machine Learning ---
+pandas==3.0.5
+numpy==2.5.2
+scikit-learn==1.9.0
+scipy==1.18.0
+statsmodels==0.14.6
+patsy==1.0.2
+joblib==1.5.3
+
+# --- Ficheiros (Excel, PDF) ---
+openpyxl==3.1.5
+reportlab==5.0.0
+pypdf==6.15.0
+
+# --- Gráficos (usados pelo pipeline offline em main.py/src/eda.py) ---
+matplotlib==3.11.1
+seaborn==0.13.2

@@ -1,0 +1,1593 @@
+<!-- ============================================================
+     index.html — StudentPerfomance: página única (SPA) com todas as páginas da
+     aplicação já presentes no DOM, escondidas/mostradas por JavaScript
+     (ver goToPage em main.js) em vez de recarregar o browser a cada
+     navegação. A estrutura geral é: sidebar (menu lateral) + área de
+     conteúdo com uma <section id="page-XXX"> por cada página da app,
+     seguidas do widget do chatbot e dos <script> que ligam tudo.
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudentPerfomance — Desempenho Académico &amp; Hábitos de Estudo</title>
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<!-- Pré-liga ao Google Fonts e carrega a fonte Inter (várias espessuras) usada em toda a app. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" type="button" title="Fechar menu" aria-label="Fechar menu">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="sidebar-resize-handle" id="sidebar-resize-handle" title="Arrastar para redimensionar o menu (duplo clique repõe o tamanho)"></div>
+
+    <!-- Logótipo StudentPerfomance: um círculo tracejado (anel de progresso) com um
+         visto lá dentro, desenhado diretamente em SVG (sem ficheiro de
+         imagem externo) para se adaptar sempre à cor do tema ativo. -->
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="7.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="42 5" transform="rotate(-110 12 12)"></circle>
+          <path d="M8.6 12.4 L11 14.8 L15.6 9.4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <div class="brand-title">StudentPerfomance</div>
+      </div>
+    </div>
+
+    <!-- Caixa de pesquisa: escreve o nome de uma página, ou uma palavra
+         relacionada com o que procuras (ex.: "notas", "cronómetro", "tema
+         escuro"), e Enter/clicar num resultado abre-a logo — sem ser preciso
+         saber em que grupo do menu está. -->
+    <div class="sidebar-search" id="sidebar-search">
+      <input type="text" class="sidebar-search-input" id="sidebar-search-input" placeholder="Pesquisar página…" autocomplete="off" aria-label="Pesquisar página">
+      <svg class="sidebar-search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.3"></circle><line x1="10" y1="10" x2="14" y2="14"></line></svg>
+      <div class="sidebar-search-results hidden" id="sidebar-search-results"></div>
+    </div>
+
+    <!-- Menu de navegação: cada botão tem data-page="..." (usado por
+         goToPage em main.js para saber que <section> mostrar) e está
+         agrupado em 3 secções recolhíveis (Análise de Dados, Gestão de
+         Estudantes, Configurações), cada uma com o seu próprio cabeçalho
+         clicável (.nav-section-label) que abre/fecha o grupo. -->
+    <nav class="nav" id="nav">
+      <button class="nav-item nav-item-home active" data-page="home">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8 8 2.5 14 8"></path><path d="M3.5 6.8V13.5h9V6.8"></path><path d="M6.3 13.5V9.8h3.4v3.7"></path></svg></span> <span class="nav-label">Início</span>
+      </button>
+      <button class="nav-section-label" type="button" data-section="analise-dados" aria-expanded="true"><span>Análise de Dados</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <div class="nav-section-items" data-section-items="analise-dados">
+      <button class="nav-item" data-page="overview">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span> <span class="nav-label">Visão Geral</span>
+      </button>
+      <button class="nav-item" data-page="risk">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Fatores de Risco</span>
+      </button>
+      <button class="nav-item" data-page="profile">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span> <span class="nav-label">Perfil do Estudante</span>
+      </button>
+      <button class="nav-item" data-page="prediction">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Previsão de Notas</span>
+      </button>
+      <button class="nav-item" data-page="data">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span> <span class="nav-label">Dados</span>
+      </button>
+
+      </div>
+      <!-- Antes "Avisos e Alertas" — passou a agrupar também o "Adicionar
+           Dados" (entrada de novos estudantes), por isso o nome mudou para
+           refletir as duas coisas: acompanhar e alimentar os dados dos
+           estudantes. -->
+      <button class="nav-section-label" type="button" data-section="avisos-alertas" aria-expanded="true"><span>Gestão de Estudantes</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <div class="nav-section-items" data-section-items="avisos-alertas">
+      <button class="nav-item" data-page="adddata">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span> <span class="nav-label">Adicionar Dados</span>
+      </button>
+      <button class="nav-item" data-page="alerts">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span> <span class="nav-label">Avisos e Alertas</span>
+      </button>
+      <button class="nav-item" data-page="segmentation">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span> <span class="nav-label">Segmentação de Perfis</span>
+      </button>
+      <button class="nav-item" data-page="fichas">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span> <span class="nav-label">Fichas de Desempenho</span>
+      </button>
+      <button class="nav-item" data-page="optimizer">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span> <span class="nav-label">Otimizador de Estudo</span>
+      </button>
+
+      </div>
+      <!-- Novo grupo: "Dataset Personalizado" — área independente onde o
+           utilizador pode carregar o SEU próprio ficheiro de dados (CSV/
+           Excel), mapear as colunas para o esquema da StudentPerfomance, e depois ver
+           estatísticas, previsões (com o modelo principal) e treinar um
+           modelo novo — tudo à parte do dataset/modelos principais (ver
+           src/custom_dataset.py). Mesmo padrão de menu com submenus
+           colapsáveis já usado nos outros grupos acima. -->
+      <button class="nav-section-label" type="button" data-section="dataset-personalizado" aria-expanded="true"><span>Dataset Personalizado</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <div class="nav-section-items" data-section-items="dataset-personalizado">
+      <button class="nav-item" data-page="customimport">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5V2.5"></path><path d="M4.8 5.7 8 2.5l3.2 3.2"></path><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"></path></svg></span> <span class="nav-label">Importar Dataset</span>
+      </button>
+      <button class="nav-item" data-page="customstats">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="7"></line><line x1="8" y1="13" x2="8" y2="3"></line><line x1="13" y1="13" x2="13" y2="9.5"></line></svg></span> <span class="nav-label">Estatísticas &amp; Gráficos</span>
+      </button>
+      <button class="nav-item" data-page="custompredict">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.3"></circle><line x1="10.1" y1="10.1" x2="13.5" y2="13.5"></line></svg></span> <span class="nav-label">Previsões</span>
+      </button>
+      <button class="nav-item" data-page="customtrain">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.3"></circle><path d="M8 2.6v1.7M8 11.7v1.7M13.4 8h-1.7M4.3 8H2.6M11.6 4.4l-1.2 1.2M5.6 10.4l-1.2 1.2M11.6 11.6l-1.2-1.2M5.6 5.6 4.4 4.4"></path></svg></span> <span class="nav-label">Treinar Modelo</span>
+      </button>
+      <button class="nav-item" data-page="customformula">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"></rect><line x1="2" y1="6.6" x2="14" y2="6.6"></line><line x1="5.6" y1="6.6" x2="5.6" y2="14"></line><line x1="10" y1="6.6" x2="10" y2="14"></line><circle cx="7.8" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="7.8" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Fórmulas Personalizadas</span>
+      </button>
+      </div>
+      <button class="nav-section-label" type="button" data-section="configuracoes" aria-expanded="true"><span>Configurações</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <div class="nav-section-items" data-section-items="configuracoes">
+      <button class="nav-item" data-page="settings">
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Configurações</span>
+      </button>
+      </div>
+    </nav>
+
+    <!-- Rodapé da sidebar: atalhos rápidos (modo escuro, zoom +/-/reset),
+         indicador do estado da ligação à API (atualizado por
+         checkApiHealth em main.js), hora da última atualização automática
+         (ver startAutoRefresh) e uma nota fixa sobre a escala das notas. -->
+    <div class="sidebar-footer">
+      <div class="sidebar-quick-actions">
+        <button class="sidebar-quick-btn" id="dark-mode-toggle-btn" type="button" title="Mudar para modo escuro" aria-label="Mudar para modo escuro">Escuro</button>
+        <div class="sidebar-zoom-group">
+          <button class="sidebar-quick-btn sidebar-zoom-btn" id="zoom-out-btn" type="button" title="Diminuir zoom" aria-label="Diminuir zoom">&minus;</button>
+          <button class="sidebar-quick-btn sidebar-zoom-btn" id="zoom-reset-btn" type="button" title="Repor zoom" aria-label="Repor zoom">100%</button>
+          <button class="sidebar-quick-btn sidebar-zoom-btn" id="zoom-in-btn" type="button" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>
+        </div>
+      </div>
+      <div id="sidebar-status" class="status-badge status-loading">A ligar à API…</div>
+      <div id="sidebar-last-refresh" class="sidebar-last-refresh"></div>
+      <div class="sidebar-meta">Escala das notas: 0–20</div>
+    </div>
+  </aside>
+
+  <!-- Fundo escurecido atrás da sidebar quando esta aparece como painel
+       sobreposto em ecrãs estreitos (ver responsividade em style.css e
+       initSidebarToggle em main.js) — clicar fecha-a. Invisível em ecrã
+       largo. -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- Botão flutuante para reabrir o menu quando está totalmente escondido
+       (modo foco — ver setSidebarFocusMode em main.js, usado pelo editor do
+       Esquema Mental para dar o máximo de espaço possível ao canvas). Só
+       fica visível nesse estado (ver .sidebar-expand-fab.visible). -->
+  <button type="button" class="sidebar-expand-fab" id="sidebar-expand-fab" title="Mostrar menu" aria-label="Mostrar menu">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="14" y2="18"></line></svg>
+  </button>
+
+  <!-- ============ CONTEÚDO ============ -->
+  <main class="content">
+
+    <!-- ---------- PÁGINA: INÍCIO ---------- -->
+    <!-- Dashboard de abertura da app: banner "hero" com título/estatísticas
+         rápidas, seguido de 3 grupos de cartões clicáveis (Análise de
+         Dados, Gestão de Estudantes, Configurações), cada cartão a navegar
+         para a respetiva página via data-goto (ver wireHomeFeatureCards em
+         home.js). -->
+    <section id="page-home" class="page active">
+      <!-- Banner discreto e dispensável (não é um popup): só aparece
+           enquanto o tour de boas-vindas ainda não tiver sido visto nem
+           dispensado (ver initOnboardingBanner em home.js e
+           isOnboardingResolved/markOnboardingResolved em main.js). Fechar
+           com o "x" ou ver o tour marca-o como resolvido — nunca mais
+           aparece sozinho depois disso, mas o tour continua acessível em
+           Configurações a qualquer momento. -->
+      <div class="onboarding-banner hidden" id="home-onboarding-banner">
+        <span class="onboarding-banner-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.2"></circle><line x1="8" y1="7.2" x2="8" y2="11.3"></line><circle cx="8" cy="4.9" r="0.15" fill="currentColor" stroke="currentColor" stroke-width="1.4"></circle></svg></span>
+        <span class="onboarding-banner-text">Nova(o) por aqui? Faz um tour rápido à app.</span>
+        <button type="button" class="btn-small" id="onboarding-banner-view-btn">Ver tour</button>
+        <button type="button" class="onboarding-banner-close" id="onboarding-banner-close-btn" aria-label="Dispensar">&times;</button>
+      </div>
+
+      <div class="home-hero">
+        <!-- Círculos e pontos decorativos de fundo do banner, sem significado funcional. -->
+        <div class="home-hero-deco" aria-hidden="true">
+          <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice">
+            <circle cx="350" cy="40" r="170" fill="rgba(255,255,255,0.08)"></circle>
+            <circle cx="40" cy="360" r="130" fill="rgba(255,255,255,0.06)"></circle>
+            <circle cx="380" cy="340" r="80" fill="rgba(255,255,255,0.07)"></circle>
+            <circle cx="150" cy="30" r="34" fill="rgba(255,255,255,0.06)"></circle>
+            <g fill="rgba(255,255,255,0.16)">
+              <circle cx="250" cy="120" r="2.4"></circle><circle cx="272" cy="150" r="2.4"></circle><circle cx="230" cy="150" r="2.4"></circle>
+              <circle cx="60" cy="90" r="2.4"></circle><circle cx="82" cy="120" r="2.4"></circle><circle cx="40" cy="120" r="2.4"></circle>
+            </g>
+          </svg>
+        </div>
+        <div class="home-hero-content">
+          <span class="home-hero-eyebrow">Bem-vindo(a)</span>
+          <h1 class="home-hero-title">StudentPerfomance</h1>
+          <p class="home-hero-tagline"><span class="home-hero-tagline-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 6 8 3l6.5 3-6.5 3-6.5-3Z"></path><path d="M4.5 7.5v3c0 1 1.6 1.8 3.5 1.8s3.5-.8 3.5-1.8v-3"></path></svg></span>Desempenho Académico &amp; Hábitos de Estudo</p>
+
+          <p class="home-hero-text">
+            Uma aplicação só tua para analisar desempenho escolar, prever notas a partir de hábitos de
+            estudo e detetar sinais de risco — tudo num só sítio, a correr localmente no teu computador.
+          </p>
+          <ul class="home-hero-highlights">
+            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 9.8 5.8 14.5 6.3 11 9.3 12 14 8 11.6 4 14 5 9.3 1.5 6.3 6.2 5.8Z"></path></svg> Previsão com Machine Learning</li>
+            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2.5"></rect><path d="M5.5 8.3 7.3 10.2 10.8 6"></path></svg> 100% local e privado</li>
+            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.2"></circle><path d="M8 4.6v3.6l2.4 1.4"></path></svg> 11 ferramentas num só lugar</li>
+          </ul>
+          <div class="home-hero-actions">
+            <button class="btn-primary" type="button" data-goto="overview">Ver Visão Geral</button>
+            <button class="home-hero-btn-secondary" type="button" data-goto="optimizer">Organizar o meu estudo</button>
+          </div>
+        </div>
+        <!-- Skeletons cinza até loadHomeHeroStats (home.js) os substituir
+             pelos números reais (nº de estudantes, taxa de aprovação, etc.),
+             com animação de contagem. -->
+        <div class="home-hero-stats" id="home-hero-stats">
+          <div class="home-hero-stat skeleton"></div>
+          <div class="home-hero-stat skeleton"></div>
+          <div class="home-hero-stat skeleton"></div>
+          <div class="home-hero-stat skeleton"></div>
+        </div>
+      </div>
+
+      <p class="home-intro">
+        A app é construída sobre um modelo de machine learning treinado num conjunto real de
+        estudantes, que analisa dados, deteta fatores de risco, prevê notas e gera avisos automáticos.
+        Explora por secção abaixo, ou usa o menu lateral a qualquer momento.
+      </p>
+
+      <div class="home-section" style="--accent:#4F46E5">
+        <div class="home-section-header">
+          <h2>Análise de Dados</h2>
+          <p>Indicadores, fatores de risco e previsão de notas com base no conjunto de estudantes analisado.</p>
+        </div>
+        <div class="home-feature-grid">
+          <button class="home-feature-card" type="button" data-goto="overview" style="--accent:#4F46E5">
+            <span class="home-feature-icon" style="background:#4F46E5;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Visão Geral</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Principais indicadores de desempenho académico do conjunto de estudantes analisado.</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="risk" style="--accent:#DC2626">
+            <span class="home-feature-icon" style="background:#DC2626;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Fatores de Risco</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Que hábitos e características estão mais associados a um pior (ou melhor) desempenho?</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="profile" style="--accent:#0EA5E9">
+            <span class="home-feature-icon" style="background:#0EA5E9;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Perfil do Estudante</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Filtra o conjunto de estudantes e compara o subgrupo com a média geral.</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="prediction" style="--accent:#059669">
+            <span class="home-feature-icon" style="background:#059669;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Previsão de Notas</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Indica os hábitos de estudo para obter uma previsão de desempenho baseada nos dados analisados.</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="data" style="--accent:#64748B">
+            <span class="home-feature-icon" style="background:#64748B;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Dados</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Explora o dataset completo, com filtros e formatação condicional por desempenho.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mesmo padrão do grupo "Análise de Dados" acima: um .home-section
+           por área, com título/descrição e uma .home-feature-grid de
+           botões .home-feature-card (ícone + título + seta + descrição),
+           cada um a navegar por data-goto. Um só comentário chega para os
+           5 cartões deste grupo — a estrutura repete-se, só o texto e a
+           cor (--accent) mudam. -->
+      <div class="home-section" style="--accent:#D97706">
+        <div class="home-section-header">
+          <h2>Gestão de Estudantes</h2>
+          <p>Adiciona novos estudantes ao dataset, acompanha sinais de atenção e age sobre os casos mais críticos.</p>
+        </div>
+        <div class="home-feature-grid">
+          <button class="home-feature-card" type="button" data-goto="adddata" style="--accent:#D97706">
+            <span class="home-feature-icon" style="background:#D97706;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Adicionar Dados</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Adiciona um novo estudante ao dataset — a nota final é sempre prevista automaticamente pelo modelo.</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="alerts" style="--accent:#D97706">
+            <span class="home-feature-icon" style="background:#D97706;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Avisos e Alertas</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Sinais de atenção gerados automaticamente a partir do estado atual dos dados.</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="segmentation" style="--accent:#7C3AED">
+            <span class="home-feature-icon" style="background:#7C3AED;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Segmentação de Perfis</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Agrupamento automático de estudantes com hábitos e desempenho semelhantes (K-Means).</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="fichas" style="--accent:#0891B2">
+            <span class="home-feature-icon" style="background:#0891B2;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Fichas de Desempenho</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Gera um PDF individual por estudante, com uma recomendação baseada em comparações reais entre grupos.</span>
+          </button>
+          <button class="home-feature-card" type="button" data-goto="optimizer" style="--accent:#059669">
+            <span class="home-feature-icon" style="background:#059669;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Otimizador de Estudo</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Indica um estudante e uma nota-alvo — a app calcula que mudanças de hábitos mais a aproximam.</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="home-section" style="--accent:#64748B">
+        <div class="home-section-header">
+          <h2>Configurações</h2>
+          <p>Personaliza a app e gere os teus dados.</p>
+        </div>
+        <div class="home-feature-grid">
+          <button class="home-feature-card" type="button" data-goto="settings" style="--accent:#64748B">
+            <span class="home-feature-icon" style="background:#64748B;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>
+            <div class="home-feature-body">
+              <span class="home-feature-title">Configurações</span>
+              <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
+            </div>
+            <span class="home-feature-desc">Tema de cores e tipo de letra da aplicação.</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: VISÃO GERAL ---------- -->
+    <!-- Dashboard geral do conjunto de dados: KPIs, resumo automático em
+         texto, e 3 gráficos (distribuição de notas, aprovação/reprovação,
+         taxa de aprovação por tempo de estudo). Dados carregados por
+         overview.js. -->
+    <section id="page-overview" class="page" style="--accent:#4F46E5">
+      <header class="page-header" style="--accent:#4F46E5">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span>
+        <div class="page-header-text">
+          <h1>Visão Geral</h1>
+          <p>Principais indicadores de desempenho académico do conjunto de estudantes analisado.</p>
+        </div>
+      </header>
+
+      <!-- Cartões de KPI (indicadores-chave) começam como skeletons cinza;
+           renderKpiCards (main.js) substitui pelos valores reais. -->
+      <div class="kpi-row" id="overview-kpis">
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+      </div>
+
+      <!-- Resumo automático em linguagem natural: recalculado sempre a
+           partir do dataset atual (ver generate_overview_summary no
+           backend), nunca texto fixo. -->
+      <div class="card" id="overview-summary-card">
+        <p id="overview-summary-text" class="model-metrics-summary"></p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Distribuição da nota final</h3>
+          <div class="chart-wrap"><canvas id="chart-grade-distribution"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Aprovação vs Reprovação</h3>
+          <div class="chart-wrap"><canvas id="chart-pass-fail"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Taxa de aprovação por tempo de estudo semanal</h3>
+        <div class="chart-wrap chart-wrap-wide"><canvas id="chart-studytime-rate"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: FATORES DE RISCO ---------- -->
+    <section id="page-risk" class="page" style="--accent:#DC2626">
+      <header class="page-header" style="--accent:#DC2626">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span>
+        <div class="page-header-text">
+          <h1>Fatores de Risco</h1>
+          <p>Que hábitos e características estão mais associados a um pior (ou melhor) desempenho?</p>
+        </div>
+      </header>
+
+      <!-- Cartões skeleton com os 3 destaques estatísticos mais relevantes
+           (preenchidos por risk.js a partir dos dados). -->
+      <div class="grid-3" id="risk-highlights">
+        <div class="card skeleton" style="height:110px"></div>
+        <div class="card skeleton" style="height:110px"></div>
+        <div class="card skeleton" style="height:110px"></div>
+      </div>
+
+      <!-- Contexto familiar e socioeconómico: colunas do dataset original
+           (escola, zona, explicações pagas, educação/profissão dos pais,
+           motivo de escolha da escola) que já estavam limpas na base de
+           dados mas nunca tinham chegado à interface — o resto da app foca-se
+           em hábitos (controláveis), isto complementa com o contexto que o
+           estudante não escolhe mas que os dados mostram ter peso real. -->
+      <div class="card" id="family-context-card">
+        <h3>Contexto familiar e socioeconómico</h3>
+        <p class="card-subtitle">Variáveis do dataset que ainda não tinham sido analisadas na app — o estudante não as controla, mas os dados mostram que pesam no resultado.</p>
+        <div class="grid-3" id="family-context-highlights">
+          <div class="card skeleton" style="height:110px"></div>
+          <div class="card skeleton" style="height:110px"></div>
+          <div class="card skeleton" style="height:110px"></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Matriz de correlação</h3>
+          <div id="correlation-heatmap" class="heatmap-wrap"></div>
+        </div>
+        <div class="card">
+          <h3>Importância das variáveis</h3>
+          <div class="chart-wrap"><canvas id="chart-feature-importance"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Selecionador de variável (agrupada em "hábitos" vs "contexto
+           familiar") cujo gráfico de dispersão vs nota final é desenhado
+           por habit explorer em risk.js. -->
+      <div class="card">
+        <h3>Explorar um hábito específico vs nota final</h3>
+        <div class="field-inline">
+          <label for="habit-select">Escolher variável</label>
+          <select id="habit-select">
+            <optgroup label="Hábitos e estilo de vida">
+              <option value="studytime">Tempo de estudo</option>
+              <option value="absences">Faltas</option>
+              <option value="failures">Reprovações anteriores</option>
+              <option value="goout">Sair com amigos</option>
+              <option value="Dalc">Álcool (dias úteis)</option>
+              <option value="Walc">Álcool (fim de semana)</option>
+              <option value="freetime">Tempo livre</option>
+              <option value="health">Saúde</option>
+            </optgroup>
+            <optgroup label="Contexto familiar e socioeconómico">
+              <option value="school">Escola</option>
+              <option value="address">Zona (urbana/rural)</option>
+              <option value="paid">Explicações pagas</option>
+              <option value="Mjob">Profissão da mãe</option>
+              <option value="Fjob">Profissão do pai</option>
+              <option value="reason">Motivo de escolha da escola</option>
+              <option value="guardian">Encarregado de educação</option>
+              <option value="famsize">Tamanho da família</option>
+              <option value="Pstatus">Pais juntos/separados</option>
+              <option value="nursery">Frequentou infantário</option>
+              <option value="Medu">Educação da mãe</option>
+              <option value="Fedu">Educação do pai</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="chart-wrap chart-wrap-wide"><canvas id="chart-habit-explorer"></canvas></div>
+      </div>
+
+      <!-- Qualidade do modelo: as métricas (R²/MAE/RMSE, Accuracy/F1/ROC-AUC,
+           validação cruzada) já eram calculadas no treino e gravadas em
+           reports/model_metrics.json, mas nunca chegavam à interface — só
+           existiam num ficheiro. Mostra-se aqui para dar transparência sobre
+           quão fiável é cada previsão/análise desta página. -->
+      <div class="card">
+        <h3>Qualidade do modelo</h3>
+        <p>Métricas medidas num conjunto de teste que o modelo nunca viu durante o treino — para se perceber quão fiável é, e não só confiar às cegas.</p>
+        <div id="model-metrics-wrap"></div>
+      </div>
+
+      <!-- Perfis atípicos: não é "quem tem nota baixa" (isso já existe em
+           Avisos e Alertas), é "quem teve um resultado muito diferente do
+           que o SEU PRÓPRIO perfil fazia prever" — usa o resíduo do modelo
+           de regressão (ver detect_outliers em predict.py). -->
+      <div class="card">
+        <h3>Perfis atípicos</h3>
+        <p>Estudantes cuja nota real ficou muito longe da nota que o modelo previa para o seu próprio perfil — não é "nota baixa", é "resultado surpreendente", para melhor ou para pior.</p>
+        <div id="outliers-table-wrap"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: PERFIL DO ESTUDANTE ---------- -->
+    <section id="page-profile" class="page" style="--accent:#0EA5E9">
+      <header class="page-header" style="--accent:#0EA5E9">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span>
+        <div class="page-header-text">
+          <h1>Perfil do Estudante</h1>
+          <p>Filtra o conjunto de estudantes e compara o subgrupo com a média geral.</p>
+        </div>
+      </header>
+
+      <!-- Filtros do subgrupo (sexo, internet, quer estudo superior, faixa
+           de tempo de estudo) — lidos por profile.js sempre que mudam, para
+           recalcular KPIs, gráficos e tabela abaixo. -->
+      <div class="card filters-card">
+        <div class="filters-grid">
+          <div class="field">
+            <label>Sexo</label>
+            <div class="checkbox-row" id="filter-sex">
+              <label><input type="checkbox" value="F" checked> F</label>
+              <label><input type="checkbox" value="M" checked> M</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Internet em casa</label>
+            <div class="checkbox-row" id="filter-internet">
+              <label><input type="checkbox" value="yes" checked> Sim</label>
+              <label><input type="checkbox" value="no" checked> Não</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Quer estudo superior</label>
+            <div class="checkbox-row" id="filter-higher">
+              <label><input type="checkbox" value="yes" checked> Sim</label>
+              <label><input type="checkbox" value="no" checked> Não</label>
+            </div>
+          </div>
+          <div class="field">
+            <label>Tempo de estudo (nível <span id="studytime-range-label">1–4</span>)</label>
+            <div class="range-row">
+              <input type="range" id="studytime-min" min="1" max="4" value="1">
+              <input type="range" id="studytime-max" min="1" max="4" value="4">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-row" id="profile-kpis"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Distribuição de notas do grupo filtrado</h3>
+          <div class="chart-wrap"><canvas id="chart-profile-distribution"></canvas></div>
+        </div>
+        <div class="card">
+          <h3>Faltas vs Nota (grupo filtrado)</h3>
+          <div class="chart-wrap"><canvas id="chart-profile-scatter"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Evolução das notas: média do grupo filtrado em cada período
+           (G1/G2/G3), com uma reta de tendência (regressão linear simples
+           sobre os 3 pontos) que projeta o período seguinte a tracejado. -->
+      <div class="card">
+        <h3>Evolução das notas do grupo (G1 → G2 → G3)</h3>
+        <div class="chart-wrap"><canvas id="chart-profile-trend"></canvas></div>
+        <p id="profile-trend-summary" class="model-metrics-summary"></p>
+      </div>
+
+      <!-- Gráfico radar: perfil de hábitos do grupo filtrado vs a turma
+           toda, sobre as mesmas variáveis normalizadas (ver radar_profile
+           no backend). -->
+      <div class="card">
+        <h3>Perfil de hábitos do grupo (radar)</h3>
+        <p class="card-subtitle">Médias normalizadas (0-100) do grupo filtrado comparadas com a turma toda, sobre os mesmos hábitos.</p>
+        <div class="chart-wrap"><canvas id="chart-profile-radar"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Estudantes do grupo</h3>
+        <div class="table-wrap">
+          <table id="profile-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Sexo</th><th>Idade</th><th>Estudo</th><th>Faltas</th>
+                <th>Reprovações</th><th>Internet</th><th>G1</th><th>G2</th><th>G3</th><th>Aprovado</th>
+                <th>Progresso</th><th>Percentil (nota)</th><th>Comentários</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: PREVISÃO DE NOTAS ---------- -->
+    <section id="page-prediction" class="page" style="--accent:#059669">
+      <header class="page-header" style="--accent:#059669">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span>
+        <div class="page-header-text">
+          <h1>Previsão de Notas</h1>
+          <p>Simulador "e se": ajusta os controlos abaixo e vê a previsão do modelo atualizar-se sozinha, em tempo real.</p>
+        </div>
+      </header>
+
+      <!-- Formulário do simulador "e se": cada input (hábitos, estilo de
+           vida, contexto familiar) dispara, com debounce, um pedido à API de
+           previsão — prediction.js lê estes campos e atualiza os gauges e
+           cartões abaixo em tempo real, sem submeter o formulário. -->
+      <form class="card form-card" id="prediction-form">
+        <h4>Hábitos de estudo</h4>
+        <div class="form-grid form-grid-3">
+          <div class="field">
+            <label for="f-studytime">Tempo de estudo semanal</label>
+            <select id="f-studytime">
+              <option value="1">&lt; 2h</option>
+              <option value="2" selected>2-5h</option>
+              <option value="3">5-10h</option>
+              <option value="4">&gt; 10h</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-absences">Nº de faltas</label>
+            <input type="number" id="f-absences" min="0" max="93" value="2">
+          </div>
+          <div class="field">
+            <label for="f-failures">Reprovações anteriores</label>
+            <select id="f-failures">
+              <option value="0" selected>0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </div>
+        </div>
+
+        <h4>Estilo de vida</h4>
+        <div class="form-grid form-grid-4">
+          <div class="field">
+            <label for="f-goout">Sair com amigos (1-5)</label>
+            <input type="range" id="f-goout" min="1" max="5" value="3">
+            <output for="f-goout" id="f-goout-out">3</output>
+          </div>
+          <div class="field">
+            <label for="f-freetime">Tempo livre (1-5)</label>
+            <input type="range" id="f-freetime" min="1" max="5" value="3">
+            <output for="f-freetime" id="f-freetime-out">3</output>
+          </div>
+          <div class="field">
+            <label for="f-dalc">Álcool - dias úteis (1-5)</label>
+            <input type="range" id="f-dalc" min="1" max="5" value="1">
+            <output for="f-dalc" id="f-dalc-out">1</output>
+          </div>
+          <div class="field">
+            <label for="f-walc">Álcool - fim de semana (1-5)</label>
+            <input type="range" id="f-walc" min="1" max="5" value="2">
+            <output for="f-walc" id="f-walc-out">2</output>
+          </div>
+        </div>
+
+        <h4>Contexto</h4>
+        <div class="form-grid form-grid-4">
+          <label class="toggle-field">
+            <input type="checkbox" id="f-internet" checked>
+            <span class="toggle-visual"></span> Tem internet em casa
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" id="f-higher" checked>
+            <span class="toggle-visual"></span> Deseja estudo superior
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" id="f-schoolsup">
+            <span class="toggle-visual"></span> Apoio educativo extra
+          </label>
+          <label class="toggle-field">
+            <input type="checkbox" id="f-romantic">
+            <span class="toggle-visual"></span> Relação amorosa
+          </label>
+        </div>
+
+        <div class="prediction-form-footer">
+          <button type="submit" class="btn-primary">Recalcular agora</button>
+          <span class="prediction-live-hint" id="prediction-live-status" aria-live="polite"></span>
+        </div>
+      </form>
+
+      <!-- Bloco de resultados: escondido (.hidden) até à primeira previsão
+           bem-sucedida; prediction.js remove a classe e preenche gauges,
+           cartões de guardar/comparar cenários, comparação com pares,
+           recomendações, checklist de exame e explicabilidade. -->
+      <div id="prediction-results" class="prediction-results hidden">
+        <div class="grid-2">
+          <div class="card gauge-card">
+            <h4>Nota final prevista</h4>
+            <div class="gauge" id="gauge-grade">
+              <div class="gauge-value" id="gauge-grade-value">–</div>
+              <div class="gauge-label">/ 20</div>
+            </div>
+            <div class="kpi-delta" id="gauge-grade-delta"></div>
+            <p class="gauge-margin-note" id="gauge-grade-margin"></p>
+          </div>
+          <div class="card gauge-card">
+            <h4>Probabilidade de aprovação</h4>
+            <div class="gauge" id="gauge-proba">
+              <div class="gauge-value" id="gauge-proba-value">–</div>
+              <div class="gauge-label">%</div>
+            </div>
+            <div class="kpi-delta" id="gauge-proba-delta"></div>
+          </div>
+        </div>
+
+        <div class="card" id="prediction-save-card">
+          <h4>Guardar esta previsão para comparar depois</h4>
+          <p class="card-subtitle">Guarda o "antes" agora — quando tiveres a nota real, regista-a no histórico abaixo para veres se o modelo acertou.</p>
+          <div class="prediction-save-row">
+            <input type="text" id="prediction-save-label" placeholder="Ex.: Depois de aumentar o tempo de estudo (opcional)" maxlength="120">
+            <button type="button" class="btn-primary" id="prediction-save-btn">Guardar esta previsão</button>
+          </div>
+          <p id="prediction-save-message" class="info-box hidden"></p>
+        </div>
+
+        <div class="card" id="scenario-compare-card">
+          <h4>Comparar cenários lado a lado</h4>
+          <p class="card-subtitle">Guarda até 3 cenários "e se" diferentes (ex.: "hábitos atuais", "mais horas de estudo", "sem faltas") e compara-os lado a lado, sem perder o cenário anterior a cada ajuste.</p>
+          <div class="prediction-save-row">
+            <input type="text" id="scenario-save-label" placeholder="Nome do cenário (opcional)" maxlength="60">
+            <button type="button" class="btn-primary" id="scenario-save-btn">Guardar cenário atual</button>
+            <button type="button" class="btn-small" id="scenario-clear-btn">Limpar cenários</button>
+            <button type="button" class="btn-small" id="scenario-export-btn">Exportar cenários (JSON)</button>
+            <label class="btn-small" id="scenario-import-label" style="cursor:pointer;">
+              Importar cenário
+              <input type="file" id="scenario-import-input" accept="application/json" hidden>
+            </label>
+          </div>
+          <p id="scenario-save-message" class="info-box hidden"></p>
+          <div class="table-wrap" id="scenario-compare-wrap">
+            <p class="card-subtitle">Ainda não guardaste nenhum cenário para comparar.</p>
+          </div>
+        </div>
+
+        <div class="card" id="prediction-peers-card">
+          <h4>Como te comparas com estudantes reais parecidos contigo?</h4>
+          <div class="peer-compare-grid">
+            <div class="peer-compare-stat">
+              <span class="peer-compare-label">Nota média do grupo</span>
+              <span class="peer-compare-value" id="peer-avg-grade">–</span>
+              <span class="peer-compare-diff" id="peer-avg-grade-diff"></span>
+            </div>
+            <div class="peer-compare-stat">
+              <span class="peer-compare-label">Taxa de aprovação do grupo</span>
+              <span class="peer-compare-value" id="peer-pass-rate">–</span>
+              <span class="peer-compare-diff" id="peer-pass-rate-diff"></span>
+            </div>
+          </div>
+          <p class="peer-compare-note" id="peer-compare-note"></p>
+        </div>
+
+        <div class="card">
+          <h4>Recomendações baseadas nos dados</h4>
+          <ul id="recommendations-list" class="recommendations-list"></ul>
+        </div>
+
+        <div class="card" id="examweek-card">
+          <h4>Checklist: última semana antes do exame</h4>
+          <p class="card-subtitle">As mudanças ainda possíveis em poucos dias, a partir dos teus valores atuais, ordenadas pelo impacto estimado na previsão.</p>
+          <ol id="examweek-checklist" class="examweek-checklist"></ol>
+          <p id="examweek-message" class="card-subtitle"></p>
+        </div>
+
+        <div class="card" id="prediction-explain-card">
+          <h4>Porquê esta previsão?</h4>
+          <p class="prediction-explain-intro">
+            Para cada fator abaixo, o quanto o <strong>teu</strong> valor concreto — não o de toda a gente —
+            está a puxar a tua nota prevista para cima ou para baixo, face ao valor típico do dataset.
+          </p>
+          <ul id="prediction-explain-list" class="prediction-explain-list"></ul>
+        </div>
+      </div>
+
+      <div id="prediction-placeholder" class="info-box hidden">
+        Não foi possível calcular uma previsão inicial. Confirma que a API está a correr e ajusta um dos campos acima para tentar novamente.
+      </div>
+
+      <div class="card" id="prediction-history-card">
+        <h3>Comparação Antes/Depois</h3>
+        <p class="card-subtitle">Previsões que guardaste e, quando disponível, a nota real que vieste a obter — para veres se o modelo acertou.</p>
+        <div id="validation-summary-wrap"></div>
+        <div id="accuracy-trend-wrap" class="hidden">
+          <h4>Precisão do modelo ao longo do tempo</h4>
+          <p class="card-subtitle">Erro médio acumulado à medida que vais registando notas reais — mostra se a precisão do modelo se mantém estável com mais dados.</p>
+          <canvas id="accuracy-trend-chart" height="90"></canvas>
+        </div>
+        <div class="table-wrap">
+          <table id="prediction-history-table">
+            <thead><tr><th>Guardada em</th><th>Rótulo</th><th>Previsto</th><th>Real</th><th>Resultado</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: AVISOS E ALERTAS ---------- -->
+    <section id="page-alerts" class="page" style="--accent:#D97706">
+      <header class="page-header" style="--accent:#D97706">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span>
+        <div class="page-header-text">
+          <h1>Avisos e Alertas</h1>
+          <p>Sinais de atenção gerados automaticamente a partir do estado atual dos dados.</p>
+        </div>
+      </header>
+
+      <div class="kpi-row" id="alerts-kpis">
+        <div class="kpi-card skeleton"></div>
+        <div class="kpi-card skeleton"></div>
+      </div>
+
+      <!-- Lista de alertas ativos (gerados por regras em alerts.py) — cada
+           um pode ser dispensado pelo utilizador (guardado em localStorage,
+           ver alerts.js). -->
+      <div id="alerts-list"></div>
+
+      <div class="card">
+        <h3>Estudantes em risco</h3>
+        <div class="table-wrap">
+          <table id="alerts-table">
+            <thead>
+              <tr><th>ID</th><th>Sexo</th><th>Idade</th><th>Estudo</th><th>Faltas</th><th>Reprovações</th><th>G3</th><th>Comentários</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: SEGMENTAÇÃO DE PERFIS ---------- -->
+    <section id="page-segmentation" class="page" style="--accent:#7C3AED">
+      <header class="page-header" style="--accent:#7C3AED">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span>
+        <div class="page-header-text">
+          <h1>Segmentação de Perfis</h1>
+          <p>Agrupamento automático de estudantes com hábitos e desempenho semelhantes (K-Means).</p>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="segment-controls">
+          <label for="segment-n-clusters">Número de perfis</label>
+          <select id="segment-n-clusters">
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+          </select>
+          <button type="button" class="btn-small" id="segment-export-csv-btn">Exportar CSV</button>
+        </div>
+
+        <!-- Variáveis a incluir no K-Means: por omissão todas as 13 vêm
+             selecionadas (igual ao comportamento anterior), mas o
+             utilizador pode desmarcar as que não quer considerar — por
+             exemplo, ver os perfis só por hábitos, sem as notas influenciarem
+             o agrupamento. Mínimo de 2 variáveis, aplicado em JS. -->
+        <div class="field">
+          <label>Variáveis incluídas no agrupamento</label>
+          <div class="checkbox-row checkbox-row-wrap" id="segment-features">
+            <label><input type="checkbox" value="studytime" checked> Tempo de estudo</label>
+            <label><input type="checkbox" value="absences" checked> Faltas</label>
+            <label><input type="checkbox" value="failures" checked> Reprovações anteriores</label>
+            <label><input type="checkbox" value="G1" checked> Nota 1º período</label>
+            <label><input type="checkbox" value="G2" checked> Nota 2º período</label>
+            <label><input type="checkbox" value="G3" checked> Nota final</label>
+            <label><input type="checkbox" value="famrel" checked> Relação familiar</label>
+            <label><input type="checkbox" value="freetime" checked> Tempo livre</label>
+            <label><input type="checkbox" value="goout" checked> Saídas com amigos</label>
+            <label><input type="checkbox" value="Dalc" checked> Álcool (dias úteis)</label>
+            <label><input type="checkbox" value="Walc" checked> Álcool (fim de semana)</label>
+            <label><input type="checkbox" value="health" checked> Saúde</label>
+            <label><input type="checkbox" value="traveltime" checked> Deslocação até à escola</label>
+          </div>
+          <p class="segment-feature-warning" id="segment-features-warning" hidden>Escolhe pelo menos 2 variáveis.</p>
+        </div>
+      </div>
+
+      <!-- Grelha de cartões de cluster, um por perfil K-Means encontrado;
+           segmentation.js substitui os skeletons e torna cada cartão
+           clicável para abrir a lista de estudantes desse cluster (modal). -->
+      <div class="segment-grid" id="segment-grid">
+        <div class="segment-card skeleton" style="height:220px"></div>
+        <div class="segment-card skeleton" style="height:220px"></div>
+        <div class="segment-card skeleton" style="height:220px"></div>
+        <div class="segment-card skeleton" style="height:220px"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: FICHAS DE DESEMPENHO ---------- -->
+    <section id="page-fichas" class="page" style="--accent:#0891B2">
+      <header class="page-header" style="--accent:#0891B2">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span>
+        <div class="page-header-text">
+          <h1>Fichas de Desempenho</h1>
+          <p>Gera um PDF individual por estudante, com uma recomendação baseada em comparações reais entre grupos.</p>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="field-inline">
+          <label for="ficha-student-id">Nº do estudante</label>
+          <input type="number" id="ficha-student-id" min="1" value="1" style="max-width:140px;">
+          <button class="btn-primary" id="ficha-generate-btn" type="button">Gerar PDF</button>
+        </div>
+        <div id="ficha-preview" class="info-box hidden"></div>
+      </div>
+
+      <!-- Relatório da turma (PDF agregado) e geração de fichas em lote:
+           reaproveitam gerar_ficha_pdf, mas para o conjunto (ver
+           gerar_relatorio_turma_pdf / gerar_fichas_lote_zip no backend). -->
+      <div class="card">
+        <h3>Relatório da turma</h3>
+        <p class="card-subtitle">PDF único com os KPIs gerais, a segmentação de perfis e a lista dos estudantes em risco mais prioritários.</p>
+        <button class="btn-primary" id="class-report-btn" type="button">Gerar Relatório da Turma (PDF)</button>
+      </div>
+
+      <div class="card">
+        <h3>Fichas em lote</h3>
+        <p class="card-subtitle">Descarrega num único ficheiro ZIP a ficha de desempenho de todos os estudantes em risco (até 100).</p>
+        <button class="btn-primary" id="fichas-lote-btn" type="button">Gerar Fichas para Todos em Risco (ZIP)</button>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: OTIMIZADOR DE ESTUDO ---------- -->
+    <section id="page-optimizer" class="page" style="--accent:#059669">
+      <header class="page-header" style="--accent:#059669">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span>
+        <div class="page-header-text">
+          <h1>Otimizador de Estudo</h1>
+          <p>Indica um estudante e uma nota-alvo — a app calcula que mudanças de hábitos (tempo de estudo, saídas, faltas, álcool) mais aproximam essa nota, usando o modelo de previsão já treinado.</p>
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="field-inline">
+          <label for="optimizer-student-id">Nº do estudante</label>
+          <input type="number" id="optimizer-student-id" min="1" value="1" style="max-width:140px;">
+          <label for="optimizer-target-grade">Nota-alvo</label>
+          <input type="number" id="optimizer-target-grade" min="0" max="20" step="0.5" value="14" style="max-width:120px;">
+          <button class="btn-primary" id="optimizer-generate-btn" type="button">Calcular Plano</button>
+        </div>
+      </div>
+
+      <div id="optimizer-result" class="hidden">
+        <div class="grid-2">
+          <div class="card gauge-card">
+            <h4>Nota prevista atual</h4>
+            <div class="gauge" id="gauge-optimizer-initial">
+              <div class="gauge-value" id="gauge-optimizer-initial-value">–</div>
+              <div class="gauge-label">/ 20</div>
+            </div>
+          </div>
+          <div class="card gauge-card">
+            <h4>Nota prevista com o plano</h4>
+            <div class="gauge" id="gauge-optimizer-final">
+              <div class="gauge-value" id="gauge-optimizer-final-value">–</div>
+              <div class="gauge-label">/ 20</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h4>Plano de mudança de hábitos</h4>
+          <div id="optimizer-message" class="info-box"></div>
+          <div class="table-wrap" id="optimizer-changes-wrap">
+            <table id="optimizer-changes-table">
+              <thead>
+                <tr><th>Hábito</th><th>Valor atual</th><th>Valor sugerido</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="optimizer-placeholder" class="info-box">
+        Indica o número do estudante e a nota-alvo, depois clica em <strong>Calcular Plano</strong>.
+      </div>
+
+      <!-- Simulador em lote (turma): em vez de otimizar um estudante de
+           cada vez, aplica a mesma alteração hipotética a TODOS os
+           estudantes em risco e mostra o impacto agregado (ver
+           simular_intervencao_turma no backend). -->
+      <div class="card" id="cohort-simulation-card">
+        <h3>Simulador em lote (toda a turma em risco)</h3>
+        <p class="card-subtitle">"E se todos os estudantes em risco mudassem este hábito?" — indica a alteração desejada em cada hábito (deixa em branco os que não queres alterar) e vê o impacto agregado na aprovação.</p>
+        <div class="form-grid form-grid-4">
+          <div class="field">
+            <label for="cohort-studytime">Tempo de estudo (níveis)</label>
+            <input type="number" id="cohort-studytime" step="1" placeholder="Ex.: 1">
+          </div>
+          <div class="field">
+            <label for="cohort-absences">Faltas (nº)</label>
+            <input type="number" id="cohort-absences" step="1" placeholder="Ex.: -2">
+          </div>
+          <div class="field">
+            <label for="cohort-goout">Sair com amigos (níveis)</label>
+            <input type="number" id="cohort-goout" step="1" placeholder="Ex.: -1">
+          </div>
+          <div class="field">
+            <label for="cohort-dalc">Álcool - dias úteis (níveis)</label>
+            <input type="number" id="cohort-dalc" step="1" placeholder="Ex.: -1">
+          </div>
+          <div class="field">
+            <label for="cohort-walc">Álcool - fim de semana (níveis)</label>
+            <input type="number" id="cohort-walc" step="1" placeholder="Ex.: -1">
+          </div>
+        </div>
+        <button type="button" class="btn-primary" id="cohort-simulate-btn">Simular para toda a turma em risco</button>
+        <div id="cohort-simulation-result" class="hidden">
+          <div class="kpi-row" id="cohort-simulation-kpis"></div>
+          <p id="cohort-simulation-message" class="info-box"></p>
+        </div>
+        <p id="cohort-simulation-placeholder" class="info-box hidden">Indica pelo menos uma alteração de hábito e clica em <strong>Simular</strong>.</p>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: CONFIGURAÇÕES ---------- -->
+    <section id="page-settings" class="page" style="--accent:#64748B">
+      <header class="page-header" style="--accent:#64748B">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>
+        <div class="page-header-text">
+          <h1>Configurações</h1>
+          <p>Tema de cores e tipo de letra da aplicação.</p>
+        </div>
+      </header>
+
+      <!-- Grelhas de tema e fonte preenchidas por settings.js a partir de
+           listas de opções em main.js; a seleção aplica-se de imediato
+           (applyTheme/applyFont) e é guardada em localStorage. -->
+      <div class="card">
+        <h3>Tema de Cores</h3>
+        <div class="theme-grid" id="theme-grid"></div>
+      </div>
+      <div class="card">
+        <h3>Fonte</h3>
+        <div class="field" style="max-width:260px;">
+          <label for="font-select">Tipo de letra da aplicação</label>
+          <select id="font-select"></select>
+        </div>
+      </div>
+
+      <!-- Alertas configuráveis: limiares usados por generate_alerts no
+           backend (ver src/alerts.py), personalizáveis em vez de fixos. -->
+      <div class="card">
+        <h3>Alertas</h3>
+        <p class="card-subtitle">Personaliza os limiares usados para gerar os avisos automáticos em "Avisos e Alertas".</p>
+        <div class="form-grid form-grid-3">
+          <div class="field">
+            <label for="alert-risk-threshold">Taxa de risco que dispara aviso geral (%)</label>
+            <input type="number" id="alert-risk-threshold" min="1" max="99" step="1">
+          </div>
+          <div class="field">
+            <label for="alert-min-absences">Faltas mínimas para aviso de "faltas muito acima da média"</label>
+            <input type="number" id="alert-min-absences" min="0" step="1" placeholder="Automático">
+          </div>
+        </div>
+        <div class="field-inline">
+          <button type="button" class="btn-primary" id="alert-settings-save-btn">Guardar</button>
+          <button type="button" class="btn-small" id="alert-settings-reset-btn">Repor faltas automáticas</button>
+        </div>
+        <p id="alert-settings-message" class="info-box hidden"></p>
+      </div>
+
+      <!-- Cópias de segurança: botão manual + lista das cópias existentes
+           (ver src/backup.py e os endpoints /backup em src/api.py). Uma
+           cópia automática diária corre sozinha em segundo plano assim que
+           a app está aberta, sem qualquer ação necessária aqui. -->
+      <div class="card">
+        <h3>Cópias de Segurança</h3>
+        <p class="card-subtitle" id="backup-auto-note">A verificar se a cópia automática está ativa...</p>
+        <div class="field-inline">
+          <button type="button" class="btn-primary" id="backup-create-btn">Fazer backup agora</button>
+        </div>
+        <p id="backup-message" class="info-box hidden"></p>
+        <div class="table-wrap" style="margin-top:12px;">
+          <table class="data-table" id="backup-table">
+            <thead>
+              <tr><th>Data</th><th>Motivo</th><th>Tamanho</th><th></th></tr>
+            </thead>
+            <tbody id="backup-table-body"></tbody>
+          </table>
+        </div>
+        <p id="backup-empty-state" class="empty-state hidden">Ainda não existe nenhuma cópia de segurança.</p>
+      </div>
+
+      <!-- Ajuda: reabre o tour de boas-vindas (ver showOnboarding em
+           main.js) mesmo depois de já ter sido visto na primeira abertura
+           da app — útil para quem quer rever a explicação geral mais tarde. -->
+      <div class="card">
+        <h3>Ajuda</h3>
+        <p class="card-subtitle">Uma explicação rápida do que a app faz e por onde começar.</p>
+        <button type="button" class="btn-small" id="settings-review-tour-btn">Rever tour de boas-vindas</button>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: ADICIONAR DADOS ---------- -->
+    <section id="page-adddata" class="page" style="--accent:#D97706">
+      <header class="page-header" style="--accent:#D97706">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span>
+        <div class="page-header-text">
+          <h1>Adicionar Dados</h1>
+          <p>Adiciona um novo estudante ao dataset — a nota final (G3) é sempre prevista automaticamente pelo modelo, nunca inserida manualmente. Todos os campos são opcionais: à medida que vais preenchendo, a app sugere valores prováveis para os restantes campos com base em estudantes semelhantes (clica na sugestão para a usar); o que deixares em branco sem escolher sugestão é preenchido com um valor típico do conjunto de dados atual.</p>
+        </div>
+      </header>
+
+      <div class="kpi-row" id="adddata-kpis"></div>
+
+      <!-- Formulário de novo estudante: campos todos opcionais. Cada campo
+           (exceto nome/disciplina/ano) tem um botão .field-suggestion
+           escondido ao lado — adddata.js, ao detetar valores já
+           preenchidos, procura estudantes semelhantes (k-NN) e mostra aqui
+           o valor mais provável para os campos em falta; clicar no botão
+           aplica a sugestão. -->
+      <form class="card form-card" id="adddata-form">
+        <div class="form-grid form-grid-4">
+          <div class="field">
+            <label for="ad-nome">Nome</label>
+            <input type="text" id="ad-nome" placeholder="Opcional" maxlength="120" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="ad-disciplina">Disciplina / Matéria</label>
+            <input type="text" id="ad-disciplina" list="ad-disciplina-list" placeholder="Pesquisar ou escrever..." maxlength="80" autocomplete="off">
+            <datalist id="ad-disciplina-list">
+              <option value="Matemática"></option>
+              <option value="Português"></option>
+              <option value="Inglês"></option>
+              <option value="Física"></option>
+              <option value="Química"></option>
+              <option value="Biologia"></option>
+              <option value="História"></option>
+              <option value="Geografia"></option>
+              <option value="Filosofia"></option>
+              <option value="Educação Física"></option>
+              <option value="Informática"></option>
+              <option value="Artes"></option>
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="ad-ano">Ano/nível escolar</label>
+            <input type="text" id="ad-ano" list="ad-ano-list" placeholder="Pesquisar ou escrever..." maxlength="40" autocomplete="off">
+            <datalist id="ad-ano-list">
+              <option value="7º ano"></option>
+              <option value="8º ano"></option>
+              <option value="9º ano"></option>
+              <option value="10º ano"></option>
+              <option value="11º ano"></option>
+              <option value="12º ano"></option>
+              <option value="1º ano (universidade)"></option>
+              <option value="2º ano (universidade)"></option>
+              <option value="3º ano (universidade)"></option>
+            </datalist>
+          </div>
+          <div class="field">
+            <label for="ad-school">Escola</label>
+            <select id="ad-school">
+              <option value="" selected>—</option>
+              <option value="GP">GP</option>
+              <option value="MS">MS</option>
+            </select>
+            <button type="button" class="field-suggestion hidden" id="ad-school-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-sex">Sexo</label>
+            <select id="ad-sex">
+              <option value="" selected>—</option>
+              <option value="F">F</option>
+              <option value="M">M</option>
+            </select>
+            <button type="button" class="field-suggestion hidden" id="ad-sex-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-age">Idade</label>
+            <input type="number" id="ad-age" min="15" max="22" placeholder="Opcional">
+            <button type="button" class="field-suggestion hidden" id="ad-age-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-studytime">Tempo de estudo</label>
+            <select id="ad-studytime">
+              <option value="" selected>—</option>
+              <option value="1">&lt; 2h</option>
+              <option value="2">2-5h</option>
+              <option value="3">5-10h</option>
+              <option value="4">&gt; 10h</option>
+            </select>
+            <button type="button" class="field-suggestion hidden" id="ad-studytime-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-absences">Nº de faltas</label>
+            <input type="number" id="ad-absences" min="0" max="93" placeholder="Opcional">
+            <button type="button" class="field-suggestion hidden" id="ad-absences-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-failures">Reprovações anteriores</label>
+            <select id="ad-failures">
+              <option value="" selected>—</option>
+              <option value="0">0</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+            <button type="button" class="field-suggestion hidden" id="ad-failures-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-g1">Nota 1º período (G1)</label>
+            <input type="number" id="ad-g1" min="0" max="20" placeholder="Opcional">
+            <button type="button" class="field-suggestion hidden" id="ad-g1-suggestion"></button>
+          </div>
+          <div class="field">
+            <label for="ad-g2">Nota 2º período (G2)</label>
+            <input type="number" id="ad-g2" min="0" max="20" placeholder="Opcional">
+            <button type="button" class="field-suggestion hidden" id="ad-g2-suggestion"></button>
+          </div>
+        </div>
+
+        <!-- Explica a sugestão: alterna uma tabela com os estudantes
+             semelhantes (k-NN) usados para calcular os valores sugeridos. -->
+        <div id="adddata-similar-box" class="hidden">
+          <button type="button" id="adddata-similar-toggle" class="link-button"></button>
+          <div id="adddata-similar-table" class="hidden"></div>
+        </div>
+
+        <!-- Avisos de valores atípicos (ex.: idade ou faltas fora do
+             habitual) calculados em tempo real por adddata.js antes de
+             submeter. -->
+        <div id="adddata-warnings" class="hidden"></div>
+
+        <button type="submit" class="btn-primary">Adicionar ao Dataset</button>
+      </form>
+
+      <div id="adddata-result" class="card hidden">
+        <h3>Estudante adicionado</h3>
+        <div id="adddata-result-body"></div>
+      </div>
+
+      <!-- Importação em lote via CSV: mesmas colunas do formulário acima,
+           processada de uma vez pelo backend (ver bulk_import.py). -->
+      <div class="card" id="adddata-bulk-card">
+        <h3>Importar vários estudantes de uma vez (CSV)</h3>
+        <p class="form-help-text">
+          Carrega um ficheiro CSV com uma linha por estudante (colunas: school, sex, age,
+          studytime, absences, failures, G1, G2, nome, disciplina, ano — todas opcionais,
+          tal como no formulário acima). A nota final (G3) é sempre prevista automaticamente.
+        </p>
+        <div class="bulk-import-controls">
+          <input type="file" id="ad-bulk-file" accept=".csv,text/csv">
+          <button type="button" class="btn-primary" id="ad-bulk-submit">Importar CSV</button>
+        </div>
+        <div id="adddata-bulk-result" class="hidden"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: DADOS (EXPLORADOR) ---------- -->
+    <section id="page-data" class="page" style="--accent:#64748B">
+      <header class="page-header" style="--accent:#64748B">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span>
+        <div class="page-header-text">
+          <h1>Dados</h1>
+          <p>Explora o dataset completo, com filtros e formatação condicional por desempenho.</p>
+        </div>
+      </header>
+
+      <!-- Filtros (escola, nível de desempenho, risco) + exportação CSV do
+           conjunto filtrado — lidos por data.js, que também pagina a
+           tabela abaixo. -->
+      <div class="card filters-card">
+        <div class="filters-grid">
+          <div class="field">
+            <label for="data-filter-school">Escola</label>
+            <select id="data-filter-school">
+              <option value="">Todas</option>
+              <option value="GP">GP</option>
+              <option value="MS">MS</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="data-filter-band">Nível de desempenho</label>
+            <select id="data-filter-band">
+              <option value="">Todos</option>
+              <option value="Insuficiente">Insuficiente</option>
+              <option value="Suficiente">Suficiente</option>
+              <option value="Bom">Bom</option>
+              <option value="Excelente">Excelente</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="data-filter-risk">Risco</label>
+            <select id="data-filter-risk">
+              <option value="">Todos</option>
+              <option value="1">Em risco</option>
+              <option value="0">Sem risco</option>
+            </select>
+          </div>
+          <div class="field data-export-field">
+            <label>&nbsp;</label>
+            <button type="button" class="btn-small" id="data-export-csv">Exportar CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table id="data-table">
+            <thead>
+              <tr>
+                <th>ID</th><th>Escola</th><th>Sexo</th><th>Idade</th><th>Estudo</th>
+                <th>Faltas</th><th>Reprovações</th><th>G1</th><th>G2</th><th>G3</th>
+                <th>Nível</th><th>Risco</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination-row" id="data-pagination"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: DATASET PERSONALIZADO — IMPORTAR ---------- -->
+    <!-- Carregar um ficheiro (CSV/Excel) próprio, mapear as suas colunas
+         para os campos da StudentPerfomance, e confirmar a importação — ver
+         customdataset.js. Esta área nunca toca no dataset/modelos
+         principais da app (ver src/custom_dataset.py). -->
+    <section id="page-customimport" class="page" style="--accent:#0D9488">
+      <header class="page-header" style="--accent:#0D9488">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5V2.5"></path><path d="M4.8 5.7 8 2.5l3.2 3.2"></path><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"></path></svg></span>
+        <div class="page-header-text">
+          <h1>Importar Dataset</h1>
+          <p>Carrega qualquer ficheiro teu (CSV ou Excel) — dados de estudantes ou não, ex.: vendas, notas de outra disciplina, o que precisares. É importado tal como está, com as colunas originais, sem teres de o adaptar a nenhum esquema fixo. Fica guardado numa área totalmente separada — nunca substitui nem mistura com o dataset principal da app.</p>
+        </div>
+      </header>
+
+      <!-- Estado atual: nenhum dataset importado, ou resumo do que está ativo (com opção de remover). -->
+      <div class="card" id="ci-status-card"></div>
+
+      <!-- Passo 1: carregar o ficheiro. -->
+      <div class="card" id="ci-upload-card">
+        <h3>1. Carregar ficheiro</h3>
+        <p class="form-help-text">Aceita .csv, .xlsx ou .xls — uma linha por registo, com cabeçalho na primeira linha. Sem limite de linhas.</p>
+        <div class="bulk-import-controls">
+          <input type="file" id="ci-file-input" accept=".csv,.xlsx,.xls">
+          <button type="button" class="btn-primary" id="ci-upload-btn">Carregar ficheiro</button>
+        </div>
+        <div id="ci-upload-message" class="hidden"></div>
+      </div>
+
+      <!-- Passo 2: confirmar (só aparece depois de um upload bem-sucedido) — sem qualquer mapeamento, as colunas ficam tal como vêm no ficheiro. -->
+      <div class="card hidden" id="ci-mapping-card">
+        <h3>2. Confirmar importação</h3>
+        <p class="form-help-text" id="ci-mapping-help"></p>
+        <div id="ci-preview-wrap" class="table-wrap"></div>
+        <button type="button" class="btn-primary" id="ci-confirm-btn">Confirmar e importar</button>
+        <div id="ci-import-message" class="hidden"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: DATASET PERSONALIZADO — ESTATÍSTICAS & GRÁFICOS ---------- -->
+    <section id="page-customstats" class="page" style="--accent:#0EA5E9">
+      <header class="page-header" style="--accent:#0EA5E9">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="7"></line><line x1="8" y1="13" x2="8" y2="3"></line><line x1="13" y1="13" x2="13" y2="9.5"></line></svg></span>
+        <div class="page-header-text">
+          <h1>Estatísticas &amp; Gráficos</h1>
+          <p>Estatísticas descritivas calculadas sobre o dataset personalizado importado — uma entrada por cada coluna do teu ficheiro (numérica ou categórica, decidido automaticamente), e, se o dataset tiver uma coluna de "nota final" detetada automaticamente, também os indicadores e gráficos da Visão Geral principal, como bónus.</p>
+        </div>
+      </header>
+
+      <div id="cs-empty-state" class="info-box hidden">
+        Ainda não importaste nenhum dataset personalizado.
+        <button type="button" class="link-button" id="cs-goto-import">Importar agora</button>
+      </div>
+
+      <div id="cs-content" class="hidden">
+        <div class="kpi-row" id="cs-kpis"></div>
+
+        <div class="grid-2 hidden" id="cs-chart-grid">
+          <div class="card">
+            <h3>Distribuição de notas (G3)</h3>
+            <div class="chart-wrap"><canvas id="cs-chart-grade-distribution"></canvas></div>
+          </div>
+          <div class="card">
+            <h3>Aprovados vs. Reprovados</h3>
+            <div class="chart-wrap"><canvas id="cs-chart-pass-fail"></canvas></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Estatísticas por coluna</h3>
+          <div class="table-wrap">
+            <table id="cs-columns-table">
+              <thead><tr><th>Coluna</th><th>Tipo</th><th>Resumo</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: DATASET PERSONALIZADO — PREVISÕES ---------- -->
+    <section id="page-custompredict" class="page" style="--accent:#8B5CF6">
+      <header class="page-header" style="--accent:#8B5CF6">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.3"></circle><line x1="10.1" y1="10.1" x2="13.5" y2="13.5"></line></svg></span>
+        <div class="page-header-text">
+          <h1>Previsões</h1>
+          <p>Corre o modelo de previsão PRINCIPAL (já treinado sobre o dataset original) em cada linha do teu dataset personalizado — só disponível quando o ficheiro tem colunas suficientes parecidas com as de estudantes (idade, sexo, tempo de estudo, faltas, etc.), detetadas automaticamente pelo nome. Campos que não existam no teu ficheiro são preenchidos automaticamente com valores típicos, tal como no Simulador.</p>
+        </div>
+      </header>
+
+      <div id="cp-empty-state" class="info-box hidden">
+        Este dataset não tem colunas suficientes parecidas com as de estudantes para gerar previsões — mas as Estatísticas, Fórmulas Personalizadas e o Treinar Modelo genérico continuam disponíveis.
+        <button type="button" class="link-button" id="cp-goto-import">Ver dataset importado</button>
+      </div>
+
+      <div id="cp-content" class="hidden">
+        <div class="card">
+          <div class="table-wrap">
+            <table id="cp-table">
+              <thead>
+                <tr><th>ID</th><th>Nota prevista</th><th>Prob. aprovação</th><th>Aprovado previsto</th><th>Nota real</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="pagination-row" id="cp-pagination"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: DATASET PERSONALIZADO — TREINAR MODELO ---------- -->
+    <section id="page-customtrain" class="page" style="--accent:#EA580C">
+      <header class="page-header" style="--accent:#EA580C">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.3"></circle><path d="M8 2.6v1.7M8 11.7v1.7M13.4 8h-1.7M4.3 8H2.6M11.6 4.4l-1.2 1.2M5.6 10.4l-1.2 1.2M11.6 11.6l-1.2-1.2M5.6 5.6 4.4 4.4"></path></svg></span>
+        <div class="page-header-text">
+          <h1>Treinar Modelo</h1>
+          <p>Treina um modelo de Machine Learning novo e genérico sobre o teu dataset — escolhe a coluna que queres prever (o "alvo") e as colunas a usar para prever (os "recursos"). Funciona com qualquer dataset, não só dados de estudantes: regressão se o alvo for numérico, classificação se for categórico. Guardado à parte, nunca substitui os modelos principais da app.</p>
+        </div>
+      </header>
+
+      <div id="ct-empty-state" class="info-box hidden"></div>
+
+      <div id="ct-content" class="hidden">
+        <div class="card">
+          <h3>Escolhe o que queres prever</h3>
+          <div class="field">
+            <label for="ct-target-select">Coluna a prever (alvo)</label>
+            <select id="ct-target-select"></select>
+          </div>
+          <div class="field">
+            <label>Colunas a usar para prever (recursos)</label>
+            <div class="cluster-students-list" id="ct-feature-checkboxes"></div>
+          </div>
+          <button type="button" class="btn-primary" id="ct-train-btn">Treinar modelo</button>
+          <div id="ct-train-message" class="hidden"></div>
+        </div>
+        <div id="ct-results"></div>
+      </div>
+    </section>
+
+    <!-- ---------- PÁGINA: DATASET PERSONALIZADO — FÓRMULAS PERSONALIZADAS ---------- -->
+    <!-- O utilizador escreve a SUA própria fórmula (ex.: "G1*0.3 + G2*0.3 +
+         G3*0.4" ou "media(G3) onde studytime >= 3") sobre o dataset
+         personalizado — avaliada em segurança no backend (ver
+         src/formula_engine.py: nunca corre eval()/exec() sobre o texto do
+         utilizador). O resultado tanto pode ser uma coluna nova (um valor
+         por estudante, paginada tal como as Previsões) como um único
+         resultado (ex.: uma média), consoante a fórmula escrita. -->
+    <section id="page-customformula" class="page" style="--accent:#DB2777">
+      <header class="page-header" style="--accent:#DB2777">
+        <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"></rect><line x1="2" y1="6.6" x2="14" y2="6.6"></line><line x1="5.6" y1="6.6" x2="5.6" y2="14"></line><line x1="10" y1="6.6" x2="10" y2="14"></line><circle cx="7.8" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="7.8" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle></svg></span>
+        <div class="page-header-text">
+          <h1>Fórmulas Personalizadas</h1>
+          <p>Escreve a tua própria fórmula sobre o dataset personalizado — cria uma coluna calculada (um valor por estudante) ou obtém um único resultado (uma média, soma, etc.), à tua escolha.</p>
+        </div>
+      </header>
+
+      <div id="cf-empty-state" class="info-box hidden">
+        Ainda não importaste nenhum dataset personalizado.
+        <button type="button" class="link-button" id="cf-goto-import">Importar agora</button>
+      </div>
+
+      <div id="cf-content" class="hidden">
+        <div class="card">
+          <h3>Colunas disponíveis (clica para inserir na fórmula)</h3>
+          <div class="cluster-students-list" id="cf-column-chips"></div>
+        </div>
+
+        <div class="card">
+          <h3>A tua fórmula</h3>
+          <p class="form-help-text">
+            Usa os nomes das colunas acima com operadores (+ − * / **), comparações (==, !=, &gt;, &gt;=, &lt;, &lt;=), "and" / "or" / "not", e as funções:
+            <strong>soma</strong>, <strong>media</strong>, <strong>mediana</strong>, <strong>minimo</strong>, <strong>maximo</strong>, <strong>desvio</strong>, <strong>contar</strong> (sobre uma coluna inteira — dão um único resultado),
+            <strong>absoluto</strong>, <strong>arredondar</strong> (sobre cada linha), e <strong>se(condição, valor_se_verdadeiro, valor_se_falso)</strong>.
+            Filtra as linhas com "onde" ou "where" no fim — ex.: <code>media(G3) onde studytime &gt;= 3</code>.
+          </p>
+          <div class="field">
+            <label for="cf-formula-input">Fórmula</label>
+            <input type="text" id="cf-formula-input" placeholder="ex.: G1*0.3 + G2*0.3 + G3*0.4">
+          </div>
+          <button type="button" class="btn-primary" id="cf-calculate-btn">Calcular</button>
+          <div id="cf-error-message" class="hidden"></div>
+        </div>
+
+        <div id="cf-result-wrap"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ============ ASSISTENTE (chatbot baseado em regras) ============ -->
+<!-- Flutua sobre qualquer página (fora de .app para não ser cortado por
+     scroll/overflow do conteúdo) — ver src/chatbot.py no backend: responde
+     sempre com dados reais e atuais do dataset, sem LLM externo nem ligação
+     à internet. -->
+<button type="button" class="chatbot-fab" id="chatbot-fab" title="Assistente da StudentPerfomance" aria-label="Abrir assistente da StudentPerfomance">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"></path></svg>
+  <span class="chatbot-fab-badge hidden" id="chatbot-fab-badge"></span>
+</button>
+
+<div class="chatbot-panel hidden" id="chatbot-panel" role="dialog" aria-label="Assistente da StudentPerfomance">
+  <div class="chatbot-panel-header">
+    <div class="chatbot-panel-title">
+      <span class="chatbot-panel-title-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"></path></svg>
+      </span>
+      <div>
+        <div class="chatbot-panel-title-text">Assistente da StudentPerfomance</div>
+        <div class="chatbot-panel-subtitle">Baseado em regras · 100% local, sem internet</div>
+      </div>
+    </div>
+    <button type="button" class="chatbot-panel-close" id="chatbot-panel-close" aria-label="Fechar assistente">&times;</button>
+  </div>
+
+  <div class="chatbot-messages" id="chatbot-messages" aria-live="polite"></div>
+
+  <form class="chatbot-input-row" id="chatbot-form">
+    <input type="text" id="chatbot-input" placeholder="Escreve a tua pergunta…" maxlength="300" autocomplete="off" aria-label="Escreve a tua pergunta">
+    <button type="submit" class="btn-primary" id="chatbot-send-btn">Enviar</button>
+  </form>
+</div>
+
+<!-- Ordem de carregamento dos scripts, importante porque cada um depende
+     do anterior: 1) chart.umd.js — biblioteca de gráficos (Chart.js),
+     vendor, tem de vir primeiro; 2) api.js — cliente HTTP para o backend,
+     usado por todos os módulos seguintes; 3) main.js — router (goToPage),
+     utilitários (formatação, animações) e configuração global do Chart.js,
+     de que todas as páginas dependem; 4) um script por página (home.js,
+     overview.js, risk.js, ...), cada um regista-se no router via
+     registerPage; 5) chatbot.js por último, pois o widget é independente
+     das páginas e só precisa de api.js. -->
+<script src="js/vendor/chart.umd.js"></script>
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="js/pages/home.js"></script>
+<script src="js/pages/overview.js"></script>
+<script src="js/pages/risk.js"></script>
+<script src="js/pages/profile.js"></script>
+<script src="js/pages/alerts.js"></script>
+<script src="js/pages/segmentation.js"></script>
+<script src="js/pages/fichas.js"></script>
+<script src="js/pages/optimizer.js"></script>
+<script src="js/pages/settings.js"></script>
+<script src="js/pages/adddata.js"></script>
+<script src="js/pages/data.js"></script>
+<script src="js/pages/prediction.js"></script>
+<script src="js/pages/customdataset.js"></script>
+<script src="js/chatbot.js"></script>
+</body>
+</html>
