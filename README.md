@@ -1,114 +1,107 @@
-# StudentPerfomance — Desempenho Académico e Hábitos de Estudo
+# StudentPerfomance: Academic Performance and Study Habits
 
-Aplicação em Python (com base de dados SQL e interface em HTML/CSS/JS, disponível como
-página web ou como janela de aplicação de desktop) que analisa a relação entre hábitos
-de estudo/estilo de vida e o desempenho académico de estudantes, e treina modelos de
-Machine Learning capazes de prever a nota final e a probabilidade de aprovação a partir
-desses hábitos.
+A Python application (with a SQL database and an HTML/CSS/JS interface, available as a
+web page or as a desktop application window) that analyses the relationship between
+study/lifestyle habits and students' academic performance, and trains Machine Learning
+models capable of predicting the final grade and the probability of passing from those
+habits.
 
-## Motivação
+## Motivation
 
-Milhares de estudantes pesquisam diariamente "como estudar melhor", "quantas horas devo
-estudar" ou "como melhorar as notas" — mas encontram sobretudo opiniões, não respostas
-baseadas em dados. Este projeto usa dados reais de estudantes para identificar quais
-hábitos (tempo de estudo, faltas, consumo de álcool, tempo livre, apoio familiar, etc.)
-influenciam efetivamente o desempenho escolar, e disponibiliza essa análise através de
-modelos preditivos e de uma interface web interativa.
-
-## Screenshots
-
-> _Adiciona aqui 2-3 capturas de ecrã da app (ex.: Visão Geral, Previsão de Notas,
-> Esquema Mental) — arrasta as imagens para `docs/screenshots/` e referencia-as assim:_
-> `![Visão Geral](docs/screenshots/visao-geral.png)`
+Thousands of students search daily for "how to study better", "how many hours should I
+study" or "how to improve my grades", but mostly find opinions, not data-driven answers.
+This project uses real student data to identify which habits (study time, absences,
+alcohol consumption, free time, family support, etc.) actually influence academic
+performance, and makes that analysis available through predictive models and an
+interactive web interface.
 
 ## Dataset
 
-`data/raw/StudentsPerfomance.xlsx` — 649 registos de estudantes (ensino secundário,
-Portugal), com 33 variáveis: dados demográficos e familiares, hábitos de estudo e estilo
-de vida (tempo de estudo, faltas, consumo de álcool, tempo livre, atividades
-extracurriculares, acesso a internet, etc.) e notas em três períodos (G1, G2, G3, escala
-0-20).
+`data/raw/StudentsPerfomance.xlsx`: 649 student records (secondary education, Portugal),
+with 33 variables: demographic and family data, study habits and lifestyle (study time,
+absences, alcohol consumption, free time, extracurricular activities, internet access,
+etc.) and grades across three periods (G1, G2, G3, 0-20 scale).
 
-## Arquitetura
+## Architecture
 
 ```
-Excel (dados originais)
+Excel (original data)
         │  ETL (src/etl.py)
         ▼
-Base de dados SQL  ──►  Students_Raw  /  Students_Clean
- (SQL Server via SSMS, ou SQLite local para testes)
+SQL database  ──►  Students_Raw  /  Students_Clean
+ (SQL Server via SSMS, or local SQLite for testing)
         │
         ▼
-Limpeza, outliers, normalização, análise estatística, Machine Learning
+Cleaning, outliers, normalisation, statistical analysis, Machine Learning
         │
         ▼
-API REST (FastAPI, src/api.py) — serve também a interface (web/) na mesma porta
+REST API (FastAPI, src/api.py): also serves the interface (web/) on the same port
         │
         ├──► Browser:  http://127.0.0.1:8000
-        └──► Janela nativa (desktop_app.py, pywebview)
+        └──► Native window (desktop_app.py, pywebview)
 ```
 
-## Estrutura do projeto
+## Project structure
 
 ```
 student_performance_app/
-├── main.py                      # ponto de entrada: corre o pipeline de dados/ML
-├── desktop_app.py                # abre a app numa janela nativa (pywebview)
+├── main.py                      # entry point: runs the data/ML pipeline
+├── desktop_app.py                # opens the app in a native window (pywebview)
 ├── sql/
-│   └── schema.sql               # script T-SQL para criar a BD no SSMS
-├── data/raw/                    # dados originais (Excel)
+│   └── schema.sql               # T-SQL script to create the DB in SSMS
+├── data/raw/                    # original data (Excel)
 ├── src/
-│   ├── config.py                # caminhos, ligação à BD, colunas e parâmetros
-│   ├── database.py              # camada de acesso à base de dados (SQLAlchemy)
-│   ├── etl.py                   # importação Excel -> BD, limpeza -> BD
-│   ├── data_processing.py       # limpeza, outliers, normalização, novas variáveis
-│   ├── eda.py                   # análise exploratória (gráficos + relatório)
-│   ├── statistics_analysis.py   # testes estatísticos e regressão simples
-│   ├── train_model.py           # treino, avaliação e seleção de modelos de ML
-│   ├── predict.py               # funções de previsão prontas a usar
-│   ├── alerts.py                 # avisos automáticos (estudantes/dataset em risco)
-│   ├── segmentation.py           # segmentação de perfis (K-Means + nomeação automática)
-│   ├── reports_pdf.py            # fichas de desempenho e relatório de turma (PDF, reportlab)
-│   ├── add_student.py            # adicionar novo estudante (G3 previsto pelo modelo)
-│   ├── optimizer.py              # otimizador de estudo (plano de mudança de hábitos)
-│   ├── notes.py                  # central de notas (7 tipos de nota)
-│   ├── settings.py               # configurações gerais (tema de cores, fonte)
-│   ├── backup.py                 # cópias de segurança da base de dados (agendadas/manuais)
-│   ├── bulk_import.py            # importação em lote de estudantes via CSV
-│   ├── chatbot.py                 # assistente conversacional baseado em regras
-│   ├── custom_dataset.py          # importação e análise de datasets genéricos (não só alunos)
-│   ├── data_export.py             # exportação do dataset completo em CSV
-│   ├── data_quality.py            # deteção de valores atípicos ao adicionar dados
-│   ├── exam_week.py               # checklist de semana de exames (Simulador)
-│   ├── formula_engine.py          # motor de fórmulas personalizadas (dataset genérico)
-│   ├── prediction_tracking.py     # histórico de previsões e precisão do modelo ao longo do tempo
-│   ├── suggestions.py             # sugestão de valores prováveis ao adicionar um estudante
-│   └── api.py                   # API REST (FastAPI) — backend da interface web
-├── web/                         # interface HTML/CSS/JS (consome a API)
-│   ├── index.html               # esqueleto das páginas (SPA, sem recarregar)
-│   ├── css/style.css            # estilo (paleta indigo, cartões, hover, gauges)
+│   ├── config.py                # paths, DB connection, columns and parameters
+│   ├── database.py              # database access layer (SQLAlchemy)
+│   ├── etl.py                   # Excel import -> DB, cleaning -> DB
+│   ├── data_processing.py       # cleaning, outliers, normalisation, new variables
+│   ├── eda.py                   # exploratory analysis (charts + report)
+│   ├── statistics_analysis.py   # statistical tests and simple regression
+│   ├── train_model.py           # training, evaluation and selection of ML models
+│   ├── predict.py               # ready-to-use prediction functions
+│   ├── alerts.py                 # automatic warnings (students/dataset at risk)
+│   ├── segmentation.py           # profile segmentation (K-Means + automatic naming)
+│   ├── reports_pdf.py            # individual and class performance reports (PDF, reportlab)
+│   ├── add_student.py            # add a new student (G3 predicted by the model)
+│   ├── optimizer.py              # study optimiser (habit-change plan)
+│   ├── notes.py                  # notes hub (7 note types)
+│   ├── settings.py               # general settings (colour theme, font)
+│   ├── backup.py                 # database backups (scheduled/manual)
+│   ├── bulk_import.py            # bulk import of students via CSV
+│   ├── chatbot.py                 # rule-based conversational assistant
+│   ├── custom_dataset.py          # import and analysis of generic datasets (not just students)
+│   ├── data_export.py             # export the full dataset as CSV
+│   ├── data_quality.py            # outlier detection when adding data
+│   ├── exam_week.py               # exam-week checklist (Simulator)
+│   ├── formula_engine.py          # custom formula engine (generic dataset)
+│   ├── prediction_tracking.py     # prediction history and model accuracy over time
+│   ├── suggestions.py             # suggested likely values when adding a student
+│   └── api.py                   # REST API (FastAPI): backend for the web interface
+├── web/                         # HTML/CSS/JS interface (consumes the API)
+│   ├── index.html               # page skeleton (SPA, no reloads)
+│   ├── css/style.css            # styling (indigo palette, cards, hover, gauges)
 │   └── js/
-│       ├── api.js               # cliente da API (fetch)
-│       ├── main.js              # router SPA, cache em memória, utilitários de UI
-│       ├── chatbot.js            # janela flutuante do assistente conversacional
-│       ├── pages/                # lógica de cada secção (1 ficheiro por página)
-│       └── vendor/chart.umd.js  # Chart.js incluído localmente (sem CDN)
-├── models/                      # modelos treinados (.joblib), gerados
+│       ├── api.js               # API client (fetch)
+│       ├── main.js              # SPA router, in-memory cache, UI utilities
+│       ├── chatbot.js            # floating window for the conversational assistant
+│       ├── pages/                # logic for each section (1 file per page)
+│       └── vendor/chart.umd.js  # Chart.js bundled locally (no CDN)
+├── models/                      # trained models (.joblib), generated
 ├── reports/
-│   ├── figures/                 # gráficos gerados pela EDA
+│   ├── figures/                 # charts generated by the EDA
 │   ├── eda_report.md
 │   ├── statistical_analysis_report.md
 │   ├── model_report.md
 │   └── model_metrics.json
-├── tests/                       # testes automatizados (pytest)
-├── .env.example                 # modelo de configuração (BD, etc.)
-├── requirements.txt              # bibliotecas Python necessárias
-├── Procfile                      # comando de arranque para alojamento na nuvem
-├── runtime.txt                   # versão do Python para alojamento na nuvem
+├── tests/                       # automated tests (pytest)
+├── .env.example                 # configuration template (DB, etc.)
+├── requirements.txt              # required Python libraries
+├── Procfile                      # startup command for cloud hosting
+├── runtime.txt                   # Python version for cloud hosting
 └── README.md
 ```
 
-## Instalação
+## Installation
 
 ```bash
 python -m venv venv
@@ -116,291 +109,291 @@ source venv/bin/activate      # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Copia `.env.example` para `.env` e ajusta conforme o motor de base de dados que
-pretendes usar (ver secção seguinte).
+Copy `.env.example` to `.env` and adjust it according to the database engine you want to
+use (see the next section).
 
-## Base de dados
+## Database
 
-Por omissão (`DB_DRIVER=sqlite`), a aplicação usa uma base de dados SQLite local em
-`data/student_performance.db` — não precisas de instalar nada, funciona de imediato.
+By default (`DB_DRIVER=sqlite`), the application uses a local SQLite database at
+`data/student_performance.db`: you don't need to install anything, it works straight
+away.
 
-Para usar SQL Server (SSMS):
+To use SQL Server (SSMS):
 
-1. Abre `sql/schema.sql` no SQL Server Management Studio e executa-o — cria a base de
-   dados `StudentPerformanceDB` e as tabelas `Students_Raw` e `Students_Clean`.
-2. No `.env`, define `DB_DRIVER=mssql` e ajusta `MSSQL_SERVER` para o nome da tua
-   instância (ex.: `localhost\SQLEXPRESS`).
-3. Garante que tens instalado o driver ODBC ("ODBC Driver 17 for SQL Server") e o
-   pacote `pyodbc` (`pip install pyodbc` — não vem no `requirements.txt` por
-   omissão, porque só é preciso neste modo; o modo SQLite, usado por omissão,
-   não precisa dele).
+1. Open `sql/schema.sql` in SQL Server Management Studio and run it: it creates the
+   `StudentPerformanceDB` database and the `Students_Raw` and `Students_Clean` tables.
+2. In `.env`, set `DB_DRIVER=mssql` and adjust `MSSQL_SERVER` to the name of your
+   instance (e.g. `localhost\SQLEXPRESS`).
+3. Make sure you have the ODBC driver installed ("ODBC Driver 17 for SQL Server") and
+   the `pyodbc` package (`pip install pyodbc`: not included in `requirements.txt` by
+   default, since it's only needed in this mode; the default SQLite mode doesn't need
+   it).
 
-Toda a aplicação lê/escreve através de `src/database.py`, por isso trocar de motor não
-implica alterar mais nenhum ficheiro.
+The whole application reads/writes through `src/database.py`, so switching engines
+doesn't require changing any other file.
 
-## Como usar
+## How to use
 
-**Pipeline completo** (ETL -> análise exploratória -> análise estatística -> ML):
+**Full pipeline** (ETL -> exploratory analysis -> statistical analysis -> ML):
 ```bash
 python main.py
 ```
-Opções: `python main.py --skip-etl` (reaproveita dados já na BD) ou
-`python main.py --only eda` (corre apenas uma etapa: `etl` | `eda` | `stats` | `ml`).
-Corre isto pelo menos uma vez antes de abrir a interface, para gerar os modelos
-em `models/`.
+Options: `python main.py --skip-etl` (reuses data already in the DB) or
+`python main.py --only eda` (runs a single step: `etl` | `eda` | `stats` | `ml`).
+Run this at least once before opening the interface, to generate the models in
+`models/`.
 
-**Abrir a interface — duas formas, a app é a mesma:**
+**Opening the interface: two ways, same app:**
 
-- **Como aplicação de desktop** (janela própria, sem browser nem terminal visível):
+- **As a desktop application** (its own window, no browser or terminal visible):
   ```bash
   python desktop_app.py
   ```
-  Isto arranca a API em segundo plano e abre logo a janela. É só isto.
+  This starts the API in the background and opens the window straight away. That's it.
 
-- **Como página web** (se preferires o browser):
+- **As a web page** (if you prefer the browser):
   ```bash
   uvicorn src.api:app --reload
   ```
-  Depois abre `http://127.0.0.1:8000` no browser.
+  Then open `http://127.0.0.1:8000` in your browser.
 
-- **Para aceder de outro dispositivo na mesma rede** (ex.: telemóvel), o `127.0.0.1`
-  por omissão não chega — é preciso `--host 0.0.0.0` para aceitar ligações de fora do
-  próprio computador:
+- **To access it from another device on the same network** (e.g. a phone), the default
+  `127.0.0.1` isn't enough: you need `--host 0.0.0.0` to accept connections from outside
+  the computer itself:
   ```bash
   uvicorn src.api:app --host 0.0.0.0 --reload
   ```
-  Depois, no outro dispositivo (na mesma rede Wi-Fi), abre `http://<IP-do-PC>:8000`
-  no browser — o IP local do PC vê-se nas Definições de Rede do Windows (algo como
-  `192.168.1.X`). A interface é responsiva, por isso funciona bem em ecrãs pequenos.
+  Then, on the other device (on the same Wi-Fi network), open `http://<PC-IP>:8000` in
+  the browser: the PC's local IP is shown in Windows Network Settings (something like
+  `192.168.1.X`). The interface is responsive, so it works well on small screens.
 
-Não há dependências externas — o Chart.js está incluído em `web/js/vendor/`, não
-precisa de ligação à internet. A API e a interface são servidas pelo mesmo processo,
-na mesma porta (não precisas de dois terminais nem de servidor à parte para os
-ficheiros web).
+There are no external dependencies: Chart.js is bundled in `web/js/vendor/`, so no
+internet connection is needed. The API and the interface are served by the same
+process, on the same port (you don't need two terminals or a separate server for the
+web files).
 
-**Testes:**
+**Tests:**
 ```bash
 pytest -v
 ```
 
-## Alojar a app na nuvem (acesso de qualquer lado, sem depender do teu PC)
+## Hosting the app in the cloud (access from anywhere, without relying on your PC)
 
-O acesso pelo telemóvel na mesma rede (secção anterior) só funciona com o teu
-computador ligado. Para teres um endereço público, acessível de qualquer lado
-(dados móveis incluídos) sem precisares de deixar o PC ligado, publica a app
-num serviço de alojamento Python — por exemplo o [Render](https://render.com)
-ou o [Railway](https://railway.com), que têm planos gratuitos suficientes para
-uma demonstração/apresentação.
+Accessing it from a phone on the same network (previous section) only works while your
+computer is switched on. To have a public address, reachable from anywhere (including
+mobile data) without needing to leave your PC on, publish the app on a Python hosting
+service, for example [Render](https://render.com) or [Railway](https://railway.com),
+which have free plans sufficient for a demo/presentation.
 
-A app já tem os ficheiros necessários para isso, prontos a usar:
+The app already has the files it needs for this, ready to use:
 
-- **`requirements.txt`** — lista das bibliotecas Python necessárias.
-- **`Procfile`** — diz ao serviço como arrancar a app:
+- **`requirements.txt`**: list of the required Python libraries.
+- **`Procfile`**: tells the service how to start the app:
   `web: uvicorn src.api:app --host 0.0.0.0 --port $PORT`
-  (o `--host 0.0.0.0` aceita ligações de fora, e o `$PORT` é a porta que o
-  próprio serviço atribui — não é preciso escolheres uma).
-- **`runtime.txt`** — indica a versão do Python usada (`3.14.6`).
+  (`--host 0.0.0.0` accepts external connections, and `$PORT` is the port the service
+  itself assigns: you don't need to choose one).
+- **`runtime.txt`**: indicates the Python version used (`3.14.6`).
 
-**Passos gerais** (exemplo com o Render):
+**General steps** (example with Render):
 
-1. Cria um repositório Git (ex.: no GitHub) só com a pasta
-   `student_performance_app/` e envia-o (`git push`). O ficheiro `.env` nunca
-   é enviado (está no `.gitignore` por segurança) — se precisares de definir
-   alguma variável de ambiente (ex.: `DB_DRIVER`), fazes isso diretamente no
-   painel do serviço, não num ficheiro.
-2. Em render.com, cria um "New Web Service" e liga-o ao repositório.
-3. Comando de build: `pip install -r requirements.txt`
-4. Comando de arranque: `uvicorn src.api:app --host 0.0.0.0 --port $PORT`
-   (o Render também lê isto automaticamente do `Procfile`, mas alguns
-   serviços pedem para o confirmares no painel).
-5. Aguarda o deploy (alguns minutos) — o serviço dá-te um endereço público
-   (ex.: `https://studentperfomance.onrender.com`), que já podes abrir em
-   qualquer telemóvel ou computador, em qualquer rede.
+1. Create a Git repository (e.g. on GitHub) containing only the
+   `student_performance_app/` folder and push it (`git push`). The `.env` file is never
+   pushed (it's in `.gitignore` for safety): if you need to set an environment variable
+   (e.g. `DB_DRIVER`), do that directly in the service's dashboard, not in a file.
+2. On render.com, create a "New Web Service" and connect it to the repository.
+3. Build command: `pip install -r requirements.txt`
+4. Start command: `uvicorn src.api:app --host 0.0.0.0 --port $PORT`
+   (Render also reads this automatically from the `Procfile`, but some services ask
+   you to confirm it in the dashboard).
+5. Wait for the deploy (a few minutes): the service gives you a public address (e.g.
+   `https://studentperfomance.onrender.com`), which you can already open on any phone
+   or computer, on any network.
 
-**Nota importante sobre os dados:** nos planos gratuitos destes serviços, o
-disco não costuma ser permanente — de vez em quando (reinícios, novo deploy)
-a base de dados volta ao estado em que foi enviada no repositório. Os 649
-estudantes de demonstração continuam sempre lá, mas alterações feitas depois
-de publicado (adicionar estudantes, backups criados na app, etc.) podem
-perder-se nesse reinício. Isto não é um problema para uma apresentação —
-só é relevante se quiseres guardar dados novos de forma permanente, o que
-exigiria um disco pago ("persistent disk") ou uma base de dados alojada à
-parte.
+**Important note about the data:** on the free tiers of these services, the disk
+usually isn't permanent: from time to time (restarts, new deploys) the database
+reverts to the state it was pushed in. The 649 demo students are always still there,
+but changes made after publishing (adding students, backups created in the app, etc.)
+may be lost on such a restart. This isn't a problem for a presentation; it only matters
+if you want to store new data permanently, which would require a paid ("persistent
+disk") or a separately hosted database.
 
-## Pipeline de dados
+## Data pipeline
 
-1. **Importação**: leitura do Excel original e carregamento em `Students_Raw` (BD).
-2. **Limpeza**: correção de tipos de dados, remoção de duplicados, validação de
-   intervalos, preenchimento de valores em falta.
-3. **Tratamento de outliers**: método do intervalo interquartil (IQR), com
-   winsorização (capping) e sinalização (`<coluna>_is_outlier`).
-4. **Normalização**: z-score das principais variáveis numéricas (`<coluna>_norm`).
-5. **Transformação**: criação de novas variáveis (aprovado, consumo médio de álcool,
-   escolaridade média dos pais, evolução de nota entre períodos).
-6. **Carregamento**: gravação do dataset final em `Students_Clean` (BD).
+1. **Import**: reading the original Excel file and loading it into `Students_Raw` (DB).
+2. **Cleaning**: correcting data types, removing duplicates, validating ranges, filling
+   in missing values.
+3. **Outlier handling**: interquartile range (IQR) method, with winsorisation (capping)
+   and flagging (`<column>_is_outlier`).
+4. **Normalisation**: z-score of the main numeric variables (`<column>_norm`).
+5. **Transformation**: creation of new variables (passed, average alcohol consumption,
+   average parental education, grade progression between periods).
+6. **Loading**: saving the final dataset in `Students_Clean` (DB).
 
-## Análise estatística
+## Statistical analysis
 
-- **Correlações e distribuições** (`src/eda.py`)
-- **Comparações entre grupos**: teste t de Student (2 grupos, ex. internet sim/não) e
-  ANOVA (3+ grupos, ex. níveis de tempo de estudo), com significância a 5%.
-- **Regressão linear simples**: relação entre uma única variável (ex. tempo de estudo)
-  e a nota final, com coeficiente, R² e p-value.
+- **Correlations and distributions** (`src/eda.py`)
+- **Group comparisons**: Student's t-test (2 groups, e.g. internet yes/no) and ANOVA
+  (3+ groups, e.g. study-time levels), with 5% significance.
+- **Simple linear regression**: relationship between a single variable (e.g. study
+  time) and the final grade, with coefficient, R² and p-value.
 
-Ver `reports/statistical_analysis_report.md`.
+See `reports/statistical_analysis_report.md`.
 
-## Modelos de Machine Learning
+## Machine Learning models
 
-Foram treinados e comparados três algoritmos para cada tarefa (Regressão Linear,
-Random Forest e Gradient Boosting), com validação cruzada de 5 folds:
+Three algorithms were trained and compared for each task (Linear Regression, Random
+Forest and Gradient Boosting), with 5-fold cross-validation:
 
-- **Regressão — "hábitos"**: prevê a nota final (G3) usando apenas hábitos de estudo,
-  estilo de vida e contexto familiar (sem conhecer notas anteriores). Responde
-  diretamente à pergunta de investigação: *que hábitos influenciam o desempenho?*
-- **Regressão — "completo"**: inclui também as notas dos períodos anteriores (G1, G2)
-  para maior precisão preditiva (R² ≈ 0.85).
-- **Classificação**: prevê aprovado/reprovado (G3 ≥ 10) com base apenas em hábitos,
-  incluindo a probabilidade de aprovação.
+- **Regression ("habits")**: predicts the final grade (G3) using only study habits,
+  lifestyle and family context (without knowing previous grades). This directly
+  answers the research question: *which habits influence performance?*
+- **Regression ("full")**: also includes grades from previous periods (G1, G2) for
+  higher predictive accuracy (R² ≈ 0.85).
+- **Classification**: predicts pass/fail (G3 ≥ 10) based on habits alone, including
+  the probability of passing.
 
-Resultados detalhados, incluindo importância de variáveis, em `reports/model_report.md`.
+Detailed results, including feature importance, in `reports/model_report.md`.
 
-## Principais conclusões
+## Key findings
 
-- O tempo de estudo semanal está associado a taxas de aprovação crescentes (76% no
-  nível mais baixo, 94% no mais alto) — diferença estatisticamente significativa.
-- Reprovações anteriores são o fator com maior impacto negativo identificado
-  (~-1,98 valores por reprovação).
-- Maior consumo de álcool (dias úteis e fim de semana) está associado a notas médias
-  mais baixas.
-- O acesso a internet em casa está associado a notas significativamente superiores
-  (p < 0,001).
+- Weekly study time is associated with increasing pass rates (76% at the lowest level,
+  94% at the highest): a statistically significant difference.
+- Previous failures are the factor with the greatest negative impact identified
+  (~-1.98 points per failure).
+- Higher alcohol consumption (weekday and weekend) is associated with lower average
+  grades.
+- Having internet access at home is associated with significantly higher grades
+  (p < 0.001).
 
 ## Interface
 
-A interface (`web/`) tem dezoito secções, todas na mesma página (sem recarregar),
-organizadas em três grupos:
+The interface (`web/`) has eighteen sections, all on the same page (no reloads),
+organised into three groups:
 
-**Análise de Dados**
-- **Visão Geral**: KPIs (nota média, taxa de aprovação, faltas médias) e gráficos gerais.
-- **Fatores de Risco**: correlações, importância de variáveis e exploração dinâmica de
-  qualquer hábito vs nota final.
-- **Perfil do Estudante**: filtros interativos para comparar subgrupos com a média geral.
-- **Previsão de Notas**: formulário com os hábitos do estudante, devolvendo a nota
-  prevista, a probabilidade de aprovação e recomendações baseadas nos dados.
-- **Adicionar Dados**: formulário simplificado para adicionar um novo estudante ao
-  dataset — a nota final (G3) é sempre prevista automaticamente pelo modelo treinado
-  (nunca inserida manualmente), e o estudante fica persistido na base de dados,
-  disponível em todas as outras páginas a partir daí.
-- **Dados**: explorador do dataset completo (incluindo estudantes adicionados
-  manualmente), com filtros (escola, nível de desempenho, risco), tabela paginada e
-  formatação condicional por cor (nível de desempenho, estado de risco).
+**Data Analysis**
+- **Overview**: KPIs (average grade, pass rate, average absences) and general charts.
+- **Risk Factors**: correlations, feature importance and dynamic exploration of any
+  habit vs the final grade.
+- **Student Profile**: interactive filters to compare subgroups against the overall
+  average.
+- **Grade Prediction**: a form with the student's habits, returning the predicted
+  grade, the probability of passing and data-driven recommendations.
+- **Add Data**: a simplified form for adding a new student to the dataset: the final
+  grade (G3) is always predicted automatically by the trained model (never entered
+  manually), and the student is persisted in the database, available on every other
+  page from then on.
+- **Data**: an explorer for the full dataset (including manually added students), with
+  filters (school, performance level, risk), a paginated table and colour-coded
+  conditional formatting (performance level, risk status).
 
-**Avisos e Alertas**
-- **Avisos e Alertas**: sinais de atenção gerados automaticamente a partir do estado
-  atual dos dados (ex.: taxa de risco elevada, faltas muito acima da média, notas a
-  piorar em estudantes que já reprovaram), com lista dos estudantes em risco
-  (critério: nota final < 10, OU já reprovou antes, OU mais de 15 faltas).
-- **Segmentação de Perfis**: agrupamento automático de estudantes com hábitos e
-  desempenho semelhantes, usando K-Means (3 a 8 grupos, à escolha). Cada grupo é
-  nomeado automaticamente a partir dos traços mais desviantes da média geral
-  (ex.: "Dedicados ao Estudo & Bom Desempenho Académico") — os nomes não são fixos,
-  são calculados a partir dos dados reais de cada grupo.
-- **Fichas de Desempenho**: gera um PDF individual por estudante (indicando o número),
-  com um resumo das notas e uma recomendação personalizada baseada em comparações
-  reais entre grupos de estudantes com o mesmo tempo de estudo (nunca texto genérico —
-  só é gerada se houver pelo menos 5 estudantes em cada grupo comparado).
-- **Otimizador de Estudo**: indicando o número de um estudante e uma nota-alvo,
-  calcula o plano de mudança de hábitos (mais tempo de estudo, menos saídas, menos
-  faltas, menos consumo de álcool) que mais aproxima a nota prevista da meta, usando
-  um algoritmo guloso (hill-climbing) sobre o modelo de regressão já treinado —
-  mostra a nota prevista antes/depois e a lista de mudanças sugeridas.
-- **Alertas por Email**: deteta automaticamente estudantes em estado crítico (nota
-  final negativa **e** mais de 10 faltas — critério mais estrito do que o "em risco"
-  geral) e permite enviar um email de alerta ao encarregado de educação associado,
-  com um resumo do desempenho e a mesma recomendação personalizada usada nas Fichas
-  de Desempenho. Inclui: configuração do servidor SMTP (a palavra-passe fica
-  guardada só na base de dados local/configurada da aplicação, nunca partilhada com
-  mais lado nenhum além do próprio servidor SMTP indicado — recomenda-se sempre uma
-  "palavra-passe de aplicação"), associação de emails de encarregados a estudantes, e
-  envio individual ou em lote (nunca automático — exige sempre confirmação explícita).
+**Warnings and Alerts**
+- **Warnings and Alerts**: attention signals generated automatically from the current
+  state of the data (e.g. a high risk rate, absences well above average, grades
+  worsening in students who have already failed before), with a list of at-risk
+  students (criteria: final grade < 10, OR has failed before, OR more than 15
+  absences).
+- **Profile Segmentation**: automatic grouping of students with similar habits and
+  performance, using K-Means (3 to 8 groups, your choice). Each group is automatically
+  named from the traits that deviate most from the overall average (e.g. "Dedicated
+  Students & Strong Academic Performance"): the names aren't fixed, they're calculated
+  from each group's actual data.
+- **Performance Reports**: generates an individual PDF per student (by student
+  number), with a summary of grades and a personalised recommendation based on real
+  comparisons between groups of students with the same study time (never generic
+  text: it's only generated if there are at least 5 students in each group being
+  compared).
+- **Study Optimiser**: given a student's number and a target grade, calculates the
+  habit-change plan (more study time, fewer outings, fewer absences, less alcohol
+  consumption) that brings the predicted grade closest to the target, using a greedy
+  (hill-climbing) algorithm on the already-trained regression model: shows the
+  predicted grade before/after and the list of suggested changes.
+- **Email Alerts**: automatically detects students in a critical state (a failing
+  final grade **and** more than 10 absences: a stricter criterion than the general "at
+  risk" one) and allows sending an alert email to the associated guardian, with a
+  performance summary and the same personalised recommendation used in the
+  Performance Reports. Includes: SMTP server configuration (the password is stored
+  only in the application's local/configured database, never shared with anyone
+  besides the specified SMTP server itself: an "app password" is always recommended),
+  linking guardian emails to students, and sending individually or in bulk (never
+  automatic: it always requires explicit confirmation).
 
-**Ferramentas de Estudo**
-- **Plano de Estudo**: metas pessoais com prazo (ex.: "Rever Matemática até sexta") e um
-  cronograma de conteúdos por disciplina/tópico. O estado "Em atraso" nunca é guardado —
-  é sempre calculado a partir da data/hora atual, para nunca ficar desatualizado. Inclui
-  um resumo de progresso (% concluído) e alertas de prazos próximos (48h).
-- **Calendário**: horário de estudo semanal em grelha (um bloco = dia, hora de
-  início/fim, disciplina, assunto, estado). Cada disciplina recebe automaticamente uma
-  cor consistente de uma paleta rotativa, e a página destaca sempre o próximo bloco a
-  começar.
-- **Central de Notas**: 7 tipos de nota, cada um com o seu editor — texto livre (negrito,
-  itálico, sublinhado, destaque de 4 cores, escolha de fonte/tamanho), checklist,
-  flashcards (pergunta/resposta), método de Cornell (palavras-chave, notas, resumo),
-  método dos Quadrantes (sempre 4 blocos fixos), Outline (tópicos hierárquicos com
-  numeração automática ao usar Tab/Shift+Tab, até 4 níveis: I. → A. → 1. → a)) e SQ3R —
-  leitura ativa em 5 secções (Survey, Question, Read, Recite, Review), editáveis em
-  qualquer ordem. Notas podem ser associadas a um "Tema" (para os Meus Dashboards)
-  e filtradas por tema na lista.
-- **Meus Dashboards**: um dashboard não é uma grelha de widgets — é um agrupamento
-  lógico por tema (ex.: "Física", "Exame Final"). O nome do dashboard é usado como
-  "Tema" nas Notas e nos Esquemas Mentais, por isso cada dashboard tem dois botões —
-  "Notas" e "Esquemas" — que levam diretamente à Central de Notas ou ao Esquema Mental
-  já filtrados por esse tema (reaproveita a mesma lógica, sem duplicar código). Apagar
-  um dashboard nunca apaga o conteúdo — notas e esquemas só deixam de estar agrupados e
-  voltam a aparecer nas páginas gerais; o próprio dashboard vai para a Lixeira.
-- **Pomodoro**: cronómetro de foco/pausa com 4 modos — Clássico (25/5 fixo),
-  Customizado (durações à escolha), Fluxo (a pausa é sempre 1/5 do tempo que passaste
-  em foco) e Horas Líquidas (sem pausas cronometradas, só acumula tempo de estudo) — e 4
-  estilos visuais. O cronómetro corre no browser; o total acumulado de horas líquidas
-  fica guardado no servidor (sincronizado a cada 30s enquanto corre), para não se perder
-  mesmo que feches a aplicação a meio de uma sessão.
-- **Esquema Mental**: mini-editor de mapas mentais em SVG. Cada esquema tem uma galeria
-  própria (criar, renomear, filtrar por tema, remover) e um canvas onde se criam nós de
-  7 formas (retângulo, círculo, elipse, triângulo, losango, hexágono, estrela) com cor à
-  escolha, se arrastam livremente, se editam com duplo clique, e se ligam uns aos outros
-  em "Modo Ligar" (linha sólida/tracejada/pontilhada, seta num lado ou nos dois). Inclui
-  desfazer/refazer, zoom (roda do rato) e deslocação da vista (arrastar o fundo). O
-  conteúdo (nós e ligações) é guardado como um "snapshot" completo de cada vez —
-  automaticamente ao fim de 1,2s de inatividade e também ao sair do editor.
+**Study Tools**
+- **Study Plan**: personal goals with a deadline (e.g. "Review Maths by Friday") and a
+  content schedule by subject/topic. The "Overdue" status is never stored: it's always
+  calculated from the current date/time, so it never goes stale. Includes a progress
+  summary (% complete) and upcoming-deadline alerts (48h).
+- **Calendar**: a weekly study timetable in grid form (one block = day, start/end
+  time, subject, topic, status). Each subject automatically gets a consistent colour
+  from a rotating palette, and the page always highlights the next block about to
+  start.
+- **Notes Hub**: 7 note types, each with its own editor: free text (bold, italic,
+  underline, 4-colour highlight, font/size choice), checklist, flashcards
+  (question/answer), the Cornell method (keywords, notes, summary), the Quadrant
+  method (always 4 fixed blocks), Outline (hierarchical topics with automatic
+  numbering via Tab/Shift+Tab, up to 4 levels: I. → A. → 1. → a)) and SQ3R: active
+  reading in 5 sections (Survey, Question, Read, Recite, Review), editable in any
+  order. Notes can be linked to a "Theme" (for My Dashboards) and filtered by theme in
+  the list.
+- **My Dashboards**: a dashboard isn't a grid of widgets, it's a logical grouping by
+  theme (e.g. "Physics", "Final Exam"). The dashboard's name is used as the "Theme" in
+  Notes and Mind Maps, so each dashboard has two buttons, "Notes" and "Mind Maps",
+  which go straight to the Notes Hub or the Mind Map already filtered by that theme
+  (reusing the same logic, without duplicating code). Deleting a dashboard never
+  deletes its content: notes and mind maps simply stop being grouped and reappear on
+  the general pages; the dashboard itself goes to the Trash.
+- **Pomodoro**: a focus/break timer with 4 modes: Classic (fixed 25/5), Custom
+  (durations of your choice), Flow (the break is always 1/5 of the time spent focused)
+  and Net Hours (no timed breaks, just accumulates study time), and 4 visual styles.
+  The timer runs in the browser; the accumulated total of net hours is saved on the
+  server (synced every 30s while running), so it isn't lost even if you close the app
+  mid-session.
+- **Mind Map**: a mini SVG mind-mapping editor. Each mind map has its own gallery
+  (create, rename, filter by theme, remove) and a canvas where you create nodes in 7
+  shapes (rectangle, circle, ellipse, triangle, diamond, hexagon, star) in a colour of
+  your choice, drag them freely, edit them with a double click, and connect them to
+  each other in "Connect Mode" (solid/dashed/dotted line, an arrow on one or both
+  ends). Includes undo/redo, zoom (mouse wheel) and panning (drag the background). The
+  content (nodes and connections) is saved as a full "snapshot" each time:
+  automatically after 1.2s of inactivity, and also when leaving the editor.
 
-Eliminar um item em qualquer Ferramenta de Estudo nunca é definitivo de imediato — o
-item é guardado na Lixeira (`src/trash.py`), que pode ser gerida a partir de Configurações.
+Deleting an item in any Study Tool is never immediately permanent: the item is saved
+in the Trash (`src/trash.py`), which can be managed from Settings.
 
-**Configurações**
-- **Temas**: 10 temas de cores (6 claros, 4 escuros) e escolha de fonte, aplicados
-  instantaneamente a toda a app e guardados na base de dados (persistem entre sessões,
-  tanto na versão web como na janela de desktop).
-- **Conta**: conta local opcional (email, utilizador, palavra-passe) — a palavra-passe
-  nunca é guardada em texto simples (hash PBKDF2-HMAC-SHA256 com "salt" único por conta),
-  com validação de força em tempo real. Iniciar sessão nunca bloqueia o uso da app.
-- **Importar/Exportar**: exporta um backup JSON de tudo o que foi criado nas Ferramentas
-  de Estudo (metas, cronograma, calendário, notas, esquemas mentais); importar um backup
-  adiciona sempre registos novos, nunca substitui o que já existe. Inclui também uma
-  biblioteca de ficheiros importados (.txt/.pdf) com extração automática de texto, e um
-  histórico de todas as ações de import/export.
-- **Lixeira**: lista tudo o que foi eliminado nas Ferramentas de Estudo (metas,
-  cronograma, blocos do calendário, notas, dashboards, esquemas mentais), com restauro
-  (volta a ficar disponível na ferramenta de origem) ou eliminação definitiva.
+**Settings**
+- **Themes**: 10 colour themes (6 light, 4 dark) and font choice, applied instantly
+  across the whole app and saved in the database (persisting between sessions, both in
+  the web version and the desktop window).
+- **Account**: an optional local account (email, username, password): the password is
+  never stored as plain text (PBKDF2-HMAC-SHA256 hash with a unique salt per account),
+  with real-time strength validation. Signing in never blocks use of the app.
+- **Import/Export**: exports a JSON backup of everything created in the Study Tools
+  (goals, schedule, calendar, notes, mind maps); importing a backup always adds new
+  records, never replaces what already exists. Also includes a library of imported
+  files (.txt/.pdf) with automatic text extraction, and a history of all import/export
+  actions.
+- **Trash**: lists everything deleted in the Study Tools (goals, schedule, calendar
+  blocks, notes, dashboards, mind maps), with restore (becomes available again in its
+  original tool) or permanent deletion.
 
-O `js/main.js` mantém uma cache em memória dos dados já pedidos à API, para que trocar
-de secção seja imediato, sem repetir pedidos desnecessários.
+`js/main.js` keeps an in-memory cache of data already requested from the API, so
+switching sections is instant, without repeating unnecessary requests.
 
-A mesma interface está disponível de duas formas:
+The same interface is available in two forms:
 
-- **Janela de desktop** (`desktop_app.py`): usa [pywebview](https://pywebview.flowrl.com/)
-  para mostrar a interface numa janela nativa do sistema operativo. Por baixo, corre a
-  mesma API FastAPI num thread em segundo plano — a app fecha sozinha quando fechas a
-  janela.
-- **Página web** (`src/api.py` com `uvicorn`): a API serve os ficheiros de `web/`
-  diretamente (via `StaticFiles`), por isso a app fica toda disponível num único
-  endereço (`http://127.0.0.1:8000`), sem precisar de servidor separado para o
-  frontend. Se algum dia quiseres servir o frontend a partir de outro endereço/porta,
-  edita `API_BASE_URL` no topo de `web/js/api.js`.
+- **Desktop window** (`desktop_app.py`): uses [pywebview](https://pywebview.flowrl.com/)
+  to show the interface in a native operating-system window. Underneath, the same
+  FastAPI API runs in a background thread: the app closes itself when you close the
+  window.
+- **Web page** (`src/api.py` with `uvicorn`): the API serves the `web/` files directly
+  (via `StaticFiles`), so the whole app is available at a single address
+  (`http://127.0.0.1:8000`), without needing a separate server for the frontend. If
+  you ever want to serve the frontend from a different address/port, edit
+  `API_BASE_URL` at the top of `web/js/api.js`.
 
-## Licença
+## Licence
 
-Todos os direitos reservados. O código está publicamente visível (para fins de
-portefólio/avaliação académica), mas não há uma licença de código aberto —
-copiar, reutilizar ou redistribuir este código sem autorização não é permitido.
-O dataset usado (`data/raw/StudentsPerfomance.xlsx`) é o conjunto de dados
-público "Student Performance" (UCI Machine Learning Repository).
+All rights reserved. The code is publicly visible (for portfolio/academic assessment
+purposes), but there is no open-source licence: copying, reusing or redistributing
+this code without permission is not allowed. The dataset used
+(`data/raw/StudentsPerfomance.xlsx`) is the public "Student Performance" dataset (UCI
+Machine Learning Repository).
