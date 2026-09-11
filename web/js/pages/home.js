@@ -68,17 +68,17 @@ async function loadHomeHeroStats() {
     // Vai buscar as estatísticas gerais (usa cache para não repetir o pedido desnecessariamente).
     const stats = await cached("stats", Api.stats);
     renderHomeHeroStats(container, [
-      { label: "Estudantes analisados", value: `${stats.n_students}` },
-      { label: "Nota média (G3)", value: `${fmtNum(stats.average_grade)} / 20` },
-      { label: "Taxa de aprovação", value: fmtPct(stats.pass_rate) },
-      { label: "Ferramentas incluídas", value: "11" }, // valor fixo, não vem da API
+      { label: t("home_stat_students"), value: `${stats.n_students}` },
+      { label: t("home_stat_avg_grade"), value: `${fmtNum(stats.average_grade)} / 20` },
+      { label: t("home_stat_pass_rate"), value: fmtPct(stats.pass_rate) },
+      { label: t("home_stat_tools"), value: "11" }, // valor fixo, não vem da API
     ]);
   } catch (err) {
     console.error("Não foi possível carregar as estatísticas do Início:", err);
     // Sem dados do dataset, mostra pelo menos a contagem fixa de
     // ferramentas — a faixa nunca fica com skeletons presos para sempre.
     renderHomeHeroStats(container, [
-      { label: "Ferramentas incluídas", value: "11" },
+      { label: t("home_stat_tools"), value: "11" },
     ]);
   }
 }

@@ -49,7 +49,7 @@
          escuro"), e Enter/clicar num resultado abre-a logo — sem ser preciso
          saber em que grupo do menu está. -->
     <div class="sidebar-search" id="sidebar-search">
-      <input type="text" class="sidebar-search-input" id="sidebar-search-input" placeholder="Pesquisar página…" autocomplete="off" aria-label="Pesquisar página">
+      <input type="text" class="sidebar-search-input" id="sidebar-search-input" placeholder="Pesquisar página…" autocomplete="off" aria-label="Pesquisar página" data-i18n-placeholder="search_placeholder" data-i18n-title="search_aria">
       <svg class="sidebar-search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.3"></circle><line x1="10" y1="10" x2="14" y2="14"></line></svg>
       <div class="sidebar-search-results hidden" id="sidebar-search-results"></div>
     </div>
@@ -61,24 +61,24 @@
          clicável (.nav-section-label) que abre/fecha o grupo. -->
     <nav class="nav" id="nav">
       <button class="nav-item nav-item-home active" data-page="home">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8 8 2.5 14 8"></path><path d="M3.5 6.8V13.5h9V6.8"></path><path d="M6.3 13.5V9.8h3.4v3.7"></path></svg></span> <span class="nav-label">Início</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8 8 2.5 14 8"></path><path d="M3.5 6.8V13.5h9V6.8"></path><path d="M6.3 13.5V9.8h3.4v3.7"></path></svg></span> <span class="nav-label" data-i18n="nav_home">Início</span>
       </button>
-      <button class="nav-section-label" type="button" data-section="analise-dados" aria-expanded="true"><span>Análise de Dados</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <button class="nav-section-label" type="button" data-section="analise-dados" aria-expanded="true"><span data-i18n="nav_section_data">Análise de Dados</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
       <div class="nav-section-items" data-section-items="analise-dados">
       <button class="nav-item" data-page="overview">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span> <span class="nav-label">Visão Geral</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span> <span class="nav-label" data-i18n="nav_overview">Visão Geral</span>
       </button>
       <button class="nav-item" data-page="risk">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Fatores de Risco</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label" data-i18n="nav_risk">Fatores de Risco</span>
       </button>
       <button class="nav-item" data-page="profile">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span> <span class="nav-label">Perfil do Estudante</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span> <span class="nav-label" data-i18n="nav_profile">Perfil do Estudante</span>
       </button>
       <button class="nav-item" data-page="prediction">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Previsão de Notas</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label" data-i18n="nav_prediction">Previsão de Notas</span>
       </button>
       <button class="nav-item" data-page="data">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span> <span class="nav-label">Dados</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span> <span class="nav-label" data-i18n="nav_data">Dados</span>
       </button>
 
       </div>
@@ -86,22 +86,22 @@
            Dados" (entrada de novos estudantes), por isso o nome mudou para
            refletir as duas coisas: acompanhar e alimentar os dados dos
            estudantes. -->
-      <button class="nav-section-label" type="button" data-section="avisos-alertas" aria-expanded="true"><span>Gestão de Estudantes</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <button class="nav-section-label" type="button" data-section="avisos-alertas" aria-expanded="true"><span data-i18n="nav_section_students">Gestão de Estudantes</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
       <div class="nav-section-items" data-section-items="avisos-alertas">
       <button class="nav-item" data-page="adddata">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span> <span class="nav-label">Adicionar Dados</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span> <span class="nav-label" data-i18n="nav_adddata">Adicionar Dados</span>
       </button>
       <button class="nav-item" data-page="alerts">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span> <span class="nav-label">Avisos e Alertas</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span> <span class="nav-label" data-i18n="nav_alerts">Avisos e Alertas</span>
       </button>
       <button class="nav-item" data-page="segmentation">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span> <span class="nav-label">Segmentação de Perfis</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span> <span class="nav-label" data-i18n="nav_segmentation">Segmentação de Perfis</span>
       </button>
       <button class="nav-item" data-page="fichas">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span> <span class="nav-label">Fichas de Desempenho</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span> <span class="nav-label" data-i18n="nav_fichas">Fichas de Desempenho</span>
       </button>
       <button class="nav-item" data-page="optimizer">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span> <span class="nav-label">Otimizador de Estudo</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span> <span class="nav-label" data-i18n="nav_optimizer">Otimizador de Estudo</span>
       </button>
 
       </div>
@@ -112,28 +112,28 @@
            modelo novo — tudo à parte do dataset/modelos principais (ver
            src/custom_dataset.py). Mesmo padrão de menu com submenus
            colapsáveis já usado nos outros grupos acima. -->
-      <button class="nav-section-label" type="button" data-section="dataset-personalizado" aria-expanded="true"><span>Dataset Personalizado</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <button class="nav-section-label" type="button" data-section="dataset-personalizado" aria-expanded="true"><span data-i18n="nav_section_custom">Dataset Personalizado</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
       <div class="nav-section-items" data-section-items="dataset-personalizado">
       <button class="nav-item" data-page="customimport">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5V2.5"></path><path d="M4.8 5.7 8 2.5l3.2 3.2"></path><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"></path></svg></span> <span class="nav-label">Importar Dataset</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5V2.5"></path><path d="M4.8 5.7 8 2.5l3.2 3.2"></path><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"></path></svg></span> <span class="nav-label" data-i18n="nav_customimport">Importar Dataset</span>
       </button>
       <button class="nav-item" data-page="customstats">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="7"></line><line x1="8" y1="13" x2="8" y2="3"></line><line x1="13" y1="13" x2="13" y2="9.5"></line></svg></span> <span class="nav-label">Estatísticas &amp; Gráficos</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="7"></line><line x1="8" y1="13" x2="8" y2="3"></line><line x1="13" y1="13" x2="13" y2="9.5"></line></svg></span> <span class="nav-label" data-i18n="nav_customstats">Estatísticas &amp; Gráficos</span>
       </button>
       <button class="nav-item" data-page="custompredict">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.3"></circle><line x1="10.1" y1="10.1" x2="13.5" y2="13.5"></line></svg></span> <span class="nav-label">Previsões</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.3"></circle><line x1="10.1" y1="10.1" x2="13.5" y2="13.5"></line></svg></span> <span class="nav-label" data-i18n="nav_custompredict">Previsões</span>
       </button>
       <button class="nav-item" data-page="customtrain">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.3"></circle><path d="M8 2.6v1.7M8 11.7v1.7M13.4 8h-1.7M4.3 8H2.6M11.6 4.4l-1.2 1.2M5.6 10.4l-1.2 1.2M11.6 11.6l-1.2-1.2M5.6 5.6 4.4 4.4"></path></svg></span> <span class="nav-label">Treinar Modelo</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.3"></circle><path d="M8 2.6v1.7M8 11.7v1.7M13.4 8h-1.7M4.3 8H2.6M11.6 4.4l-1.2 1.2M5.6 10.4l-1.2 1.2M11.6 11.6l-1.2-1.2M5.6 5.6 4.4 4.4"></path></svg></span> <span class="nav-label" data-i18n="nav_customtrain">Treinar Modelo</span>
       </button>
       <button class="nav-item" data-page="customformula">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"></rect><line x1="2" y1="6.6" x2="14" y2="6.6"></line><line x1="5.6" y1="6.6" x2="5.6" y2="14"></line><line x1="10" y1="6.6" x2="10" y2="14"></line><circle cx="7.8" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="7.8" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Fórmulas Personalizadas</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"></rect><line x1="2" y1="6.6" x2="14" y2="6.6"></line><line x1="5.6" y1="6.6" x2="5.6" y2="14"></line><line x1="10" y1="6.6" x2="10" y2="14"></line><circle cx="7.8" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="7.8" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label" data-i18n="nav_customformula">Fórmulas Personalizadas</span>
       </button>
       </div>
-      <button class="nav-section-label" type="button" data-section="configuracoes" aria-expanded="true"><span>Configurações</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
+      <button class="nav-section-label" type="button" data-section="configuracoes" aria-expanded="true"><span data-i18n="nav_section_settings">Configurações</span><svg class="nav-section-chevron" viewBox="0 0 16 16" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"></polyline></svg></button>
       <div class="nav-section-items" data-section-items="configuracoes">
       <button class="nav-item" data-page="settings">
-        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label">Configurações</span>
+        <span class="nav-icon"><svg viewBox="0 0 16 16" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span> <span class="nav-label" data-i18n="nav_settings">Configurações</span>
       </button>
       </div>
     </nav>
@@ -153,7 +153,7 @@
       </div>
       <div id="sidebar-status" class="status-badge status-loading">A ligar à API…</div>
       <div id="sidebar-last-refresh" class="sidebar-last-refresh"></div>
-      <div class="sidebar-meta">Escala das notas: 0–20</div>
+      <div class="sidebar-meta" data-i18n="sidebar_meta">Escala das notas: 0–20</div>
     </div>
   </aside>
 
@@ -210,22 +210,22 @@
           </svg>
         </div>
         <div class="home-hero-content">
-          <span class="home-hero-eyebrow">Bem-vindo(a)</span>
+          <span class="home-hero-eyebrow" data-i18n="home_eyebrow">Bem-vindo(a)</span>
           <h1 class="home-hero-title">StudentPerfomance</h1>
-          <p class="home-hero-tagline"><span class="home-hero-tagline-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 6 8 3l6.5 3-6.5 3-6.5-3Z"></path><path d="M4.5 7.5v3c0 1 1.6 1.8 3.5 1.8s3.5-.8 3.5-1.8v-3"></path></svg></span>Desempenho Académico &amp; Hábitos de Estudo</p>
+          <p class="home-hero-tagline"><span class="home-hero-tagline-icon" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 6 8 3l6.5 3-6.5 3-6.5-3Z"></path><path d="M4.5 7.5v3c0 1 1.6 1.8 3.5 1.8s3.5-.8 3.5-1.8v-3"></path></svg></span><span data-i18n="home_tagline">Desempenho Académico &amp; Hábitos de Estudo</span></p>
 
-          <p class="home-hero-text">
+          <p class="home-hero-text" data-i18n="home_hero_text">
             Uma aplicação só tua para analisar desempenho escolar, prever notas a partir de hábitos de
             estudo e detetar sinais de risco — tudo num só sítio, a correr localmente no teu computador.
           </p>
           <ul class="home-hero-highlights">
-            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 9.8 5.8 14.5 6.3 11 9.3 12 14 8 11.6 4 14 5 9.3 1.5 6.3 6.2 5.8Z"></path></svg> Previsão com Machine Learning</li>
-            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2.5"></rect><path d="M5.5 8.3 7.3 10.2 10.8 6"></path></svg> 100% local e privado</li>
-            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.2"></circle><path d="M8 4.6v3.6l2.4 1.4"></path></svg> 11 ferramentas num só lugar</li>
+            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.5 9.8 5.8 14.5 6.3 11 9.3 12 14 8 11.6 4 14 5 9.3 1.5 6.3 6.2 5.8Z"></path></svg> <span data-i18n="home_highlight_1">Previsão com Machine Learning</span></li>
+            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="2.5"></rect><path d="M5.5 8.3 7.3 10.2 10.8 6"></path></svg> <span data-i18n="home_highlight_2">100% local e privado</span></li>
+            <li><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.2"></circle><path d="M8 4.6v3.6l2.4 1.4"></path></svg> <span data-i18n="home_highlight_3">11 ferramentas num só lugar</span></li>
           </ul>
           <div class="home-hero-actions">
-            <button class="btn-primary" type="button" data-goto="overview">Ver Visão Geral</button>
-            <button class="home-hero-btn-secondary" type="button" data-goto="optimizer">Organizar o meu estudo</button>
+            <button class="btn-primary" type="button" data-goto="overview" data-i18n="home_btn_overview">Ver Visão Geral</button>
+            <button class="home-hero-btn-secondary" type="button" data-goto="optimizer" data-i18n="home_btn_optimizer">Organizar o meu estudo</button>
           </div>
         </div>
         <!-- Skeletons cinza até loadHomeHeroStats (home.js) os substituir
@@ -239,7 +239,7 @@
         </div>
       </div>
 
-      <p class="home-intro">
+      <p class="home-intro" data-i18n="home_intro">
         A app é construída sobre um modelo de machine learning treinado num conjunto real de
         estudantes, que analisa dados, deteta fatores de risco, prevê notas e gera avisos automáticos.
         Explora por secção abaixo, ou usa o menu lateral a qualquer momento.
@@ -247,49 +247,49 @@
 
       <div class="home-section" style="--accent:#4F46E5">
         <div class="home-section-header">
-          <h2>Análise de Dados</h2>
-          <p>Indicadores, fatores de risco e previsão de notas com base no conjunto de estudantes analisado.</p>
+          <h2 data-i18n="nav_section_data">Análise de Dados</h2>
+          <p data-i18n="home_section_data_desc">Indicadores, fatores de risco e previsão de notas com base no conjunto de estudantes analisado.</p>
         </div>
         <div class="home-feature-grid">
           <button class="home-feature-card" type="button" data-goto="overview" style="--accent:#4F46E5">
             <span class="home-feature-icon" style="background:#4F46E5;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Visão Geral</span>
+              <span class="home-feature-title" data-i18n="nav_overview">Visão Geral</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Principais indicadores de desempenho académico do conjunto de estudantes analisado.</span>
+            <span class="home-feature-desc" data-i18n="overview_subtitle">Principais indicadores de desempenho académico do conjunto de estudantes analisado.</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="risk" style="--accent:#DC2626">
             <span class="home-feature-icon" style="background:#DC2626;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Fatores de Risco</span>
+              <span class="home-feature-title" data-i18n="nav_risk">Fatores de Risco</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Que hábitos e características estão mais associados a um pior (ou melhor) desempenho?</span>
+            <span class="home-feature-desc" data-i18n="risk_subtitle">Que hábitos e características estão mais associados a um pior (ou melhor) desempenho?</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="profile" style="--accent:#0EA5E9">
             <span class="home-feature-icon" style="background:#0EA5E9;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Perfil do Estudante</span>
+              <span class="home-feature-title" data-i18n="nav_profile">Perfil do Estudante</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Filtra o conjunto de estudantes e compara o subgrupo com a média geral.</span>
+            <span class="home-feature-desc" data-i18n="profile_subtitle">Filtra o conjunto de estudantes e compara o subgrupo com a média geral.</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="prediction" style="--accent:#059669">
             <span class="home-feature-icon" style="background:#059669;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Previsão de Notas</span>
+              <span class="home-feature-title" data-i18n="nav_prediction">Previsão de Notas</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Indica os hábitos de estudo para obter uma previsão de desempenho baseada nos dados analisados.</span>
+            <span class="home-feature-desc" data-i18n="home_card_prediction_desc">Indica os hábitos de estudo para obter uma previsão de desempenho baseada nos dados analisados.</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="data" style="--accent:#64748B">
             <span class="home-feature-icon" style="background:#64748B;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Dados</span>
+              <span class="home-feature-title" data-i18n="nav_data">Dados</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Explora o dataset completo, com filtros e formatação condicional por desempenho.</span>
+            <span class="home-feature-desc" data-i18n="data_subtitle">Explora o dataset completo, com filtros e formatação condicional por desempenho.</span>
           </button>
         </div>
       </div>
@@ -302,66 +302,66 @@
            cor (--accent) mudam. -->
       <div class="home-section" style="--accent:#D97706">
         <div class="home-section-header">
-          <h2>Gestão de Estudantes</h2>
-          <p>Adiciona novos estudantes ao dataset, acompanha sinais de atenção e age sobre os casos mais críticos.</p>
+          <h2 data-i18n="nav_section_students">Gestão de Estudantes</h2>
+          <p data-i18n="home_section_students_desc">Adiciona novos estudantes ao dataset, acompanha sinais de atenção e age sobre os casos mais críticos.</p>
         </div>
         <div class="home-feature-grid">
           <button class="home-feature-card" type="button" data-goto="adddata" style="--accent:#D97706">
             <span class="home-feature-icon" style="background:#D97706;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Adicionar Dados</span>
+              <span class="home-feature-title" data-i18n="nav_adddata">Adicionar Dados</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Adiciona um novo estudante ao dataset — a nota final é sempre prevista automaticamente pelo modelo.</span>
+            <span class="home-feature-desc" data-i18n="home_card_adddata_desc">Adiciona um novo estudante ao dataset — a nota final é sempre prevista automaticamente pelo modelo.</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="alerts" style="--accent:#D97706">
             <span class="home-feature-icon" style="background:#D97706;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Avisos e Alertas</span>
+              <span class="home-feature-title" data-i18n="nav_alerts">Avisos e Alertas</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Sinais de atenção gerados automaticamente a partir do estado atual dos dados.</span>
+            <span class="home-feature-desc" data-i18n="alerts_subtitle">Sinais de atenção gerados automaticamente a partir do estado atual dos dados.</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="segmentation" style="--accent:#7C3AED">
             <span class="home-feature-icon" style="background:#7C3AED;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Segmentação de Perfis</span>
+              <span class="home-feature-title" data-i18n="nav_segmentation">Segmentação de Perfis</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Agrupamento automático de estudantes com hábitos e desempenho semelhantes (K-Means).</span>
+            <span class="home-feature-desc" data-i18n="segmentation_subtitle">Agrupamento automático de estudantes com hábitos e desempenho semelhantes (K-Means).</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="fichas" style="--accent:#0891B2">
             <span class="home-feature-icon" style="background:#0891B2;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Fichas de Desempenho</span>
+              <span class="home-feature-title" data-i18n="nav_fichas">Fichas de Desempenho</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Gera um PDF individual por estudante, com uma recomendação baseada em comparações reais entre grupos.</span>
+            <span class="home-feature-desc" data-i18n="fichas_subtitle">Gera um PDF individual por estudante, com uma recomendação baseada em comparações reais entre grupos.</span>
           </button>
           <button class="home-feature-card" type="button" data-goto="optimizer" style="--accent:#059669">
             <span class="home-feature-icon" style="background:#059669;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Otimizador de Estudo</span>
+              <span class="home-feature-title" data-i18n="nav_optimizer">Otimizador de Estudo</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Indica um estudante e uma nota-alvo — a app calcula que mudanças de hábitos mais a aproximam.</span>
+            <span class="home-feature-desc" data-i18n="home_card_optimizer_desc">Indica um estudante e uma nota-alvo — a app calcula que mudanças de hábitos mais a aproximam.</span>
           </button>
         </div>
       </div>
 
       <div class="home-section" style="--accent:#64748B">
         <div class="home-section-header">
-          <h2>Configurações</h2>
-          <p>Personaliza a app e gere os teus dados.</p>
+          <h2 data-i18n="nav_settings">Configurações</h2>
+          <p data-i18n="home_section_settings_desc">Personaliza a app e gere os teus dados.</p>
         </div>
         <div class="home-feature-grid">
           <button class="home-feature-card" type="button" data-goto="settings" style="--accent:#64748B">
             <span class="home-feature-icon" style="background:#64748B;"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>
             <div class="home-feature-body">
-              <span class="home-feature-title">Configurações</span>
+              <span class="home-feature-title" data-i18n="nav_settings">Configurações</span>
               <span class="home-feature-arrow"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="8" x2="12" y2="8"></line><polyline points="8 4 12 8 8 12"></polyline></svg></span>
             </div>
-            <span class="home-feature-desc">Tema de cores e tipo de letra da aplicação.</span>
+            <span class="home-feature-desc" data-i18n="settings_subtitle">Tema de cores e tipo de letra da aplicação.</span>
           </button>
         </div>
       </div>
@@ -376,8 +376,8 @@
       <header class="page-header" style="--accent:#4F46E5">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg></span>
         <div class="page-header-text">
-          <h1>Visão Geral</h1>
-          <p>Principais indicadores de desempenho académico do conjunto de estudantes analisado.</p>
+          <h1 data-i18n="nav_overview">Visão Geral</h1>
+          <p data-i18n="overview_subtitle">Principais indicadores de desempenho académico do conjunto de estudantes analisado.</p>
         </div>
       </header>
 
@@ -419,8 +419,8 @@
       <header class="page-header" style="--accent:#DC2626">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2 14.5 13.5H1.5Z"></path><line x1="8" y1="6.5" x2="8" y2="9.3"></line><circle cx="8" cy="11.3" r="0.65" fill="currentColor" stroke="none"></circle></svg></span>
         <div class="page-header-text">
-          <h1>Fatores de Risco</h1>
-          <p>Que hábitos e características estão mais associados a um pior (ou melhor) desempenho?</p>
+          <h1 data-i18n="nav_risk">Fatores de Risco</h1>
+          <p data-i18n="risk_subtitle">Que hábitos e características estão mais associados a um pior (ou melhor) desempenho?</p>
         </div>
       </header>
 
@@ -523,8 +523,8 @@
       <header class="page-header" style="--accent:#0EA5E9">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="5.3" r="2.5"></circle><path d="M3 14c0-2.8 2.2-5 5-5s5 2.2 5 5"></path></svg></span>
         <div class="page-header-text">
-          <h1>Perfil do Estudante</h1>
-          <p>Filtra o conjunto de estudantes e compara o subgrupo com a média geral.</p>
+          <h1 data-i18n="nav_profile">Perfil do Estudante</h1>
+          <p data-i18n="profile_subtitle">Filtra o conjunto de estudantes e compara o subgrupo com a média geral.</p>
         </div>
       </header>
 
@@ -617,8 +617,8 @@
       <header class="page-header" style="--accent:#059669">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg></span>
         <div class="page-header-text">
-          <h1>Previsão de Notas</h1>
-          <p>Simulador "e se": ajusta os controlos abaixo e vê a previsão do modelo atualizar-se sozinha, em tempo real.</p>
+          <h1 data-i18n="nav_prediction">Previsão de Notas</h1>
+          <p data-i18n="prediction_subtitle">Simulador "e se": ajusta os controlos abaixo e vê a previsão do modelo atualizar-se sozinha, em tempo real.</p>
         </div>
       </header>
 
@@ -627,10 +627,10 @@
            previsão — prediction.js lê estes campos e atualiza os gauges e
            cartões abaixo em tempo real, sem submeter o formulário. -->
       <form class="card form-card" id="prediction-form">
-        <h4>Hábitos de estudo</h4>
+        <h4 data-i18n="pred_h_habits">Hábitos de estudo</h4>
         <div class="form-grid form-grid-3">
           <div class="field">
-            <label for="f-studytime">Tempo de estudo semanal</label>
+            <label for="f-studytime" data-i18n="pred_label_studytime">Tempo de estudo semanal</label>
             <select id="f-studytime">
               <option value="1">&lt; 2h</option>
               <option value="2" selected>2-5h</option>
@@ -639,11 +639,11 @@
             </select>
           </div>
           <div class="field">
-            <label for="f-absences">Nº de faltas</label>
+            <label for="f-absences" data-i18n="ad_form_faltas">Nº de faltas</label>
             <input type="number" id="f-absences" min="0" max="93" value="2">
           </div>
           <div class="field">
-            <label for="f-failures">Reprovações anteriores</label>
+            <label for="f-failures" data-i18n="ad_form_reprovacoes">Reprovações anteriores</label>
             <select id="f-failures">
               <option value="0" selected>0</option>
               <option value="1">1</option>
@@ -653,52 +653,52 @@
           </div>
         </div>
 
-        <h4>Estilo de vida</h4>
+        <h4 data-i18n="pred_h_lifestyle">Estilo de vida</h4>
         <div class="form-grid form-grid-4">
           <div class="field">
-            <label for="f-goout">Sair com amigos (1-5)</label>
+            <label for="f-goout" data-i18n="pred_label_goout">Sair com amigos (1-5)</label>
             <input type="range" id="f-goout" min="1" max="5" value="3">
             <output for="f-goout" id="f-goout-out">3</output>
           </div>
           <div class="field">
-            <label for="f-freetime">Tempo livre (1-5)</label>
+            <label for="f-freetime" data-i18n="pred_label_freetime">Tempo livre (1-5)</label>
             <input type="range" id="f-freetime" min="1" max="5" value="3">
             <output for="f-freetime" id="f-freetime-out">3</output>
           </div>
           <div class="field">
-            <label for="f-dalc">Álcool - dias úteis (1-5)</label>
+            <label for="f-dalc" data-i18n="pred_label_dalc">Álcool - dias úteis (1-5)</label>
             <input type="range" id="f-dalc" min="1" max="5" value="1">
             <output for="f-dalc" id="f-dalc-out">1</output>
           </div>
           <div class="field">
-            <label for="f-walc">Álcool - fim de semana (1-5)</label>
+            <label for="f-walc" data-i18n="pred_label_walc">Álcool - fim de semana (1-5)</label>
             <input type="range" id="f-walc" min="1" max="5" value="2">
             <output for="f-walc" id="f-walc-out">2</output>
           </div>
         </div>
 
-        <h4>Contexto</h4>
+        <h4 data-i18n="pred_h_context">Contexto</h4>
         <div class="form-grid form-grid-4">
           <label class="toggle-field">
             <input type="checkbox" id="f-internet" checked>
-            <span class="toggle-visual"></span> Tem internet em casa
+            <span class="toggle-visual"></span> <span data-i18n="pred_toggle_internet">Tem internet em casa</span>
           </label>
           <label class="toggle-field">
             <input type="checkbox" id="f-higher" checked>
-            <span class="toggle-visual"></span> Deseja estudo superior
+            <span class="toggle-visual"></span> <span data-i18n="pred_toggle_higher">Deseja estudo superior</span>
           </label>
           <label class="toggle-field">
             <input type="checkbox" id="f-schoolsup">
-            <span class="toggle-visual"></span> Apoio educativo extra
+            <span class="toggle-visual"></span> <span data-i18n="prediction_field_schoolsup">Apoio educativo extra</span>
           </label>
           <label class="toggle-field">
             <input type="checkbox" id="f-romantic">
-            <span class="toggle-visual"></span> Relação amorosa
+            <span class="toggle-visual"></span> <span data-i18n="prediction_field_romantic">Relação amorosa</span>
           </label>
         </div>
 
         <div class="prediction-form-footer">
-          <button type="submit" class="btn-primary">Recalcular agora</button>
+          <button type="submit" class="btn-primary" data-i18n="pred_recalc_btn">Recalcular agora</button>
           <span class="prediction-live-hint" id="prediction-live-status" aria-live="polite"></span>
         </div>
       </form>
@@ -710,7 +710,7 @@
       <div id="prediction-results" class="prediction-results hidden">
         <div class="grid-2">
           <div class="card gauge-card">
-            <h4>Nota final prevista</h4>
+            <h4 data-i18n="pred_gauge_grade_title">Nota final prevista</h4>
             <div class="gauge" id="gauge-grade">
               <div class="gauge-value" id="gauge-grade-value">–</div>
               <div class="gauge-label">/ 20</div>
@@ -719,7 +719,7 @@
             <p class="gauge-margin-note" id="gauge-grade-margin"></p>
           </div>
           <div class="card gauge-card">
-            <h4>Probabilidade de aprovação</h4>
+            <h4 data-i18n="pred_gauge_proba_title">Probabilidade de aprovação</h4>
             <div class="gauge" id="gauge-proba">
               <div class="gauge-value" id="gauge-proba-value">–</div>
               <div class="gauge-label">%</div>
@@ -729,44 +729,44 @@
         </div>
 
         <div class="card" id="prediction-save-card">
-          <h4>Guardar esta previsão para comparar depois</h4>
-          <p class="card-subtitle">Guarda o "antes" agora — quando tiveres a nota real, regista-a no histórico abaixo para veres se o modelo acertou.</p>
+          <h4 data-i18n="pred_save_card_title">Guardar esta previsão para comparar depois</h4>
+          <p class="card-subtitle" data-i18n="pred_save_card_subtitle">Guarda o "antes" agora — quando tiveres a nota real, regista-a no histórico abaixo para veres se o modelo acertou.</p>
           <div class="prediction-save-row">
-            <input type="text" id="prediction-save-label" placeholder="Ex.: Depois de aumentar o tempo de estudo (opcional)" maxlength="120">
-            <button type="button" class="btn-primary" id="prediction-save-btn">Guardar esta previsão</button>
+            <input type="text" id="prediction-save-label" data-i18n-placeholder="pred_save_label_placeholder" placeholder="Ex.: Depois de aumentar o tempo de estudo (opcional)" maxlength="120">
+            <button type="button" class="btn-primary" id="prediction-save-btn" data-i18n="pred_save_btn">Guardar esta previsão</button>
           </div>
           <p id="prediction-save-message" class="info-box hidden"></p>
         </div>
 
         <div class="card" id="scenario-compare-card">
-          <h4>Comparar cenários lado a lado</h4>
-          <p class="card-subtitle">Guarda até 3 cenários "e se" diferentes (ex.: "hábitos atuais", "mais horas de estudo", "sem faltas") e compara-os lado a lado, sem perder o cenário anterior a cada ajuste.</p>
+          <h4 data-i18n="pred_scenario_card_title">Comparar cenários lado a lado</h4>
+          <p class="card-subtitle" data-i18n="pred_scenario_card_subtitle">Guarda até 3 cenários "e se" diferentes (ex.: "hábitos atuais", "mais horas de estudo", "sem faltas") e compara-os lado a lado, sem perder o cenário anterior a cada ajuste.</p>
           <div class="prediction-save-row">
-            <input type="text" id="scenario-save-label" placeholder="Nome do cenário (opcional)" maxlength="60">
-            <button type="button" class="btn-primary" id="scenario-save-btn">Guardar cenário atual</button>
-            <button type="button" class="btn-small" id="scenario-clear-btn">Limpar cenários</button>
-            <button type="button" class="btn-small" id="scenario-export-btn">Exportar cenários (JSON)</button>
+            <input type="text" id="scenario-save-label" data-i18n-placeholder="pred_scenario_label_placeholder" placeholder="Nome do cenário (opcional)" maxlength="60">
+            <button type="button" class="btn-primary" id="scenario-save-btn" data-i18n="pred_scenario_save_btn">Guardar cenário atual</button>
+            <button type="button" class="btn-small" id="scenario-clear-btn" data-i18n="pred_scenario_clear_btn">Limpar cenários</button>
+            <button type="button" class="btn-small" id="scenario-export-btn" data-i18n="pred_scenario_export_btn">Exportar cenários (JSON)</button>
             <label class="btn-small" id="scenario-import-label" style="cursor:pointer;">
-              Importar cenário
+              <span data-i18n="pred_scenario_import_btn">Importar cenário</span>
               <input type="file" id="scenario-import-input" accept="application/json" hidden>
             </label>
           </div>
           <p id="scenario-save-message" class="info-box hidden"></p>
           <div class="table-wrap" id="scenario-compare-wrap">
-            <p class="card-subtitle">Ainda não guardaste nenhum cenário para comparar.</p>
+            <p class="card-subtitle" data-i18n="pred_scenario_empty">Ainda não guardaste nenhum cenário para comparar.</p>
           </div>
         </div>
 
         <div class="card" id="prediction-peers-card">
-          <h4>Como te comparas com estudantes reais parecidos contigo?</h4>
+          <h4 data-i18n="pred_peers_title">Como te comparas com estudantes reais parecidos contigo?</h4>
           <div class="peer-compare-grid">
             <div class="peer-compare-stat">
-              <span class="peer-compare-label">Nota média do grupo</span>
+              <span class="peer-compare-label" data-i18n="pred_peers_avg_grade">Nota média do grupo</span>
               <span class="peer-compare-value" id="peer-avg-grade">–</span>
               <span class="peer-compare-diff" id="peer-avg-grade-diff"></span>
             </div>
             <div class="peer-compare-stat">
-              <span class="peer-compare-label">Taxa de aprovação do grupo</span>
+              <span class="peer-compare-label" data-i18n="pred_peers_pass_rate">Taxa de aprovação do grupo</span>
               <span class="peer-compare-value" id="peer-pass-rate">–</span>
               <span class="peer-compare-diff" id="peer-pass-rate-diff"></span>
             </div>
@@ -775,43 +775,47 @@
         </div>
 
         <div class="card">
-          <h4>Recomendações baseadas nos dados</h4>
+          <h4 data-i18n="pred_recommendations_title">Recomendações baseadas nos dados</h4>
           <ul id="recommendations-list" class="recommendations-list"></ul>
         </div>
 
         <div class="card" id="examweek-card">
-          <h4>Checklist: última semana antes do exame</h4>
-          <p class="card-subtitle">As mudanças ainda possíveis em poucos dias, a partir dos teus valores atuais, ordenadas pelo impacto estimado na previsão.</p>
+          <h4 data-i18n="pred_examweek_title">Checklist: última semana antes do exame</h4>
+          <p class="card-subtitle" data-i18n="pred_examweek_subtitle">As mudanças ainda possíveis em poucos dias, a partir dos teus valores atuais, ordenadas pelo impacto estimado na previsão.</p>
           <ol id="examweek-checklist" class="examweek-checklist"></ol>
           <p id="examweek-message" class="card-subtitle"></p>
         </div>
 
         <div class="card" id="prediction-explain-card">
-          <h4>Porquê esta previsão?</h4>
-          <p class="prediction-explain-intro">
-            Para cada fator abaixo, o quanto o <strong>teu</strong> valor concreto — não o de toda a gente —
-            está a puxar a tua nota prevista para cima ou para baixo, face ao valor típico do dataset.
-          </p>
+          <h4 data-i18n="pred_explain_title">Porquê esta previsão?</h4>
+          <p class="prediction-explain-intro" data-i18n="pred_explain_intro">Para cada fator abaixo, o quanto o teu valor concreto — não o de toda a gente — está a puxar a tua nota prevista para cima ou para baixo, face ao valor típico do dataset.</p>
           <ul id="prediction-explain-list" class="prediction-explain-list"></ul>
         </div>
       </div>
 
-      <div id="prediction-placeholder" class="info-box hidden">
+      <div id="prediction-placeholder" class="info-box hidden" data-i18n="pred_placeholder_error">
         Não foi possível calcular uma previsão inicial. Confirma que a API está a correr e ajusta um dos campos acima para tentar novamente.
       </div>
 
       <div class="card" id="prediction-history-card">
-        <h3>Comparação Antes/Depois</h3>
-        <p class="card-subtitle">Previsões que guardaste e, quando disponível, a nota real que vieste a obter — para veres se o modelo acertou.</p>
+        <h3 data-i18n="pred_history_title">Comparação Antes/Depois</h3>
+        <p class="card-subtitle" data-i18n="pred_history_subtitle">Previsões que guardaste e, quando disponível, a nota real que vieste a obter — para veres se o modelo acertou.</p>
         <div id="validation-summary-wrap"></div>
         <div id="accuracy-trend-wrap" class="hidden">
-          <h4>Precisão do modelo ao longo do tempo</h4>
-          <p class="card-subtitle">Erro médio acumulado à medida que vais registando notas reais — mostra se a precisão do modelo se mantém estável com mais dados.</p>
+          <h4 data-i18n="pred_accuracy_title">Precisão do modelo ao longo do tempo</h4>
+          <p class="card-subtitle" data-i18n="pred_accuracy_subtitle">Erro médio acumulado à medida que vais registando notas reais — mostra se a precisão do modelo se mantém estável com mais dados.</p>
           <canvas id="accuracy-trend-chart" height="90"></canvas>
         </div>
         <div class="table-wrap">
           <table id="prediction-history-table">
-            <thead><tr><th>Guardada em</th><th>Rótulo</th><th>Previsto</th><th>Real</th><th>Resultado</th><th></th></tr></thead>
+            <thead><tr>
+              <th data-i18n="pred_table_saved_at">Guardada em</th>
+              <th data-i18n="pred_table_label">Rótulo</th>
+              <th data-i18n="pred_table_predicted">Previsto</th>
+              <th data-i18n="pred_table_actual">Real</th>
+              <th data-i18n="pred_table_result">Resultado</th>
+              <th></th>
+            </tr></thead>
             <tbody></tbody>
           </table>
         </div>
@@ -823,8 +827,8 @@
       <header class="page-header" style="--accent:#D97706">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg></span>
         <div class="page-header-text">
-          <h1>Avisos e Alertas</h1>
-          <p>Sinais de atenção gerados automaticamente a partir do estado atual dos dados.</p>
+          <h1 data-i18n="nav_alerts">Avisos e Alertas</h1>
+          <p data-i18n="alerts_subtitle">Sinais de atenção gerados automaticamente a partir do estado atual dos dados.</p>
         </div>
       </header>
 
@@ -856,8 +860,8 @@
       <header class="page-header" style="--accent:#7C3AED">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="8" r="4"></circle><circle cx="10" cy="8" r="4"></circle></svg></span>
         <div class="page-header-text">
-          <h1>Segmentação de Perfis</h1>
-          <p>Agrupamento automático de estudantes com hábitos e desempenho semelhantes (K-Means).</p>
+          <h1 data-i18n="nav_segmentation">Segmentação de Perfis</h1>
+          <p data-i18n="segmentation_subtitle">Agrupamento automático de estudantes com hábitos e desempenho semelhantes (K-Means).</p>
         </div>
       </header>
 
@@ -917,8 +921,8 @@
       <header class="page-header" style="--accent:#0891B2">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h5l3 3v9H4Z"></path><path d="M9 2v3h3"></path><line x1="6" y1="8.6" x2="11" y2="8.6"></line><line x1="6" y1="11" x2="11" y2="11"></line></svg></span>
         <div class="page-header-text">
-          <h1>Fichas de Desempenho</h1>
-          <p>Gera um PDF individual por estudante, com uma recomendação baseada em comparações reais entre grupos.</p>
+          <h1 data-i18n="nav_fichas">Fichas de Desempenho</h1>
+          <p data-i18n="fichas_subtitle">Gera um PDF individual por estudante, com uma recomendação baseada em comparações reais entre grupos.</p>
         </div>
       </header>
 
@@ -952,8 +956,8 @@
       <header class="page-header" style="--accent:#059669">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2.5,11.5 6.5,7.5 9,10 13.5,4.5"></polyline><polyline points="10,4.5 13.5,4.5 13.5,8"></polyline></svg></span>
         <div class="page-header-text">
-          <h1>Otimizador de Estudo</h1>
-          <p>Indica um estudante e uma nota-alvo — a app calcula que mudanças de hábitos (tempo de estudo, saídas, faltas, álcool) mais aproximam essa nota, usando o modelo de previsão já treinado.</p>
+          <h1 data-i18n="nav_optimizer">Otimizador de Estudo</h1>
+          <p data-i18n="optimizer_subtitle">Indica um estudante e uma nota-alvo — a app calcula que mudanças de hábitos (tempo de estudo, saídas, faltas, álcool) mais aproximam essa nota, usando o modelo de previsão já treinado.</p>
         </div>
       </header>
 
@@ -1046,8 +1050,8 @@
       <header class="page-header" style="--accent:#64748B">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4.5" x2="13" y2="4.5"></line><circle cx="6" cy="4.5" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="8" x2="13" y2="8"></line><circle cx="10" cy="8" r="1.2" fill="currentColor" stroke="none"></circle><line x1="3" y1="11.5" x2="13" y2="11.5"></line><circle cx="7" cy="11.5" r="1.2" fill="currentColor" stroke="none"></circle></svg></span>
         <div class="page-header-text">
-          <h1>Configurações</h1>
-          <p>Tema de cores e tipo de letra da aplicação.</p>
+          <h1 data-i18n="nav_settings">Configurações</h1>
+          <p data-i18n="settings_subtitle">Tema de cores e tipo de letra da aplicação.</p>
         </div>
       </header>
 
@@ -1063,6 +1067,23 @@
         <div class="field" style="max-width:260px;">
           <label for="font-select">Tipo de letra da aplicação</label>
           <select id="font-select"></select>
+        </div>
+      </div>
+
+      <!-- Idioma: alterna a interface estática (menu, cabeçalhos, assistente)
+           entre português e inglês europeu — ver web/js/i18n.js. A escolha
+           fica em localStorage e aplica-se de imediato, sem recarregar. -->
+      <div class="card">
+        <h3 data-i18n="settings_language_label">Idioma</h3>
+        <div class="theme-grid" id="language-grid" style="max-width:420px;">
+          <div class="theme-option" data-lang-id="pt">
+            <div class="theme-option-name" data-i18n="settings_language_pt">Português</div>
+            <div class="theme-option-mode">PT</div>
+          </div>
+          <div class="theme-option" data-lang-id="en">
+            <div class="theme-option-name" data-i18n="settings_language_en">Inglês</div>
+            <div class="theme-option-mode">EN</div>
+          </div>
         </div>
       </div>
 
@@ -1125,8 +1146,8 @@
       <header class="page-header" style="--accent:#D97706">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6"></circle><line x1="8" y1="5" x2="8" y2="11"></line><line x1="5" y1="8" x2="11" y2="8"></line></svg></span>
         <div class="page-header-text">
-          <h1>Adicionar Dados</h1>
-          <p>Adiciona um novo estudante ao dataset — a nota final (G3) é sempre prevista automaticamente pelo modelo, nunca inserida manualmente. Todos os campos são opcionais: à medida que vais preenchendo, a app sugere valores prováveis para os restantes campos com base em estudantes semelhantes (clica na sugestão para a usar); o que deixares em branco sem escolher sugestão é preenchido com um valor típico do conjunto de dados atual.</p>
+          <h1 data-i18n="nav_adddata">Adicionar Dados</h1>
+          <p data-i18n="adddata_subtitle">Adiciona um novo estudante ao dataset — a nota final (G3) é sempre prevista automaticamente pelo modelo, nunca inserida manualmente. Todos os campos são opcionais: à medida que vais preenchendo, a app sugere valores prováveis para os restantes campos com base em estudantes semelhantes (clica na sugestão para a usar); o que deixares em branco sem escolher sugestão é preenchido com um valor típico do conjunto de dados atual.</p>
         </div>
       </header>
 
@@ -1141,12 +1162,12 @@
       <form class="card form-card" id="adddata-form">
         <div class="form-grid form-grid-4">
           <div class="field">
-            <label for="ad-nome">Nome</label>
-            <input type="text" id="ad-nome" placeholder="Opcional" maxlength="120" autocomplete="off">
+            <label for="ad-nome" data-i18n="ad_form_nome">Nome</label>
+            <input type="text" id="ad-nome" data-i18n-placeholder="ad_form_placeholder_optional" placeholder="Opcional" maxlength="120" autocomplete="off">
           </div>
           <div class="field">
-            <label for="ad-disciplina">Disciplina / Matéria</label>
-            <input type="text" id="ad-disciplina" list="ad-disciplina-list" placeholder="Pesquisar ou escrever..." maxlength="80" autocomplete="off">
+            <label for="ad-disciplina" data-i18n="ad_form_disciplina">Disciplina / Matéria</label>
+            <input type="text" id="ad-disciplina" list="ad-disciplina-list" data-i18n-placeholder="ad_form_placeholder_search_or_type" placeholder="Pesquisar ou escrever..." maxlength="80" autocomplete="off">
             <datalist id="ad-disciplina-list">
               <option value="Matemática"></option>
               <option value="Português"></option>
@@ -1163,8 +1184,8 @@
             </datalist>
           </div>
           <div class="field">
-            <label for="ad-ano">Ano/nível escolar</label>
-            <input type="text" id="ad-ano" list="ad-ano-list" placeholder="Pesquisar ou escrever..." maxlength="40" autocomplete="off">
+            <label for="ad-ano" data-i18n="ad_form_ano">Ano/nível escolar</label>
+            <input type="text" id="ad-ano" list="ad-ano-list" data-i18n-placeholder="ad_form_placeholder_search_or_type" placeholder="Pesquisar ou escrever..." maxlength="40" autocomplete="off">
             <datalist id="ad-ano-list">
               <option value="7º ano"></option>
               <option value="8º ano"></option>
@@ -1178,7 +1199,7 @@
             </datalist>
           </div>
           <div class="field">
-            <label for="ad-school">Escola</label>
+            <label for="ad-school" data-i18n="ad_form_escola">Escola</label>
             <select id="ad-school">
               <option value="" selected>—</option>
               <option value="GP">GP</option>
@@ -1187,7 +1208,7 @@
             <button type="button" class="field-suggestion hidden" id="ad-school-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-sex">Sexo</label>
+            <label for="ad-sex" data-i18n="ad_form_sexo">Sexo</label>
             <select id="ad-sex">
               <option value="" selected>—</option>
               <option value="F">F</option>
@@ -1196,12 +1217,12 @@
             <button type="button" class="field-suggestion hidden" id="ad-sex-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-age">Idade</label>
-            <input type="number" id="ad-age" min="15" max="22" placeholder="Opcional">
+            <label for="ad-age" data-i18n="ad_form_idade">Idade</label>
+            <input type="number" id="ad-age" min="15" max="22" data-i18n-placeholder="ad_form_placeholder_optional" placeholder="Opcional">
             <button type="button" class="field-suggestion hidden" id="ad-age-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-studytime">Tempo de estudo</label>
+            <label for="ad-studytime" data-i18n="ad_form_tempo_estudo">Tempo de estudo</label>
             <select id="ad-studytime">
               <option value="" selected>—</option>
               <option value="1">&lt; 2h</option>
@@ -1212,12 +1233,12 @@
             <button type="button" class="field-suggestion hidden" id="ad-studytime-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-absences">Nº de faltas</label>
-            <input type="number" id="ad-absences" min="0" max="93" placeholder="Opcional">
+            <label for="ad-absences" data-i18n="ad_form_faltas">Nº de faltas</label>
+            <input type="number" id="ad-absences" min="0" max="93" data-i18n-placeholder="ad_form_placeholder_optional" placeholder="Opcional">
             <button type="button" class="field-suggestion hidden" id="ad-absences-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-failures">Reprovações anteriores</label>
+            <label for="ad-failures" data-i18n="ad_form_reprovacoes">Reprovações anteriores</label>
             <select id="ad-failures">
               <option value="" selected>—</option>
               <option value="0">0</option>
@@ -1228,13 +1249,13 @@
             <button type="button" class="field-suggestion hidden" id="ad-failures-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-g1">Nota 1º período (G1)</label>
-            <input type="number" id="ad-g1" min="0" max="20" placeholder="Opcional">
+            <label for="ad-g1" data-i18n="ad_form_g1">Nota 1º período (G1)</label>
+            <input type="number" id="ad-g1" min="0" max="20" data-i18n-placeholder="ad_form_placeholder_optional" placeholder="Opcional">
             <button type="button" class="field-suggestion hidden" id="ad-g1-suggestion"></button>
           </div>
           <div class="field">
-            <label for="ad-g2">Nota 2º período (G2)</label>
-            <input type="number" id="ad-g2" min="0" max="20" placeholder="Opcional">
+            <label for="ad-g2" data-i18n="ad_form_g2">Nota 2º período (G2)</label>
+            <input type="number" id="ad-g2" min="0" max="20" data-i18n-placeholder="ad_form_placeholder_optional" placeholder="Opcional">
             <button type="button" class="field-suggestion hidden" id="ad-g2-suggestion"></button>
           </div>
         </div>
@@ -1251,26 +1272,26 @@
              submeter. -->
         <div id="adddata-warnings" class="hidden"></div>
 
-        <button type="submit" class="btn-primary">Adicionar ao Dataset</button>
+        <button type="submit" class="btn-primary" data-i18n="ad_form_submit_btn">Adicionar ao Dataset</button>
       </form>
 
       <div id="adddata-result" class="card hidden">
-        <h3>Estudante adicionado</h3>
+        <h3 data-i18n="ad_result_title">Estudante adicionado</h3>
         <div id="adddata-result-body"></div>
       </div>
 
       <!-- Importação em lote via CSV: mesmas colunas do formulário acima,
            processada de uma vez pelo backend (ver bulk_import.py). -->
       <div class="card" id="adddata-bulk-card">
-        <h3>Importar vários estudantes de uma vez (CSV)</h3>
-        <p class="form-help-text">
+        <h3 data-i18n="ad_bulk_title">Importar vários estudantes de uma vez (CSV)</h3>
+        <p class="form-help-text" data-i18n="ad_bulk_help">
           Carrega um ficheiro CSV com uma linha por estudante (colunas: school, sex, age,
           studytime, absences, failures, G1, G2, nome, disciplina, ano — todas opcionais,
           tal como no formulário acima). A nota final (G3) é sempre prevista automaticamente.
         </p>
         <div class="bulk-import-controls">
           <input type="file" id="ad-bulk-file" accept=".csv,text/csv">
-          <button type="button" class="btn-primary" id="ad-bulk-submit">Importar CSV</button>
+          <button type="button" class="btn-primary" id="ad-bulk-submit" data-i18n="ad_bulk_submit_btn">Importar CSV</button>
         </div>
         <div id="adddata-bulk-result" class="hidden"></div>
       </div>
@@ -1281,8 +1302,8 @@
       <header class="page-header" style="--accent:#64748B">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3" width="11" height="10" rx="1.4"></rect><line x1="2.5" y1="6.3" x2="13.5" y2="6.3"></line><line x1="2.5" y1="9.6" x2="13.5" y2="9.6"></line></svg></span>
         <div class="page-header-text">
-          <h1>Dados</h1>
-          <p>Explora o dataset completo, com filtros e formatação condicional por desempenho.</p>
+          <h1 data-i18n="nav_data">Dados</h1>
+          <p data-i18n="data_subtitle">Explora o dataset completo, com filtros e formatação condicional por desempenho.</p>
         </div>
       </header>
 
@@ -1350,8 +1371,8 @@
       <header class="page-header" style="--accent:#0D9488">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10.5V2.5"></path><path d="M4.8 5.7 8 2.5l3.2 3.2"></path><path d="M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"></path></svg></span>
         <div class="page-header-text">
-          <h1>Importar Dataset</h1>
-          <p>Carrega qualquer ficheiro teu (CSV ou Excel) — dados de estudantes ou não, ex.: vendas, notas de outra disciplina, o que precisares. É importado tal como está, com as colunas originais, sem teres de o adaptar a nenhum esquema fixo. Fica guardado numa área totalmente separada — nunca substitui nem mistura com o dataset principal da app.</p>
+          <h1 data-i18n="nav_customimport">Importar Dataset</h1>
+          <p data-i18n="customimport_subtitle">Carrega qualquer ficheiro teu (CSV ou Excel) — dados de estudantes ou não, ex.: vendas, notas de outra disciplina, o que precisares. É importado tal como está, com as colunas originais, sem teres de o adaptar a nenhum esquema fixo. Fica guardado numa área totalmente separada — nunca substitui nem mistura com o dataset principal da app.</p>
         </div>
       </header>
 
@@ -1384,8 +1405,8 @@
       <header class="page-header" style="--accent:#0EA5E9">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="7"></line><line x1="8" y1="13" x2="8" y2="3"></line><line x1="13" y1="13" x2="13" y2="9.5"></line></svg></span>
         <div class="page-header-text">
-          <h1>Estatísticas &amp; Gráficos</h1>
-          <p>Estatísticas descritivas calculadas sobre o dataset personalizado importado — uma entrada por cada coluna do teu ficheiro (numérica ou categórica, decidido automaticamente), e, se o dataset tiver uma coluna de "nota final" detetada automaticamente, também os indicadores e gráficos da Visão Geral principal, como bónus.</p>
+          <h1 data-i18n="nav_customstats">Estatísticas &amp; Gráficos</h1>
+          <p data-i18n="customstats_subtitle">Estatísticas descritivas calculadas sobre o dataset personalizado importado — uma entrada por cada coluna do teu ficheiro (numérica ou categórica, decidido automaticamente), e, se o dataset tiver uma coluna de "nota final" detetada automaticamente, também os indicadores e gráficos da Visão Geral principal, como bónus.</p>
         </div>
       </header>
 
@@ -1425,8 +1446,8 @@
       <header class="page-header" style="--accent:#8B5CF6">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.3"></circle><line x1="10.1" y1="10.1" x2="13.5" y2="13.5"></line></svg></span>
         <div class="page-header-text">
-          <h1>Previsões</h1>
-          <p>Corre o modelo de previsão PRINCIPAL (já treinado sobre o dataset original) em cada linha do teu dataset personalizado — só disponível quando o ficheiro tem colunas suficientes parecidas com as de estudantes (idade, sexo, tempo de estudo, faltas, etc.), detetadas automaticamente pelo nome. Campos que não existam no teu ficheiro são preenchidos automaticamente com valores típicos, tal como no Simulador.</p>
+          <h1 data-i18n="nav_custompredict">Previsões</h1>
+          <p data-i18n="custompredict_subtitle">Corre o modelo de previsão PRINCIPAL (já treinado sobre o dataset original) em cada linha do teu dataset personalizado — só disponível quando o ficheiro tem colunas suficientes parecidas com as de estudantes (idade, sexo, tempo de estudo, faltas, etc.), detetadas automaticamente pelo nome. Campos que não existam no teu ficheiro são preenchidos automaticamente com valores típicos, tal como no Simulador.</p>
         </div>
       </header>
 
@@ -1455,8 +1476,8 @@
       <header class="page-header" style="--accent:#EA580C">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="2.3"></circle><path d="M8 2.6v1.7M8 11.7v1.7M13.4 8h-1.7M4.3 8H2.6M11.6 4.4l-1.2 1.2M5.6 10.4l-1.2 1.2M11.6 11.6l-1.2-1.2M5.6 5.6 4.4 4.4"></path></svg></span>
         <div class="page-header-text">
-          <h1>Treinar Modelo</h1>
-          <p>Treina um modelo de Machine Learning novo e genérico sobre o teu dataset — escolhe a coluna que queres prever (o "alvo") e as colunas a usar para prever (os "recursos"). Funciona com qualquer dataset, não só dados de estudantes: regressão se o alvo for numérico, classificação se for categórico. Guardado à parte, nunca substitui os modelos principais da app.</p>
+          <h1 data-i18n="nav_customtrain">Treinar Modelo</h1>
+          <p data-i18n="customtrain_subtitle">Treina um modelo de Machine Learning novo e genérico sobre o teu dataset — escolhe a coluna que queres prever (o "alvo") e as colunas a usar para prever (os "recursos"). Funciona com qualquer dataset, não só dados de estudantes: regressão se o alvo for numérico, classificação se for categórico. Guardado à parte, nunca substitui os modelos principais da app.</p>
         </div>
       </header>
 
@@ -1492,8 +1513,8 @@
       <header class="page-header" style="--accent:#DB2777">
         <span class="page-header-icon"><svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"></rect><line x1="2" y1="6.6" x2="14" y2="6.6"></line><line x1="5.6" y1="6.6" x2="5.6" y2="14"></line><line x1="10" y1="6.6" x2="10" y2="14"></line><circle cx="7.8" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="9.4" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="7.8" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle><circle cx="12.2" cy="11.9" r="0.6" fill="currentColor" stroke="none"></circle></svg></span>
         <div class="page-header-text">
-          <h1>Fórmulas Personalizadas</h1>
-          <p>Escreve a tua própria fórmula sobre o dataset personalizado — cria uma coluna calculada (um valor por estudante) ou obtém um único resultado (uma média, soma, etc.), à tua escolha.</p>
+          <h1 data-i18n="nav_customformula">Fórmulas Personalizadas</h1>
+          <p data-i18n="customformula_subtitle">Escreve a tua própria fórmula sobre o dataset personalizado — cria uma coluna calculada (um valor por estudante) ou obtém um único resultado (uma média, soma, etc.), à tua escolha.</p>
         </div>
       </header>
 
@@ -1536,30 +1557,30 @@
      scroll/overflow do conteúdo) — ver src/chatbot.py no backend: responde
      sempre com dados reais e atuais do dataset, sem LLM externo nem ligação
      à internet. -->
-<button type="button" class="chatbot-fab" id="chatbot-fab" title="Assistente da StudentPerfomance" aria-label="Abrir assistente da StudentPerfomance">
+<button type="button" class="chatbot-fab" id="chatbot-fab" title="Assistente da StudentPerfomance" aria-label="Abrir assistente da StudentPerfomance" data-i18n-title="chatbot_fab_aria">
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"></path></svg>
   <span class="chatbot-fab-badge hidden" id="chatbot-fab-badge"></span>
 </button>
 
-<div class="chatbot-panel hidden" id="chatbot-panel" role="dialog" aria-label="Assistente da StudentPerfomance">
+<div class="chatbot-panel hidden" id="chatbot-panel" role="dialog" aria-label="Assistente da StudentPerfomance" data-i18n-title="chatbot_title">
   <div class="chatbot-panel-header">
     <div class="chatbot-panel-title">
       <span class="chatbot-panel-title-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"></path></svg>
       </span>
       <div>
-        <div class="chatbot-panel-title-text">Assistente da StudentPerfomance</div>
-        <div class="chatbot-panel-subtitle">Baseado em regras · 100% local, sem internet</div>
+        <div class="chatbot-panel-title-text" data-i18n="chatbot_title">Assistente da StudentPerfomance</div>
+        <div class="chatbot-panel-subtitle" data-i18n="chatbot_subtitle">Baseado em regras · 100% local, sem internet</div>
       </div>
     </div>
-    <button type="button" class="chatbot-panel-close" id="chatbot-panel-close" aria-label="Fechar assistente">&times;</button>
+    <button type="button" class="chatbot-panel-close" id="chatbot-panel-close" aria-label="Fechar assistente" data-i18n-title="chatbot_close_aria">&times;</button>
   </div>
 
   <div class="chatbot-messages" id="chatbot-messages" aria-live="polite"></div>
 
   <form class="chatbot-input-row" id="chatbot-form">
-    <input type="text" id="chatbot-input" placeholder="Escreve a tua pergunta…" maxlength="300" autocomplete="off" aria-label="Escreve a tua pergunta">
-    <button type="submit" class="btn-primary" id="chatbot-send-btn">Enviar</button>
+    <input type="text" id="chatbot-input" placeholder="Escreve a tua pergunta…" maxlength="300" autocomplete="off" aria-label="Escreve a tua pergunta" data-i18n-placeholder="chatbot_input_placeholder" data-i18n-title="chatbot_input_aria">
+    <button type="submit" class="btn-primary" id="chatbot-send-btn" data-i18n="chatbot_send_btn">Enviar</button>
   </form>
 </div>
 
@@ -1572,6 +1593,7 @@
      overview.js, risk.js, ...), cada um regista-se no router via
      registerPage; 5) chatbot.js por último, pois o widget é independente
      das páginas e só precisa de api.js. -->
+<script src="js/i18n.js"></script>
 <script src="js/vendor/chart.umd.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>

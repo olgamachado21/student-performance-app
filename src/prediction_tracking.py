@@ -19,6 +19,7 @@ from datetime import datetime
 import pandas as pd
 
 from src import database
+from src.i18n import t, plural_en, normalize_lang
 
 # Nome da tabela na base de dados onde ficam guardadas as previsões "fotografadas".
 SNAPSHOT_TABLE = "Prediction_Snapshots"
@@ -76,19 +77,24 @@ def _row_to_dict(row: pd.Series) -> dict:
     return d
 
 
-def save_snapshot(prediction_result: dict, habits: dict, label: str = "") -> dict:
+def save_snapshot(prediction_result: dict, habits: dict, label: str = "", lang: str | None = None) -> dict:
     """
     Guarda uma previsão como ponto de partida para comparação futura.
     Usa a previsão "completa" (com G1/G2) quando disponível, senão a de
     hábitos — a mesma prioridade de leitura já usada no ecrã do Simulador.
     """
+    lang = normalize_lang(lang)
     # Escolhe qual variante da previsão usar, com a mesma prioridade do Simulador.
     if "nota_prevista_completa" in prediction_result:
         predicted = prediction_result["nota_prevista_completa"]
     elif "nota_prevista_habitos" in prediction_result:
         predicted = prediction_result["nota_prevista_habitos"]
     else:
-        raise ValueError("Resultado de previsão inválido: falta 'nota_prevista_habitos' ou 'nota_prevista_completa'.")
+        raise ValueError(t(
+            lang,
+            "Resultado de previsão inválido: falta 'nota_prevista_habitos' ou 'nota_prevista_completa'.",
+            "Invalid prediction result: missing 'nota_prevista_habitos' or 'nota_prevista_completa'.",
+        ))
 
     df = _load()
     # Novo registo, ainda sem nota real (fica preenchida mais tarde, quando disponível).
@@ -119,15 +125,20 @@ def get_snapshots() -> list[dict]:
     return sorted(items, key=lambda i: i["created_at"], reverse=True)
 
 
-def record_actual_grade(snapshot_id: int, actual_grade: float) -> dict:
+def record_actual_grade(snapshot_id: int, actual_grade: float, lang: str | None = None) -> dict:
     """Regista a nota real obtida, associando-a a uma previsão guardada anteriormente."""
+    lang = normalize_lang(lang)
     # Valida que a nota está dentro da escala válida (0-20).
     if not (0 <= actual_grade <= 20):
-        raise ValueError("A nota real tem de estar entre 0 e 20.")
+        raise ValueError(t(lang, "A nota real tem de estar entre 0 e 20.", "The actual grade must be between 0 and 20."))
     df = _load()
     # Verifica que a previsão indicada realmente existe antes de tentar atualizá-la.
     if df.empty or snapshot_id not in set(df["id"]):
-        raise ValueError(f"Previsão {snapshot_id} não encontrada.")
+        raise ValueError(t(
+            lang,
+            f"Previsão {snapshot_id} não encontrada.",
+            f"Prediction {snapshot_id} not found.",
+        ))
     # Encontra a linha correspondente a este id e atualiza-a.
     idx = df.index[df["id"] == snapshot_id][0]
     df.at[idx, "actual_grade"] = actual_grade
@@ -136,7 +147,7 @@ def record_actual_grade(snapshot_id: int, actual_grade: float) -> dict:
     return _row_to_dict(df.loc[idx])
 
 
-def get_validation_summary() -> dict:
+def get_validation_summary(lang: str | None = None) -> dict:
     """
     Valida o modelo com dados REAIS do próprio utilizador, não só com o
     dataset histórico de treino: agrega todas as previsões guardadas que já
@@ -147,13 +158,22 @@ def get_validation_summary() -> dict:
     do modelo eram métricas calculadas sobre dados históricos; isto fecha o
     ciclo com previsões e resultados reais deste utilizador.
     """
+    lang = normalize_lang(lang)
     # Só interessam as previsões que já têm nota real registada.
     validated = [s for s in get_snapshots() if s["actual_grade"] is not None]
     if not validated:
         return {
             "n_validated": 0,
             "has_data": False,
-            "message": "Ainda não há previsões guardadas com nota real registada — guarda uma previsão no Simulador e regista a nota real mais tarde para começares a validar o modelo com dados próprios.",
+            "message": t(
+                lang,
+                "Ainda não há previsões guardadas com nota real registada — guarda uma "
+                "previsão no Simulador e regista a nota real mais tarde para começares a "
+                "validar o modelo com dados próprios.",
+                "There are no saved predictions with a recorded actual grade yet — save a "
+                "prediction in the Simulator and record the actual grade later to start "
+                "validating the model with your own data.",
+            ),
         }
 
     # Erro absoluto de cada previsão validada (diferença entre real e previsto, sem sinal).
@@ -174,9 +194,12 @@ def get_validation_summary() -> dict:
         "real_world_mae": mae,
         "real_world_rmse": rmse,
         "status_counts": status_counts,
-        "message": (
+        "message": t(
+            lang,
             f"{len(validated)} previsão(ões) validada(s) com nota real — erro médio real "
-            f"de {mae} valores nesta amostra."
+            f"de {mae} valores nesta amostra.",
+            f"{len(validated)} {plural_en(len(validated), 'prediction')} validated with an actual "
+            f"grade — real-world average error of {mae} points in this sample.",
         ),
     }
 

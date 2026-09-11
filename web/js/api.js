@@ -82,17 +82,21 @@ const Api = {
   // -- Endpoints simples (sem parâmetros) ----------------------------------
   health: () => Api._get("/health"),
   meta: () => Api._get("/meta"),
-  stats: () => Api._get("/stats"),
+  // "?lang=" segue sempre o idioma atual da interface (ver getLanguage() em
+  // i18n.js) — controla só o texto devolvido pela API (resumos, alertas,
+  // mensagens do otimizador/chatbot, PDFs, CSV); os dados numéricos em si
+  // são sempre os mesmos, independentemente do idioma.
+  stats: () => Api._get(`/stats?lang=${getLanguage()}`),
   gradeDistribution: () => Api._get("/grade-distribution"),
   passFailCounts: () => Api._get("/pass-fail-counts"),
   correlations: () => Api._get("/correlations"),
   // scatter: pontos (x,y) + regressão simples entre duas variáveis à escolha.
-  scatter: (x, y) => Api._get(`/scatter?x=${encodeURIComponent(x)}&y=${encodeURIComponent(y)}`),
+  scatter: (x, y) => Api._get(`/scatter?x=${encodeURIComponent(x)}&y=${encodeURIComponent(y)}&lang=${getLanguage()}`),
   featureImportance: () => Api._get("/feature-importance"),
   groupStats: (variable) => Api._get(`/group-stats?variable=${encodeURIComponent(variable)}`),
-  statisticalTests: () => Api._get("/statistical-tests"),
+  statisticalTests: () => Api._get(`/statistical-tests?lang=${getLanguage()}`),
   modelMetrics: () => Api._get("/model-metrics"),
-  outliers: () => Api._get("/outliers"),
+  outliers: () => Api._get(`/outliers?lang=${getLanguage()}`),
   defaults: () => Api._get("/defaults"),
 
   // Lista de estudantes com filtros opcionais — monta a query string só com
@@ -110,22 +114,22 @@ const Api = {
 
   // -- Previsão (Simulador) ------------------------------------------------
   predict: (payload) => Api._post("/predict", payload),
-  predictExplain: (payload) => Api._post("/predict/explain", payload),
+  predictExplain: (payload) => Api._post(`/predict/explain?lang=${getLanguage()}`, payload),
 
   // Instantâneos (snapshots) de previsões guardadas para validar contra a nota real depois.
-  savePredictionSnapshot: (payload) => Api._post("/predict/snapshots", payload),
+  savePredictionSnapshot: (payload) => Api._post(`/predict/snapshots?lang=${getLanguage()}`, payload),
   predictionSnapshots: () => Api._get("/predict/snapshots"),
   recordPredictionSnapshotActual: (id, actualGrade) =>
-    Api._post(`/predict/snapshots/${encodeURIComponent(id)}/actual`, { actual_grade: actualGrade }),
-  deletePredictionSnapshot: (id) => Api._delete(`/predict/snapshots/${encodeURIComponent(id)}`),
+    Api._post(`/predict/snapshots/${encodeURIComponent(id)}/actual?lang=${getLanguage()}`, { actual_grade: actualGrade }),
+  deletePredictionSnapshot: (id) => Api._delete(`/predict/snapshots/${encodeURIComponent(id)}?lang=${getLanguage()}`),
 
-  examWeekChecklist: (payload) => Api._post("/exam-week/checklist", payload),
+  examWeekChecklist: (payload) => Api._post(`/exam-week/checklist?lang=${getLanguage()}`, payload),
 
-  predictionValidation: () => Api._get("/predict/validation"),
+  predictionValidation: () => Api._get(`/predict/validation?lang=${getLanguage()}`),
   predictionAccuracyOverTime: () => Api._get("/predict/accuracy-over-time"),
 
   // -- Alertas --------------------------------------------------------------
-  alerts: () => Api._get("/alerts"),
+  alerts: () => Api._get(`/alerts?lang=${getLanguage()}`),
 
   // -- Comentários/notas por estudante (ver src/notes.py) --------------------
   studentNotes: (studentId) => Api._get(`/notes?student_id=${encodeURIComponent(studentId)}`),
@@ -139,14 +143,15 @@ const Api = {
     const params = new URLSearchParams();
     params.set("n_clusters", nClusters);
     if (features && features.length) params.set("features", features.join(","));
+    params.set("lang", getLanguage());
     return Api._get(`/segmentation?${params.toString()}`);
   },
 
   // -- Fichas/estudantes ----------------------------------------------------
-  fichaUrl: (studentId) => `${API_BASE_URL}/ficha/${encodeURIComponent(studentId)}`,
+  fichaUrl: (studentId) => `${API_BASE_URL}/ficha/${encodeURIComponent(studentId)}?lang=${getLanguage()}`,
   addStudent: (payload) => Api._post("/students/add", payload),
   suggestValues: (knownFields) => Api._post("/students/suggest-values", knownFields),
-  checkValues: (knownFields) => Api._post("/students/check-values", knownFields),
+  checkValues: (knownFields) => Api._post(`/students/check-values?lang=${getLanguage()}`, knownFields),
 
   // Importação em lote (CSV) — usa FormData em vez de JSON, por isso não
   // reaproveita o _post genérico (que fixa Content-Type: application/json).
@@ -185,18 +190,19 @@ const Api = {
     if (filters.at_risk !== "" && filters.at_risk !== undefined && filters.at_risk !== null) {
       params.set("at_risk", filters.at_risk);
     }
+    params.set("lang", getLanguage());
     return `${API_BASE_URL}/students/export-csv?${params.toString()}`;
   },
 
   // -- Otimizador de estudo --------------------------------------------------
   optimizer: (studentId, targetGrade) =>
-    Api._get(`/optimizer?student_id=${encodeURIComponent(studentId)}&target_grade=${encodeURIComponent(targetGrade)}`),
-  cohortSimulation: (deltas) => Api._post("/optimizer/cohort-simulation", deltas),
+    Api._get(`/optimizer?student_id=${encodeURIComponent(studentId)}&target_grade=${encodeURIComponent(targetGrade)}&lang=${getLanguage()}`),
+  cohortSimulation: (deltas) => Api._post(`/optimizer/cohort-simulation?lang=${getLanguage()}`, deltas),
 
   // -- Relatórios (Ideias 2 e 3) ------------------------------------------
-  classReportUrl: () => `${API_BASE_URL}/reports/class`,
+  classReportUrl: () => `${API_BASE_URL}/reports/class?lang=${getLanguage()}`,
   fichasLoteUrl: (onlyAtRisk = true, limit = 100) =>
-    `${API_BASE_URL}/reports/fichas-lote?only_at_risk=${onlyAtRisk ? "true" : "false"}&limit=${encodeURIComponent(limit)}`,
+    `${API_BASE_URL}/reports/fichas-lote?only_at_risk=${onlyAtRisk ? "true" : "false"}&limit=${encodeURIComponent(limit)}&lang=${getLanguage()}`,
 
   // -- Gráfico radar (Ideia 4) ---------------------------------------------
   profileRadar: (filters) => {
@@ -206,6 +212,7 @@ const Api = {
     if (filters.higher) params.set("higher", filters.higher);
     params.set("studytime_min", filters.studytime_min ?? 1);
     params.set("studytime_max", filters.studytime_max ?? 4);
+    params.set("lang", getLanguage());
     return Api._get(`/profile/radar?${params.toString()}`);
   },
 
@@ -224,8 +231,8 @@ const Api = {
   deleteBackup: (id) => Api._delete(`/backup/${encodeURIComponent(id)}`),
 
   // -- Assistente (chatbot baseado em regras) ------------------------------
-  chatbotAsk: (question) => Api._post("/chatbot/ask", { question }),
-  chatbotExamples: () => Api._get("/chatbot/examples"),
+  chatbotAsk: (question) => Api._post(`/chatbot/ask?lang=${getLanguage()}`, { question }),
+  chatbotExamples: () => Api._get(`/chatbot/examples?lang=${getLanguage()}`),
 
   // -- Dataset Personalizado ------------------------------------------------
   // Área independente e genérica: upload de QUALQUER ficheiro próprio ->

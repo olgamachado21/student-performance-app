@@ -14,6 +14,7 @@ from src import config
 # Importado com um "apelido" (settings_module) para não colidir com o nome
 # do parâmetro "settings" que poderia ser usado nas funções abaixo.
 from src import settings as settings_module
+from src.i18n import t, plural_en
 
 # 30% dos estudantes em risco -> aviso geral (valor por omissão, pode ser
 # personalizado em Configurações — ver settings.py).
@@ -24,6 +25,7 @@ def generate_alerts(
     df: pd.DataFrame,
     risk_rate_threshold: float | None = None,
     min_absences: int | None = None,
+    lang: str | None = None,
 ) -> list[dict]:
     """
     Constrói uma lista de avisos, ordenados por gravidade
@@ -62,14 +64,19 @@ def generate_alerts(
         alerts.append({
             "id": "risk_rate_high",
             "severity": "urgente",
-            "title": "Taxa de risco elevada no conjunto de dados",
-            "description": (
+            "title": t(lang, "Taxa de risco elevada no conjunto de dados", "High risk rate in the dataset"),
+            "description": t(
+                lang,
                 f"{risk_rate*100:.1f}% dos estudantes estão em risco "
                 f"(nota final < {config.PASS_THRESHOLD}, já reprovaram antes, "
                 f"ou têm mais de 15 faltas) — acima do limiar configurado de "
-                f"{risk_rate_threshold*100:.0f}%."
+                f"{risk_rate_threshold*100:.0f}%.",
+                f"{risk_rate*100:.1f}% of students are at risk "
+                f"(final grade < {config.PASS_THRESHOLD}, have failed before, "
+                f"or have more than 15 absences) — above the configured threshold of "
+                f"{risk_rate_threshold*100:.0f}%.",
             ),
-            "action_label": "Ver Fatores de Risco",
+            "action_label": t(lang, "Ver Fatores de Risco", "View Risk Factors"),
             "action_page": "risk",
         })
 
@@ -84,12 +91,15 @@ def generate_alerts(
         alerts.append({
             "id": "high_absences",
             "severity": "aviso",
-            "title": "Estudantes com faltas muito acima da média",
-            "description": (
+            "title": t(lang, "Estudantes com faltas muito acima da média", "Students with absences far above average"),
+            "description": t(
+                lang,
                 f"{n_high_absences} estudante(s) têm mais de "
-                f"{high_absence_threshold:.0f} faltas (média geral: {absences_mean:.1f})."
+                f"{high_absence_threshold:.0f} faltas (média geral: {absences_mean:.1f}).",
+                f"{n_high_absences} {plural_en(n_high_absences, 'student has', 'students have')} more than "
+                f"{high_absence_threshold:.0f} absences (overall average: {absences_mean:.1f}).",
             ),
-            "action_label": "Ver Perfil do Estudante",
+            "action_label": t(lang, "Ver Perfil do Estudante", "View Student Profile"),
             "action_page": "profile",
         })
 
@@ -101,12 +111,15 @@ def generate_alerts(
         alerts.append({
             "id": "worsening_with_failures",
             "severity": "aviso",
-            "title": "Estudantes com reprovações e notas a piorar",
-            "description": (
+            "title": t(lang, "Estudantes com reprovações e notas a piorar", "Students with failures and worsening grades"),
+            "description": t(
+                lang,
                 f"{len(worsening)} estudante(s) já reprovaram antes e a nota "
-                f"desceu entre o 1º e o 3º período - merecem atenção prioritária."
+                f"desceu entre o 1º e o 3º período - merecem atenção prioritária.",
+                f"{len(worsening)} {plural_en(len(worsening), 'student has', 'students have')} failed before and their grade "
+                f"dropped between the 1st and 3rd period - deserve priority attention.",
             ),
-            "action_label": "Ver Segmentação de Perfis",
+            "action_label": t(lang, "Ver Segmentação de Perfis", "View Profile Segmentation"),
             "action_page": "segmentation",
         })
 
@@ -118,7 +131,7 @@ def generate_alerts(
     # mediana E já reprovou antes tem uma média de nota muito abaixo do
     # resto (perto de 3 valores de diferença), não é só "duas coisas más ao
     # mesmo tempo por coincidência".
-    combined_alert = generate_combined_risk_alert(df)
+    combined_alert = generate_combined_risk_alert(df, lang=lang)
     if combined_alert:
         alerts.append(combined_alert)
 
@@ -128,13 +141,17 @@ def generate_alerts(
         alerts.append({
             "id": "alcohol_low_grade",
             "severity": "info",
-            "title": "Consumo de álcool elevado associado a reprovação",
-            "description": (
+            "title": t(lang, "Consumo de álcool elevado associado a reprovação", "High alcohol consumption linked to failing grades"),
+            "description": t(
+                lang,
                 f"{len(heavy_drinkers_low_grade)} estudante(s) com consumo de "
                 f"álcool elevado (média ≥3) e nota final abaixo de "
-                f"{config.PASS_THRESHOLD}."
+                f"{config.PASS_THRESHOLD}.",
+                f"{len(heavy_drinkers_low_grade)} {plural_en(len(heavy_drinkers_low_grade), 'student has', 'students have')} high "
+                f"alcohol consumption (average ≥3) and a final grade below "
+                f"{config.PASS_THRESHOLD}.",
             ),
-            "action_label": "Ver Fatores de Risco",
+            "action_label": t(lang, "Ver Fatores de Risco", "View Risk Factors"),
             "action_page": "risk",
         })
 
@@ -143,8 +160,12 @@ def generate_alerts(
         alerts.append({
             "id": "all_clear",
             "severity": "info",
-            "title": "Sem avisos de momento",
-            "description": "Não foram detetados sinais de alerta no conjunto de dados atual.",
+            "title": t(lang, "Sem avisos de momento", "No alerts right now"),
+            "description": t(
+                lang,
+                "Não foram detetados sinais de alerta no conjunto de dados atual.",
+                "No warning signs were detected in the current dataset.",
+            ),
             "action_label": None,
             "action_page": None,
         })
@@ -155,7 +176,7 @@ def generate_alerts(
     return alerts
 
 
-def generate_combined_risk_alert(df: pd.DataFrame) -> dict | None:
+def generate_combined_risk_alert(df: pd.DataFrame, lang: str | None = None) -> dict | None:
     """
     Sinal de risco combinado: faltas acima da mediana da turma E pelo menos
     uma reprovação anterior, no MESMO estudante — não é a soma de dois
@@ -184,15 +205,21 @@ def generate_combined_risk_alert(df: pd.DataFrame) -> dict | None:
         "id": "combined_risk_absences_failures",
         # Gravidade "urgente" se o grupo afetado for pelo menos 5% da turma, senão só "aviso".
         "severity": "urgente" if n_combined / len(df) >= 0.05 else "aviso",
-        "title": "Risco combinado: faltas altas e reprovação anterior",
-        "description": (
+        "title": t(lang, "Risco combinado: faltas altas e reprovação anterior", "Combined risk: high absences and prior failure"),
+        "description": t(
+            lang,
             f"{n_combined} estudante(s) têm faltas acima da mediana da turma "
             f"({absences_median:.0f}) E já reprovaram antes. Este grupo tem nota "
             f"média de {combined_grade:.2f}, contra {rest_grade:.2f} nos restantes — "
             f"uma diferença de {gap:.2f} valores, maior do que olhar a cada fator "
-            f"isoladamente."
+            f"isoladamente.",
+            f"{n_combined} {plural_en(n_combined, 'student has', 'students have')} absences above the class median "
+            f"({absences_median:.0f}) AND has failed before. This group has an average "
+            f"grade of {combined_grade:.2f}, versus {rest_grade:.2f} for the rest — "
+            f"a difference of {gap:.2f} points, larger than looking at each factor "
+            f"alone.",
         ),
-        "action_label": "Ver Fatores de Risco",
+        "action_label": t(lang, "Ver Fatores de Risco", "View Risk Factors"),
         "action_page": "risk",
     }
 

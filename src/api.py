@@ -56,7 +56,7 @@ from src.segmentation import SEGMENTATION_FEATURES, radar_profile, run_segmentat
 from src.statistics_analysis import (compare_multiple_groups, compare_two_groups,
                                       generate_overview_summary, simple_linear_regression)
 from src.bulk_import import add_students_bulk
-from src.chatbot import EXAMPLE_QUESTIONS, answer_question
+from src.chatbot import EXAMPLE_QUESTIONS, answer_question, example_questions
 from src import custom_dataset
 from src.data_export import export_students_csv
 from src.data_quality import check_unusual_values
@@ -67,6 +67,7 @@ from src import notes as notes_module
 from src import exam_week
 from src import backup as backup_module
 from src.train_model import compute_naive_baseline, get_feature_importance
+from src.i18n import t
 
 # Logger da API — usado nos pontos onde se recebe conteúdo imprevisível do
 # utilizador (ficheiros carregados) para que, se algo correr mal de um jeito
@@ -193,7 +194,7 @@ def meta():
 
 
 @app.get("/stats")
-def stats():
+def stats(lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'.")):
     """Estatísticas gerais do dataset (KPIs), para a página de Visão Geral."""
     df = _dataset()
     return {
@@ -207,7 +208,7 @@ def stats():
         # Resumo automático em linguagem natural (ver generate_overview_summary
         # em src/statistics_analysis.py) — recalculado sempre a partir do
         # dataset atual, não é texto fixo.
-        "summary_text": generate_overview_summary(df),
+        "summary_text": generate_overview_summary(df, lang=lang),
     }
 
 
@@ -254,6 +255,7 @@ def correlations():
 def scatter(
     x: str = Query(..., description="Variável no eixo X (uma das colunas do heatmap de correlação)"),
     y: str = Query(..., description="Variável no eixo Y (uma das colunas do heatmap de correlação)"),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
 ):
     """
     Pontos individuais (x, y) e reta de regressão linear simples para um par
@@ -281,7 +283,7 @@ def scatter(
         # Remove linhas com valores em falta em qualquer uma das duas colunas.
         sub = df[[x, y]].astype(float).dropna()
         xs, ys = sub[x], sub[y]
-        reg = simple_linear_regression(sub, x_col=x, y_col=y)
+        reg = simple_linear_regression(sub, x_col=x, y_col=y, lang=lang)
 
     return {
         "x": x,
@@ -336,7 +338,7 @@ def group_stats(variable: str = Query(..., description="Nome da coluna a agrupar
 
 
 @app.get("/statistical-tests")
-def statistical_tests():
+def statistical_tests(lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'.")):
     """
     Resumo dos testes estatísticos (t-test/ANOVA/regressão simples) usados
     nos destaques da app.
@@ -351,9 +353,9 @@ def statistical_tests():
     return {
         "internet": compare_two_groups(df, "internet"),
         "higher": compare_two_groups(df, "higher"),
-        "studytime_regression": simple_linear_regression(df, "studytime"),
-        "failures_regression": simple_linear_regression(df, "failures"),
-        "alcohol_regression": simple_linear_regression(df, "alcohol_avg"),
+        "studytime_regression": simple_linear_regression(df, "studytime", lang=lang),
+        "failures_regression": simple_linear_regression(df, "failures", lang=lang),
+        "alcohol_regression": simple_linear_regression(df, "alcohol_avg", lang=lang),
         # --- Contexto familiar e socioeconómico ---
         "paid": compare_two_groups(df, "paid"),
         "school": compare_two_groups(df, "school"),
@@ -361,8 +363,8 @@ def statistical_tests():
         "mjob": compare_multiple_groups(df, "Mjob"),
         "fjob": compare_multiple_groups(df, "Fjob"),
         "reason": compare_multiple_groups(df, "reason"),
-        "medu_regression": simple_linear_regression(df, "Medu"),
-        "fedu_regression": simple_linear_regression(df, "Fedu"),
+        "medu_regression": simple_linear_regression(df, "Medu", lang=lang),
+        "fedu_regression": simple_linear_regression(df, "Fedu", lang=lang),
         # Apoio educativo extra: incluído aqui (e não só no relatório
         # offline de statistics_analysis.py) porque o resultado é
         # contra-intuitivo — quem tem apoio tem nota mais baixa — e a
@@ -378,10 +380,10 @@ def statistical_tests():
         # quem já reprovou. Ver optimizer.py e prediction.js, que usam
         # estes dois valores para não prometer a mesma coisa a todos.
         "studytime_regression_no_failures": simple_linear_regression(
-            df[df["failures"] == 0], "studytime"
+            df[df["failures"] == 0], "studytime", lang=lang
         ),
         "studytime_regression_with_failures": simple_linear_regression(
-            df[df["failures"] >= 1], "studytime"
+            df[df["failures"] >= 1], "studytime", lang=lang
         ),
     }
 
@@ -446,6 +448,7 @@ def model_metrics():
 def outliers(
     z_threshold: float = Query(2.0, ge=0.5, le=5.0, description="Nº de desvios-padrão de resíduo a partir do qual um estudante é sinalizado"),
     limit: int = Query(20, ge=1, le=100, description="Nº máximo de estudantes devolvidos"),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
 ):
     """
     Estudantes cujo resultado foge do que seria esperado dado o seu próprio
@@ -454,7 +457,7 @@ def outliers(
     perfil", para cima ou para baixo.
     """
     df = _dataset()
-    students_list = detect_outliers(df, z_threshold=z_threshold, limit=limit)
+    students_list = detect_outliers(df, z_threshold=z_threshold, limit=limit, lang=lang)
     return {
         "z_threshold": z_threshold,
         "n_outliers": len(students_list),
@@ -520,6 +523,7 @@ def profile_radar(
     higher: Optional[str] = Query(None, description="yes, no ou vazio para ambos"),
     studytime_min: int = Query(1, ge=1, le=4),
     studytime_max: int = Query(4, ge=1, le=4),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
 ):
     """
     Médias normalizadas (0-100) de um conjunto de hábitos para o subgrupo
@@ -536,7 +540,7 @@ def profile_radar(
         mask &= df["internet"] == internet
     if higher:
         mask &= df["higher"] == higher
-    return radar_profile(df, mask)
+    return radar_profile(df, mask, lang=lang)
 
 
 @app.get("/defaults")
@@ -564,7 +568,10 @@ def predict(student: StudentInput):
 
 
 @app.post("/predict/explain")
-def predict_explain(student: StudentInput):
+def predict_explain(
+    student: StudentInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """
     Explica a previsão de hábitos deste estudante em concreto: para cada
     fator, o quanto o SEU valor (não o de toda a gente) está a puxar a nota
@@ -573,7 +580,7 @@ def predict_explain(student: StudentInput):
     """
     try:
         user_input = student.model_dump(exclude_none=True)
-        return explain_prediction(user_input)
+        return explain_prediction(user_input, lang=lang)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -584,7 +591,10 @@ class PredictionSnapshotInput(StudentInput):
 
 
 @app.post("/predict/snapshots")
-def save_prediction_snapshot(payload: PredictionSnapshotInput):
+def save_prediction_snapshot(
+    payload: PredictionSnapshotInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """
     Comparação Antes/Depois: corre a mesma previsão do Simulador e guarda-a
     como ponto de partida, para mais tarde comparar com a nota real
@@ -595,7 +605,7 @@ def save_prediction_snapshot(payload: PredictionSnapshotInput):
     label = data.pop("label", "")
     try:
         prediction_result = full_prediction(data)
-        return prediction_tracking.save_snapshot(prediction_result, data, label)
+        return prediction_tracking.save_snapshot(prediction_result, data, label, lang=lang)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
@@ -607,12 +617,12 @@ def list_prediction_snapshots():
 
 
 @app.get("/predict/validation")
-def prediction_validation_summary():
+def prediction_validation_summary(lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'.")):
     """
     Validação do modelo com dados reais deste utilizador — ver
     get_validation_summary em src/prediction_tracking.py.
     """
-    return prediction_tracking.get_validation_summary()
+    return prediction_tracking.get_validation_summary(lang=lang)
 
 
 @app.get("/predict/accuracy-over-time")
@@ -631,21 +641,33 @@ class ActualGradeInput(BaseModel):
 
 
 @app.post("/predict/snapshots/{snapshot_id}/actual")
-def record_prediction_snapshot_actual(snapshot_id: int, payload: ActualGradeInput):
+def record_prediction_snapshot_actual(
+    snapshot_id: int,
+    payload: ActualGradeInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """Regista a nota real obtida, associando-a a uma previsão guardada anteriormente."""
     try:
-        return prediction_tracking.record_actual_grade(snapshot_id, payload.actual_grade)
+        return prediction_tracking.record_actual_grade(snapshot_id, payload.actual_grade, lang=lang)
     except ValueError as exc:
-        # Distingue "não encontrada" (404) de outros erros de validação (400).
-        status = 404 if "não encontrada" in str(exc) else 400
+        # Distingue "não encontrada"/"not found" (404) de outros erros de
+        # validação (400) — a mensagem pode vir em qualquer um dos dois
+        # idiomas consoante `lang`, por isso testa as duas variantes.
+        status = 404 if ("não encontrada" in str(exc) or "not found" in str(exc)) else 400
         raise HTTPException(status_code=status, detail=str(exc))
 
 
 @app.delete("/predict/snapshots/{snapshot_id}")
-def delete_prediction_snapshot(snapshot_id: int):
+def delete_prediction_snapshot(
+    snapshot_id: int,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """Remove uma previsão guardada."""
     if not prediction_tracking.delete_snapshot(snapshot_id):
-        raise HTTPException(status_code=404, detail=f"Previsão {snapshot_id} não encontrada.")
+        raise HTTPException(
+            status_code=404,
+            detail=t(lang, f"Previsão {snapshot_id} não encontrada.", f"Prediction {snapshot_id} not found."),
+        )
     return {"deleted": True}
 
 
@@ -690,7 +712,10 @@ def delete_note(note_id: int):
 
 
 @app.post("/exam-week/checklist")
-def exam_week_checklist(student: StudentInput):
+def exam_week_checklist(
+    student: StudentInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """
     Modo "Última Semana Antes do Exame": checklist curto com as mudanças de
     hábito ainda realistas em poucos dias, priorizadas pelo ganho estimado
@@ -699,17 +724,17 @@ def exam_week_checklist(student: StudentInput):
     """
     try:
         user_input = student.model_dump(exclude_none=True)
-        return exam_week.gerar_checklist_ultima_semana(user_input)
+        return exam_week.gerar_checklist_ultima_semana(user_input, lang=lang)
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/alerts")
-def alerts():
+def alerts(lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'.")):
     """Avisos automáticos gerados a partir do estado atual dos dados."""
     df = _dataset()
     return {
-        "alerts": generate_alerts(df),
+        "alerts": generate_alerts(df, lang=lang),
         "at_risk_students": get_at_risk_students(df, limit=50),
         "n_at_risk": int(df["at_risk"].sum()),
         "risk_rate": round(float(df["at_risk"].mean()), 4),
@@ -729,6 +754,7 @@ def segmentation(
         None,
         description="Variáveis a incluir no K-Means, separadas por vírgula (mín. 2). Por omissão usa todas.",
     ),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
 ):
     """Segmentação de estudantes em perfis comportamentais (K-Means)."""
     df = _dataset()
@@ -739,17 +765,20 @@ def segmentation(
         if not feature_list:
             feature_list = None
     try:
-        return run_segmentation(df, n_clusters=n_clusters, features=feature_list)
+        return run_segmentation(df, n_clusters=n_clusters, features=feature_list, lang=lang)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
 
 @app.get("/ficha/{student_id}")
-def ficha_desempenho(student_id: int):
+def ficha_desempenho(
+    student_id: int,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """Gera e devolve o PDF da ficha de desempenho de um estudante."""
     df = _dataset()
     try:
-        pdf_bytes = gerar_ficha_pdf(df, student_id)
+        pdf_bytes = gerar_ficha_pdf(df, student_id, lang=lang)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     # Devolve o PDF diretamente como resposta HTTP (não como JSON).
@@ -761,10 +790,10 @@ def ficha_desempenho(student_id: int):
 
 
 @app.get("/reports/class")
-def class_report():
+def class_report(lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'.")):
     """Gera e devolve o PDF do relatório agregado de turma (KPIs, segmentação e estudantes em risco)."""
     df = _dataset()
-    pdf_bytes = gerar_relatorio_turma_pdf(df)
+    pdf_bytes = gerar_relatorio_turma_pdf(df, lang=lang)
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -776,11 +805,12 @@ def class_report():
 def fichas_lote(
     only_at_risk: bool = Query(True, description="Só estudantes em risco (True) ou todos (False)"),
     limit: int = Query(100, ge=1, le=300, description="Nº máximo de fichas a incluir"),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
 ):
     """Gera e devolve um ZIP com as fichas de desempenho PDF de vários estudantes de uma vez."""
     df = _dataset()
     try:
-        zip_bytes = gerar_fichas_lote_zip(df, only_at_risk=only_at_risk, limit=limit)
+        zip_bytes = gerar_fichas_lote_zip(df, only_at_risk=only_at_risk, limit=limit, lang=lang)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     return Response(
@@ -863,7 +893,10 @@ def students_suggest_values(fields: SuggestValuesInput):
 
 
 @app.post("/students/check-values")
-def students_check_values(fields: SuggestValuesInput):
+def students_check_values(
+    fields: SuggestValuesInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """
     Avisa sobre valores pouco habituais ou inconsistentes entre si nos
     campos já preenchidos do formulário "Adicionar Dados" — não bloqueia
@@ -871,7 +904,7 @@ def students_check_values(fields: SuggestValuesInput):
     gravar (ver src/data_quality.py).
     """
     known = {k: v for k, v in fields.model_dump().items() if v is not None and v != ""}
-    return {"warnings": check_unusual_values(_dataset(), known)}
+    return {"warnings": check_unusual_values(_dataset(), known, lang=lang)}
 
 
 @app.post("/students/bulk-import")
@@ -940,12 +973,13 @@ def students_export_csv(
     school: Optional[str] = Query(None, description="'GP', 'MS' ou vazio para todas"),
     perf_band: Optional[str] = Query(None, description="Insuficiente/Suficiente/Bom/Excelente ou vazio"),
     at_risk: Optional[int] = Query(None, ge=0, le=1, description="1=em risco, 0=sem risco, vazio=todos"),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'. Afeta o cabeçalho das colunas quando 'en'."),
 ):
     """
     Exporta o dataset completo (ou uma vista filtrada, com os mesmos filtros
     do explorador de dados) como ficheiro CSV para descarregar.
     """
-    csv_text = export_students_csv(_dataset(), school=school, perf_band=perf_band, at_risk=at_risk)
+    csv_text = export_students_csv(_dataset(), school=school, perf_band=perf_band, at_risk=at_risk, lang=lang)
     return Response(
         content=csv_text,
         media_type="text/csv",
@@ -958,25 +992,30 @@ class ChatQuestionInput(BaseModel):
 
 
 @app.post("/chatbot/ask")
-def chatbot_ask(payload: ChatQuestionInput):
+def chatbot_ask(
+    payload: ChatQuestionInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """
     Assistente baseado em regras (sem LLM externo, sem chave de API) — ver
-    src/chatbot.py. Reconhece um conjunto fixo de tipos de pergunta e
-    responde sempre com dados reais do dataset atual.
+    src/chatbot.py. Reconhece um conjunto fixo de tipos de pergunta (em
+    português ou inglês, independentemente de `lang`) e responde sempre com
+    dados reais do dataset atual, no idioma pedido.
     """
-    return answer_question(_dataset(), payload.question)
+    return answer_question(_dataset(), payload.question, lang=lang)
 
 
 @app.get("/chatbot/examples")
-def chatbot_examples():
+def chatbot_examples(lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'.")):
     """Perguntas de exemplo, para o frontend sugerir antes do utilizador escrever."""
-    return {"examples": EXAMPLE_QUESTIONS}
+    return {"examples": example_questions(lang)}
 
 
 @app.get("/optimizer")
 def optimizer(
     student_id: int = Query(..., description="Número do estudante"),
     target_grade: float = Query(..., ge=0, le=20, description="Nota-alvo (0-20)"),
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
 ):
     """
     Calcula o plano de mudança de hábitos (tempo de estudo, saídas, faltas,
@@ -985,7 +1024,7 @@ def optimizer(
     """
     df = _dataset()
     try:
-        return otimizar_plano_estudo(df, student_id, target_grade)
+        return otimizar_plano_estudo(df, student_id, target_grade, lang=lang)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
 
@@ -1001,7 +1040,10 @@ class CohortSimulationInput(BaseModel):
 
 
 @app.post("/optimizer/cohort-simulation")
-def optimizer_cohort_simulation(payload: CohortSimulationInput):
+def optimizer_cohort_simulation(
+    payload: CohortSimulationInput,
+    lang: Optional[str] = Query(None, description="Idioma da resposta: 'pt' (omissão) ou 'en'."),
+):
     """
     Simulador em lote, ao nível da turma: aplica a mesma alteração
     hipotética de hábitos a TODOS os estudantes em risco de uma só vez, e
@@ -1010,10 +1052,13 @@ def optimizer_cohort_simulation(payload: CohortSimulationInput):
     """
     deltas = payload.model_dump(exclude_none=True)
     if not deltas:
-        raise HTTPException(status_code=400, detail="Indica pelo menos uma alteração de hábito.")
+        raise HTTPException(
+            status_code=400,
+            detail=t(lang, "Indica pelo menos uma alteração de hábito.", "Specify at least one habit change."),
+        )
     df = _dataset()
     try:
-        return simular_intervencao_turma(df, deltas)
+        return simular_intervencao_turma(df, deltas, lang=lang)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 

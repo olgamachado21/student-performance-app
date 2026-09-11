@@ -6,6 +6,18 @@ sobre o modelo de regressão já treinado (variante "completo").
 Em cada iteração, testa um passo em cada "alavanca" ajustável (tempo de
 estudo, sair com amigos, faltas, álcool) e aplica sempre a que mais aumenta
 a nota prevista, até atingir a meta ou esgotar as iterações.
+
+i18n: as mensagens finais (explicação do plano, nota de calibração,
+simulação em lote) e os rótulos das alavancas são construídos com t()/
+plural_en() (ver src/i18n.py). Importante: toda a lógica interna (LEVERS,
+consolidação de passos consecutivos, deteção de "o plano mexe no tempo de
+estudo") continua a usar o texto PT de "label" (ex.: "Tempo de estudo")
+exatamente como antes — isso é só um identificador interno estável, nunca
+muda com o idioma. A tradução só acontece no fim de
+`otimizar_plano_estudo`, ao empacotar a lista de mudanças para devolver à
+API, através de LEVER_LABEL_EN (PT->EN). Isto mantém `_consolidate_changes`,
+`_format_message` e `_studytime_calibration_note` com o comportamento (e a
+assinatura, para quem já as chama sem `lang`) inalterados.
 """
 from __future__ import annotations
 
@@ -14,12 +26,16 @@ import pandas as pd
 
 from src import config
 from src.predict import predict_grade
+from src.i18n import t, plural_en, normalize_lang
 
 # Número máximo de passos que o algoritmo guloso pode dar antes de desistir
 # (evita loops infinitos caso a meta seja impossível de atingir).
 MAX_ITERATIONS = 80
 
-# Alavancas ajustáveis: coluna, direção do passo "de melhoria", e limite.
+# Alavancas ajustáveis: coluna, direção do passo "de melhoria", e limite. O
+# "label" aqui é sempre em português — é o identificador interno estável
+# usado em toda a lógica deste ficheiro; a tradução para o idioma do
+# pedido só acontece no fim, via LEVER_LABEL_EN (ver abaixo).
 LEVERS = [
     {"column": "studytime", "step": 1, "bound": 4, "label": "Tempo de estudo"},
     {"column": "goout", "step": -1, "bound": 1, "label": "Sair com amigos"},
@@ -27,6 +43,18 @@ LEVERS = [
     {"column": "Dalc", "step": -1, "bound": 1, "label": "Álcool (dias úteis)"},
     {"column": "Walc", "step": -1, "bound": 1, "label": "Álcool (fim de semana)"},
 ]
+
+# Tradução do rótulo PT de cada alavanca (o mesmo texto usado em
+# LEVERS[i]["label"], que continua a ser o identificador interno estável —
+# ver nota de i18n no topo do ficheiro) para inglês. Só usado no fim de
+# otimizar_plano_estudo, ao traduzir a lista de mudanças para devolver.
+LEVER_LABEL_EN = {
+    "Tempo de estudo": "Study time",
+    "Sair com amigos": "Going out with friends",
+    "Faltas": "Absences",
+    "Álcool (dias úteis)": "Alcohol (weekdays)",
+    "Álcool (fim de semana)": "Alcohol (weekend)",
+}
 
 # Acesso rápido a uma alavanca pelo nome da coluna (em vez de percorrer a lista LEVERS sempre).
 _LEVERS_BY_COLUMN = {lever["column"]: lever for lever in LEVERS}
@@ -51,12 +79,13 @@ def _within_bounds(value: float, lever: dict) -> bool:
     return value > lever["bound"]
 
 
-def otimizar_plano_estudo(df: pd.DataFrame, student_id: int, target_grade: float) -> dict:
+def otimizar_plano_estudo(df: pd.DataFrame, student_id: int, target_grade: float, lang: str | None = None) -> dict:
     """Calcula, passo a passo, a combinação mínima de mudanças de hábitos para um estudante atingir a nota-alvo."""
+    lang = normalize_lang(lang)
     # Localiza o estudante pelo id, e valida que existe.
     student_rows = df[df["student_id"] == student_id]
     if student_rows.empty:
-        raise ValueError(f"Estudante {student_id} não encontrado.")
+        raise ValueError(t(lang, f"Estudante {student_id} não encontrado.", f"Student {student_id} not found."))
     student = student_rows.iloc[0]
     student_id = int(student_id)
     # Todos os dados do estudante, usados como base para cada previsão (só as alavancas mudam).
@@ -74,6 +103,9 @@ def otimizar_plano_estudo(df: pd.DataFrame, student_id: int, target_grade: float
     initial_grade = predict(working)
     grade = initial_grade
     # Lista de mudanças aplicadas, passo a passo (preenchida no ciclo abaixo).
+    # Cada entrada guarda "label" em PT (identificador interno estável — ver
+    # nota de i18n no topo do ficheiro); só é traduzido no fim, ao empacotar
+    # a resposta.
     changes: list[dict] = []
 
     if grade >= target_grade:
@@ -85,10 +117,14 @@ def otimizar_plano_estudo(df: pd.DataFrame, student_id: int, target_grade: float
             "final_grade": round(initial_grade, 2),
             "achieved": True,
             "changes": [],
-            "message": (
+            "message": t(
+                lang,
                 f"Este estudante já tem uma nota prevista ({initial_grade:.1f} valores) "
                 f"igual ou superior à meta ({target_grade} valores) — não é necessária "
-                f"nenhuma mudança de hábitos."
+                f"nenhuma mudança de hábitos.",
+                f"This student already has a predicted grade ({initial_grade:.1f} points) "
+                f"equal to or above the target ({target_grade} points) — no habit changes "
+                f"are necessary.",
             ),
         }
 
@@ -132,14 +168,21 @@ def otimizar_plano_estudo(df: pd.DataFrame, student_id: int, target_grade: float
     # Junta passos consecutivos da mesma alavanca numa única entrada, mais legível.
     consolidated = _consolidate_changes(changes)
     has_prior_failures = int(student["failures"]) >= 1
+    # Só agora, com a lista final de mudanças pronta, se traduz o rótulo de
+    # cada entrada (toda a lógica acima — consolidação, deteção da nota de
+    # calibração — já usou sempre o texto PT original como identificador).
+    labeled_changes = [
+        {**change, "label": t(lang, change["label"], LEVER_LABEL_EN[change["label"]])}
+        for change in consolidated
+    ]
     return {
         "student_id": student_id,
         "initial_grade": round(initial_grade, 2),
         "target_grade": target_grade,
         "final_grade": round(grade, 2),
         "achieved": achieved,
-        "changes": consolidated,
-        "message": _format_message(achieved, initial_grade, grade, target_grade, consolidated, has_prior_failures),
+        "changes": labeled_changes,
+        "message": _format_message(achieved, initial_grade, grade, target_grade, consolidated, has_prior_failures, lang),
     }
 
 
@@ -156,29 +199,41 @@ def _consolidate_changes(changes: list[dict]) -> list[dict]:
     return consolidated
 
 
-def _format_message(achieved, initial, final, target, changes, has_prior_failures=False) -> str:
+def _format_message(achieved, initial, final, target, changes, has_prior_failures=False, lang=None) -> str:
     """Constrói a mensagem final explicando o resultado do plano de recuperação."""
     if not changes:
-        return "Não foi possível identificar mudanças de hábitos que melhorassem a nota prevista."
+        return t(
+            lang,
+            "Não foi possível identificar mudanças de hábitos que melhorassem a nota prevista.",
+            "No habit changes could be identified that would improve the predicted grade.",
+        )
 
     if achieved:
-        base = (
+        base = t(
+            lang,
             f"Com {len(changes)} mudança(s) de hábitos, a nota prevista passaria de "
-            f"{initial:.1f} para {final:.1f} valores, atingindo a meta de {target} valores."
+            f"{initial:.1f} para {final:.1f} valores, atingindo a meta de {target} valores.",
+            f"With {len(changes)} habit {plural_en(len(changes), 'change')}, the predicted grade "
+            f"would go from {initial:.1f} to {final:.1f} points, reaching the target of {target} points.",
         )
     else:
-        base = (
+        base = t(
+            lang,
             f"Mesmo aplicando todas as mudanças de hábitos possíveis dentro dos limites "
             f"considerados, a nota prevista chegaria a {final:.1f} valores (partindo de "
             f"{initial:.1f}), sem atingir a meta de {target} valores. Pode ser necessário "
-            f"apoio adicional (explicações, acompanhamento pedagógico) além da mudança de hábitos."
+            f"apoio adicional (explicações, acompanhamento pedagógico) além da mudança de hábitos.",
+            f"Even applying all possible habit changes within the considered limits, the "
+            f"predicted grade would reach {final:.1f} points (starting from {initial:.1f}), "
+            f"without reaching the target of {target} points. Additional support (tutoring, "
+            f"academic guidance) may be necessary beyond changing habits.",
         )
 
     # Acrescenta uma nota de calibração, se aplicável (ver função abaixo).
-    return base + _studytime_calibration_note(changes, has_prior_failures)
+    return base + _studytime_calibration_note(changes, has_prior_failures, lang)
 
 
-def _studytime_calibration_note(changes, has_prior_failures) -> str:
+def _studytime_calibration_note(changes, has_prior_failures, lang=None) -> str:
     """
     Nota de calibração: o modelo de regressão usado aqui (variante
     "completo") é linear e não tem termo de interação entre tempo de
@@ -194,21 +249,32 @@ def _studytime_calibration_note(changes, has_prior_failures) -> str:
     todos por igual, o que não é honesto para quem já reprovou.
     """
     # Só mostra a nota se o plano incluir mudar o tempo de estudo E o
-    # estudante já tiver reprovações anteriores (caso em que o aviso se aplica).
+    # estudante já tiver reprovações anteriores (caso em que o aviso se
+    # aplica). Compara sempre pelo rótulo PT ("Tempo de estudo"), que é o
+    # identificador interno estável usado em todo este ficheiro — mesmo
+    # quando `changes` já vier com o rótulo traduzido de outro sítio, quem
+    # chama esta função internamente usa sempre a lista ainda não traduzida
+    # (ver otimizar_plano_estudo, que traduz só depois de a chamar).
     studytime_in_plan = any(c["label"] == "Tempo de estudo" for c in changes)
     if not (has_prior_failures and studytime_in_plan):
         return ""
-    return (
+    return t(
+        lang,
         " Nota: como este estudante já tem reprovações anteriores, o ganho estimado ao "
         "aumentar o tempo de estudo tende a ser otimista — nos dados analisados, esse "
         "efeito é bem mais fraco (e deixa de ser estatisticamente significativo) em quem já "
         "reprovou, o que pode refletir lacunas que só mais tempo de estudo não resolve. "
         "Vale a pena considerar também apoio adicional (explicações, acompanhamento "
-        "pedagógico)."
+        "pedagógico).",
+        " Note: since this student already has prior failures, the estimated gain from "
+        "increasing study time tends to be optimistic — in the data analyzed, this effect "
+        "is much weaker (and stops being statistically significant) for students who have "
+        "failed before, which may reflect gaps that more study time alone won't fix. It's "
+        "also worth considering additional support (tutoring, academic guidance).",
     )
 
 
-def simular_intervencao_turma(df: pd.DataFrame, deltas: dict) -> dict:
+def simular_intervencao_turma(df: pd.DataFrame, deltas: dict, lang: str | None = None) -> dict:
     """
     Simulador em lote, ao nível da turma: em vez de otimizar um estudante de
     cada vez (ver otimizar_plano_estudo acima), aplica a MESMA alteração
@@ -224,14 +290,23 @@ def simular_intervencao_turma(df: pd.DataFrame, deltas: dict) -> dict:
     dataset (ver COHORT_VALUE_LIMITS), para nunca gerar hábitos impossíveis
     (ex.: tempo de estudo nível 6, que não existe na escala 1-4).
     """
+    lang = normalize_lang(lang)
     if not deltas:
-        raise ValueError("Indica pelo menos uma alteração de hábito para simular.")
+        raise ValueError(t(
+            lang,
+            "Indica pelo menos uma alteração de hábito para simular.",
+            "Specify at least one habit change to simulate.",
+        ))
 
     # Valida que só foram indicadas colunas conhecidas (uma das alavancas definidas acima).
     invalid = [col for col in deltas if col not in _LEVERS_BY_COLUMN]
     if invalid:
         valid = ", ".join(_LEVERS_BY_COLUMN)
-        raise ValueError(f"Variáveis inválidas: {', '.join(invalid)}. Escolhe entre: {valid}")
+        raise ValueError(t(
+            lang,
+            f"Variáveis inválidas: {', '.join(invalid)}. Escolhe entre: {valid}",
+            f"Invalid variables: {', '.join(invalid)}. Choose from: {valid}",
+        ))
 
     # A simulação só se aplica ao grupo de estudantes em risco.
     at_risk_df = df[df["at_risk"] == 1]
@@ -246,7 +321,11 @@ def simular_intervencao_turma(df: pd.DataFrame, deltas: dict) -> dict:
             "pass_rate_after": 0.0,
             "avg_grade_before": 0.0,
             "avg_grade_after": 0.0,
-            "message": "Não há estudantes em risco no conjunto de dados atual — nada para simular.",
+            "message": t(
+                lang,
+                "Não há estudantes em risco no conjunto de dados atual — nada para simular.",
+                "There are no at-risk students in the current dataset — nothing to simulate.",
+            ),
         }
 
     # Contadores e listas de notas, antes e depois da alteração hipotética.
@@ -292,25 +371,34 @@ def simular_intervencao_turma(df: pd.DataFrame, deltas: dict) -> dict:
         "pass_rate_after": round(passing_after / n, 4),
         "avg_grade_before": round(avg_before, 2),
         "avg_grade_after": round(avg_after, 2),
-        "message": _format_cohort_message(n, passing_before, passing_after, avg_before, avg_after),
+        "message": _format_cohort_message(n, passing_before, passing_after, avg_before, avg_after, lang),
     }
 
 
-def _format_cohort_message(n: int, before: int, after: int, avg_before: float, avg_after: float) -> str:
+def _format_cohort_message(n: int, before: int, after: int, avg_before: float, avg_after: float, lang: str) -> str:
     """Constrói a mensagem final resumindo o efeito da simulação em lote."""
     diff = after - before
     if diff <= 0:
         # A nota média pode subir, mas se ninguém passar de reprovado a aprovado, é dito claramente.
-        return (
+        return t(
+            lang,
             f"Com esta alteração aplicada aos {n} estudantes em risco, a nota média passaria de "
             f"{avg_before:.1f} para {avg_after:.1f} valores, mas o número de estudantes a atingir a "
-            f"aprovação não aumentaria ({after} em {n})."
+            f"aprovação não aumentaria ({after} em {n}).",
+            f"With this change applied to the {n} at-risk students, the average grade would go "
+            f"from {avg_before:.1f} to {avg_after:.1f} points, but the number of students reaching "
+            f"a passing grade would not increase ({after} out of {n}).",
         )
     # Concordância singular/plural na frase final, consoante o número de novos aprovados.
     plural = "s" if diff != 1 else ""
-    return (
+    return t(
+        lang,
         f"Com esta alteração aplicada a todo o grupo em risco ({n} estudantes), a nota média passaria "
         f"de {avg_before:.1f} para {avg_after:.1f} valores, e o número de estudantes que atingiria a "
         f"aprovação (nota final ≥ {config.PASS_THRESHOLD}) subiria de {before} para {after} — "
-        f"mais {diff} estudante{plural} aprovado{plural}."
+        f"mais {diff} estudante{plural} aprovado{plural}.",
+        f"With this change applied to the entire at-risk group ({n} students), the average grade "
+        f"would go from {avg_before:.1f} to {avg_after:.1f} points, and the number of students "
+        f"reaching a passing grade (final grade ≥ {config.PASS_THRESHOLD}) would rise from {before} "
+        f"to {after} — {diff} more {plural_en(diff, 'student')} passing.",
     )

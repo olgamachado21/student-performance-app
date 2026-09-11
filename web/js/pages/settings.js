@@ -6,10 +6,38 @@
 
 registerPage("settings", async () => {
   await loadThemesTab();
+  loadLanguageTab();
   await loadAlertSettingsTab();
   await loadBackupsTab();
   wireReviewTourButton();
 });
+
+// ------------------------------------------------------------
+// Idioma: alterna o texto estático da interface (menu lateral, cabeçalhos
+// de página, assistente) entre português e inglês europeu — ver
+// web/js/i18n.js (getLanguage/setLanguage/applyTranslations). A escolha
+// fica guardada em localStorage, tal como o tema de cores; não depende do
+// backend, por isso não há chamada à API aqui.
+// ------------------------------------------------------------
+function loadLanguageTab() {
+  const grid = document.getElementById("language-grid");
+  if (!grid) return; // secção não presente nesta versão do HTML
+
+  const markSelected = () => {
+    const current = getLanguage();
+    grid.querySelectorAll("[data-lang-id]").forEach((el) => {
+      el.classList.toggle("selected", el.dataset.langId === current);
+    });
+  };
+  markSelected();
+
+  grid.querySelectorAll("[data-lang-id]").forEach((el) => {
+    el.addEventListener("click", () => {
+      setLanguage(el.dataset.langId); // troca o idioma e reaplica as traduções de imediato
+      markSelected();
+    });
+  });
+}
 
 // ------------------------------------------------------------
 // Ajuda: botão para reabrir o tour de boas-vindas (ver showOnboarding em
@@ -103,12 +131,12 @@ async function loadAlertSettingsTab() {
     try {
       await Api.saveSettings(payload);
       delete AppCache.alerts; // força recálculo dos avisos com os novos limiares
-      messageBox.textContent = "Definições de alertas guardadas.";
-      showToast("Definições de alertas guardadas.", { type: "success" });
+      messageBox.textContent = t("settings_alerts_saved");
+      showToast(t("settings_alerts_saved"), { type: "success" });
     } catch (err) {
       console.error(err);
-      messageBox.textContent = err.message || "Não foi possível guardar as definições de alertas.";
-      showToast("Não foi possível guardar as definições de alertas.", { type: "error" });
+      messageBox.textContent = err.message || t("settings_alerts_save_error");
+      showToast(t("settings_alerts_save_error"), { type: "error" });
     }
   });
 
@@ -120,10 +148,10 @@ async function loadAlertSettingsTab() {
       // -1 é o valor sentinela que o backend interpreta como "repor para automático".
       await Api.saveSettings({ alert_min_absences: -1 });
       delete AppCache.alerts;
-      messageBox.textContent = "Faltas mínimas repostas para o cálculo automático.";
+      messageBox.textContent = t("settings_alerts_absences_reset");
     } catch (err) {
       console.error(err);
-      messageBox.textContent = err.message || "Não foi possível repor esta definição.";
+      messageBox.textContent = err.message || t("settings_alerts_reset_error");
     }
   });
 }
@@ -150,16 +178,16 @@ async function loadBackupsTab() {
     createBtn.addEventListener("click", async () => {
       createBtn.disabled = true;
       messageBox.classList.remove("hidden");
-      messageBox.textContent = "A criar cópia de segurança...";
+      messageBox.textContent = t("backup_creating");
       try {
         await Api.createBackup();
-        messageBox.textContent = "Cópia de segurança criada com sucesso.";
-        showToast("Cópia de segurança criada.", { type: "success" });
+        messageBox.textContent = t("backup_created");
+        showToast(t("backup_created_toast"), { type: "success" });
         await renderBackupList();
       } catch (err) {
         console.error(err);
-        messageBox.textContent = err.message || "Não foi possível criar a cópia de segurança.";
-        showToast("Não foi possível criar a cópia de segurança.", { type: "error" });
+        messageBox.textContent = err.message || t("backup_create_error");
+        showToast(t("backup_create_error"), { type: "error" });
       } finally {
         createBtn.disabled = false;
       }
@@ -169,16 +197,16 @@ async function loadBackupsTab() {
   try {
     const status = await Api.backupStatus();
     if (!status.sqlite_supported) {
-      autoNote.textContent = "As cópias de segurança não estão disponíveis com a configuração atual (SQL Server) — usa as ferramentas de backup do próprio SQL Server.";
+      autoNote.textContent = t("backup_sqlite_unsupported");
       createBtn.disabled = true;
     } else if (status.auto_backup_running) {
-      autoNote.textContent = `A cópia automática está ativa (aproximadamente a cada ${Math.round(status.auto_backup_interval_hours)}h, enquanto a app estiver aberta).`;
+      autoNote.textContent = t("backup_auto_active").replace("{h}", Math.round(status.auto_backup_interval_hours));
     } else {
-      autoNote.textContent = "A cópia automática ainda não arrancou.";
+      autoNote.textContent = t("backup_auto_not_started");
     }
   } catch (err) {
     console.error(err);
-    autoNote.textContent = "Não foi possível verificar o estado da cópia automática.";
+    autoNote.textContent = t("backup_auto_check_error");
   }
 
   await renderBackupList();
@@ -206,11 +234,11 @@ async function renderBackupList() {
   table.classList.remove("hidden");
   emptyState.classList.add("hidden");
 
-  const reasonLabels = { manual: "Manual", automatico: "Automático", pre_restauro: "Pré-restauro" };
+  const reasonLabels = { manual: t("backup_reason_manual"), automatico: t("backup_reason_auto"), pre_restauro: t("backup_reason_pre_restore") };
 
   tbody.innerHTML = backups.map((b) => {
     const date = new Date(b.created_at);
-    const dateStr = date.toLocaleString("pt-PT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    const dateStr = date.toLocaleString(getLanguage() === "en" ? "en-GB" : "pt-PT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
     const sizeStr = formatBackupSize(b.size_bytes);
     const reasonStr = reasonLabels[b.reason] || b.reason;
     return `
@@ -219,8 +247,8 @@ async function renderBackupList() {
         <td>${reasonStr}</td>
         <td>${sizeStr}</td>
         <td class="table-actions">
-          <button type="button" class="btn-small backup-restore-btn" data-id="${escapeHtml(b.id)}">Restaurar</button>
-          <button type="button" class="btn-small btn-small-danger backup-delete-btn" data-id="${escapeHtml(b.id)}">Apagar</button>
+          <button type="button" class="btn-small backup-restore-btn" data-id="${escapeHtml(b.id)}">${escapeHtml(t("backup_restore_btn"))}</button>
+          <button type="button" class="btn-small btn-small-danger backup-delete-btn" data-id="${escapeHtml(b.id)}">${escapeHtml(t("backup_delete_btn"))}</button>
         </td>
       </tr>
     `;
@@ -230,19 +258,19 @@ async function renderBackupList() {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.id;
       const ok = await appConfirm(
-        "Isto substitui todos os dados atuais pelo conteúdo desta cópia de segurança. É feita automaticamente uma cópia do estado atual antes de restaurar, por precaução. Continuar?",
-        { title: "Restaurar cópia de segurança", confirmLabel: "Restaurar", danger: true }
+        t("backup_restore_confirm_msg"),
+        { title: t("backup_restore_confirm_title"), confirmLabel: t("backup_restore_btn"), danger: true }
       );
       if (!ok) return;
       try {
         await Api.restoreBackup(id);
-        showToast("Base de dados restaurada com sucesso.", { type: "success" });
+        showToast(t("backup_restored_toast"), { type: "success" });
         // Os dados mudaram por completo — força recarregar tudo o que estiver em cache.
         Object.keys(AppCache).forEach((k) => delete AppCache[k]);
         await renderBackupList();
       } catch (err) {
         console.error(err);
-        showToast(err.message || "Não foi possível restaurar esta cópia de segurança.", { type: "error" });
+        showToast(err.message || t("backup_restore_error"), { type: "error" });
       }
     });
   });
@@ -250,17 +278,17 @@ async function renderBackupList() {
   tbody.querySelectorAll(".backup-delete-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.id;
-      const ok = await appConfirm("Apagar esta cópia de segurança? Esta ação não pode ser desfeita.", {
-        title: "Apagar cópia de segurança", confirmLabel: "Apagar", danger: true,
+      const ok = await appConfirm(t("backup_delete_confirm_msg"), {
+        title: t("backup_delete_confirm_title"), confirmLabel: t("backup_delete_btn"), danger: true,
       });
       if (!ok) return;
       try {
         await Api.deleteBackup(id);
-        showToast("Cópia de segurança apagada.", { type: "success" });
+        showToast(t("backup_deleted_toast"), { type: "success" });
         await renderBackupList();
       } catch (err) {
         console.error(err);
-        showToast(err.message || "Não foi possível apagar esta cópia de segurança.", { type: "error" });
+        showToast(err.message || t("backup_delete_error"), { type: "error" });
       }
     });
   });

@@ -69,10 +69,7 @@ function setChatbotOpen(open) {
     if (!chatbotOpened) {
       // Primeira vez que se abre: mostra a mensagem de boas-vindas do assistente.
       chatbotOpened = true;
-      appendChatbotMessage(
-        "assistant",
-        "Olá! Sou o assistente da StudentPerfomance. Escreve a tua pergunta abaixo — os dados vêm sempre do dataset atual, nunca inventados."
-      );
+      appendChatbotMessage("assistant", t("chatbot_welcome_message"));
     }
     // Foca automaticamente o campo de texto, com um pequeno atraso para
     // garantir que a animação de abertura do painel já começou.
@@ -117,12 +114,12 @@ async function sendChatbotQuestion(question) {
   try {
     const result = await Api.chatbotAsk(question);
     if (typingBubble) typingBubble.remove(); // remove os pontinhos assim que a resposta chega
-    appendChatbotMessage("assistant", result.answer || "Não consegui obter uma resposta.");
+    appendChatbotMessage("assistant", result.answer || t("chatbot_no_answer"));
   } catch (err) {
     console.error("Erro ao perguntar ao assistente:", err);
     if (typingBubble) typingBubble.remove();
-    appendChatbotMessage("assistant", "Não consegui responder agora — confirma que a API está a correr e tenta novamente.");
-    showToast("Não foi possível contactar o assistente.", { type: "error" });
+    appendChatbotMessage("assistant", t("chatbot_error_message"));
+    showToast(t("chatbot_contact_error_toast"), { type: "error" });
   } finally {
     chatbotBusy = false;
     if (sendBtn) sendBtn.disabled = false;

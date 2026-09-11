@@ -52,10 +52,13 @@ const SUGGESTION_LABELS = {
 };
 
 // Rótulos das colunas mostradas na tabela de "estudantes semelhantes".
-const SIMILAR_TABLE_COLUMN_LABELS = {
-  school: "Escola", sex: "Sexo", age: "Idade", studytime: "Estudo",
-  absences: "Faltas", failures: "Reprovações", G1: "G1", G2: "G2",
-};
+function similarTableColumnLabels() {
+  return {
+    school: t("adddata_col_school"), sex: t("adddata_col_sex"), age: t("adddata_col_age"),
+    studytime: t("adddata_col_studytime"), absences: t("adddata_col_absences"),
+    failures: t("adddata_col_failures"), G1: "G1", G2: "G2",
+  };
+}
 
 let suggestionDebounceTimer = null; // temporizador usado para "debounce" (atrasar) os pedidos de sugestão
 let lastUnusualWarnings = []; // últimos avisos de valores pouco habituais, usados na confirmação de envio
@@ -120,7 +123,7 @@ function renderFieldSuggestions(result) {
 
     // Usa o rótulo legível se existir, senão mostra o valor bruto.
     const displayValue = (SUGGESTION_LABELS[key] && SUGGESTION_LABELS[key][value]) ?? value;
-    hint.innerHTML = `<span class="field-suggestion-dot"></span>sugestão: <strong>${escapeHtml(String(displayValue))}</strong>`;
+    hint.innerHTML = `<span class="field-suggestion-dot"></span>${escapeHtml(t("adddata_suggestion_prefix"))}<strong>${escapeHtml(String(displayValue))}</strong>`;
     hint.classList.remove("hidden");
     hint.onclick = () => applySuggestion(elId, value); // clicar na dica preenche o campo automaticamente
   });
@@ -148,11 +151,12 @@ function renderSimilarStudents(students, nSimilar) {
 
   box.classList.remove("hidden");
   const arrow = similarStudentsTableVisible ? "▾" : "▸";
-  toggle.textContent = `${arrow} Ver estudantes semelhantes usados na sugestão (${nSimilar} no total, ${students.length} em destaque)`;
+  toggle.textContent = `${arrow} ${t("adddata_similar_toggle").replace("{n}", nSimilar).replace("{m}", students.length)}`;
 
   // Constrói a tabela dinamicamente a partir das chaves do primeiro estudante (colunas variam consoante os campos conhecidos).
   const cols = Object.keys(students[0]);
-  const headerRow = cols.map((c) => `<th>${escapeHtml(SIMILAR_TABLE_COLUMN_LABELS[c] || c)}</th>`).join("");
+  const columnLabels = similarTableColumnLabels();
+  const headerRow = cols.map((c) => `<th>${escapeHtml(columnLabels[c] || c)}</th>`).join("");
   const bodyRows = students.map((s) => {
     const cells = cols.map((c) => `<td>${escapeHtml(String(s[c]))}</td>`).join("");
     return `<tr>${cells}</tr>`;
@@ -193,9 +197,9 @@ async function refreshAddDataKpis() {
   if (AppCache["stats"] === undefined) showSkeletonPlaceholders("adddata-kpis", { count: 3 });
   const stats = await cached("stats", Api.stats);
   renderKpiCards("adddata-kpis", [
-    { label: "Estudantes no dataset", value: stats.n_students },
-    { label: "Nota média", value: `${fmtNum(stats.average_grade)} / 20` },
-    { label: "Taxa de aprovação", value: fmtPct(stats.pass_rate) },
+    { label: t("adddata_kpi_students"), value: stats.n_students },
+    { label: t("adddata_kpi_avg_grade"), value: `${fmtNum(stats.average_grade)} / 20` },
+    { label: t("adddata_kpi_pass_rate"), value: fmtPct(stats.pass_rate) },
   ]);
 }
 
@@ -235,8 +239,8 @@ async function submitNewStudent() {
     // Há avisos pendentes: pede confirmação explícita antes de submeter (não bloqueia, só avisa).
     const summary = lastUnusualWarnings.map((w) => `• ${w.message}`).join("\n");
     const proceed = await appConfirm(
-      `Antes de adicionar, repara nisto:\n\n${summary}\n\nQueres continuar mesmo assim?`,
-      { title: "Valores pouco habituais", confirmLabel: "Adicionar mesmo assim", danger: false }
+      t("adddata_unusual_confirm_msg").replace("{summary}", summary),
+      { title: t("adddata_unusual_confirm_title"), confirmLabel: t("adddata_unusual_confirm_label"), danger: false }
     );
     if (!proceed) return;
   }
@@ -258,7 +262,7 @@ async function submitNewStudent() {
   const form = document.getElementById("adddata-form");
   const submitBtn = form.querySelector("button[type=submit]");
   const originalText = submitBtn.textContent;
-  submitBtn.textContent = "A adicionar…";
+  submitBtn.textContent = t("adddata_adding_btn");
   submitBtn.disabled = true;
 
   // Guarda o total anterior de estudantes, para depois verificar se um marco foi ultrapassado.
@@ -282,16 +286,16 @@ async function submitNewStudent() {
     await refreshAddDataKpis();
 
     const newTotal = result.dataset_stats.n_students;
-    showToast("Estudante adicionado com sucesso.", { type: "success" });
+    showToast(t("adddata_added_toast"), { type: "success" });
     if (crossesMilestone(prevTotal, newTotal)) {
       // Cruzou um marco redondo: pequena celebração visual + toast especial.
       const kpiCard = document.querySelector("#adddata-kpis .kpi-card");
       celebrate(kpiCard || submitBtn);
-      showToast(`Marco alcançado: ${newTotal} estudantes no dataset!`, { type: "success" });
+      showToast(t("adddata_milestone_toast").replace("{n}", newTotal), { type: "success" });
     }
   } catch (err) {
     console.error(err);
-    showToast("Não foi possível adicionar o estudante. Confirma que a API está a correr.", { type: "error" });
+    showToast(t("adddata_add_error"), { type: "error" });
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -311,13 +315,13 @@ async function submitBulkImport() {
 
   if (!file) {
     resultBox.classList.remove("hidden");
-    resultBox.innerHTML = `<div class="bulk-import-summary">Escolhe primeiro um ficheiro CSV.</div>`;
+    resultBox.innerHTML = `<div class="bulk-import-summary">${escapeHtml(t("adddata_bulk_choose_file"))}</div>`;
     return;
   }
 
   const submitBtn = document.getElementById("ad-bulk-submit");
   const originalText = submitBtn.textContent;
-  submitBtn.textContent = "A importar…";
+  submitBtn.textContent = t("adddata_importing_btn");
   submitBtn.disabled = true;
 
   const prevTotal = AppCache["stats"] ? AppCache["stats"].n_students : null;
@@ -339,24 +343,26 @@ async function submitBulkImport() {
       await refreshAddDataKpis();
 
       const newTotal = AppCache["stats"] ? AppCache["stats"].n_students : null;
+      const plural = result.added_count === 1 ? "" : "s";
+      const errorsSuffix = result.error_count > 0 ? t("adddata_bulk_errors_suffix").replace("{n}", result.error_count) : "";
       showToast(
-        `${result.added_count} estudante${result.added_count === 1 ? "" : "s"} importado${result.added_count === 1 ? "" : "s"} com sucesso${result.error_count > 0 ? ` (${result.error_count} linha(s) com erros)` : ""}.`,
+        t("adddata_bulk_success_toast").replace("{n}", result.added_count).replace(/\{plural\}/g, plural).replace("{errors}", errorsSuffix),
         { type: result.error_count > 0 ? "warning" : "success" }
       );
       if (newTotal !== null && crossesMilestone(prevTotal, newTotal)) {
         celebrate(document.querySelector("#adddata-kpis .kpi-card") || submitBtn);
-        showToast(`Marco alcançado: ${newTotal} estudantes no dataset!`, { type: "success" });
+        showToast(t("adddata_milestone_toast").replace("{n}", newTotal), { type: "success" });
       }
     } else {
       // Nenhuma linha válida: nada foi alterado no dataset.
-      showToast("Nenhuma linha válida foi importada — confirma o formato do ficheiro.", { type: "error" });
+      showToast(t("adddata_bulk_no_valid_rows"), { type: "error" });
     }
     fileInput.value = ""; // limpa a seleção do ficheiro após a tentativa
   } catch (err) {
     console.error(err);
     resultBox.classList.remove("hidden");
-    resultBox.innerHTML = `<div class="bulk-import-summary">Não foi possível importar o ficheiro: ${escapeHtml(err.message || "erro desconhecido")}</div>`;
-    showToast("Não foi possível importar o ficheiro.", { type: "error" });
+    resultBox.innerHTML = `<div class="bulk-import-summary">${escapeHtml(t("adddata_bulk_import_error").replace("{msg}", err.message || t("error_unknown")))}</div>`;
+    showToast(t("adddata_bulk_import_error_toast"), { type: "error" });
   } finally {
     submitBtn.textContent = originalText;
     submitBtn.disabled = false;
@@ -369,16 +375,16 @@ function renderBulkImportResult(result) {
 
   const summary = `
     <div class="bulk-import-summary">
-      <strong>${result.added_count}</strong> estudante(s) adicionado(s) com sucesso
-      ${result.error_count > 0 ? `, <strong>${result.error_count}</strong> linha(s) com erros` : ""}.
-      Total no dataset adicionado: ${result.total_added_so_far}.
+      <strong>${result.added_count}</strong> ${escapeHtml(t("adddata_bulk_summary_added"))}
+      ${result.error_count > 0 ? `, <strong>${result.error_count}</strong> ${escapeHtml(t("adddata_bulk_summary_errors_suffix"))}` : ""}.
+      ${escapeHtml(t("adddata_bulk_summary_total").replace("{n}", result.total_added_so_far))}
     </div>
   `;
 
   // Lista detalhada de erros por linha, só construída se houver erros.
   const errorsHtml = result.errors && result.errors.length
     ? `<div class="bulk-import-errors">${result.errors.map((e) => `
-        <div class="bulk-import-error-item">Linha ${e.line}: ${escapeHtml(e.errors.join("; "))}</div>
+        <div class="bulk-import-error-item">${escapeHtml(t("adddata_bulk_error_line").replace("{n}", e.line).replace("{errors}", e.errors.join("; ")))}</div>
       `).join("")}</div>`
     : "";
 
@@ -403,24 +409,24 @@ function showAddDataResult(result) {
   body.innerHTML = `
     ${identityLine}
     <p style="margin-bottom:0.8rem;">
-      Nota final (G3) prevista pelo modelo (<strong>${result.model_used}</strong>):
+      ${t("adddata_predicted_grade_line").replace("{model}", `<strong>${escapeHtml(result.model_used)}</strong>`)}
       <strong style="font-size:1.3rem; color:var(--primary);">${s.G3} / 20</strong>
     </p>
     <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);">
       <div class="kpi-card">
-        <div class="kpi-label">Total no dataset</div>
+        <div class="kpi-label">${escapeHtml(t("adddata_kpi_total_dataset"))}</div>
         <div class="kpi-value">${result.dataset_stats.n_students}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Nota média</div>
+        <div class="kpi-label">${escapeHtml(t("adddata_kpi_avg_grade"))}</div>
         <div class="kpi-value">${fmtNum(result.dataset_stats.average_grade)}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Taxa de aprovação</div>
+        <div class="kpi-label">${escapeHtml(t("adddata_kpi_pass_rate"))}</div>
         <div class="kpi-value">${fmtPct(result.dataset_stats.pass_rate)}</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Taxa de risco</div>
+        <div class="kpi-label">${escapeHtml(t("adddata_kpi_risk_rate"))}</div>
         <div class="kpi-value">${fmtPct(result.dataset_stats.risk_rate)}</div>
       </div>
     </div>

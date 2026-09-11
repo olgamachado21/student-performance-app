@@ -17,6 +17,7 @@ import pandas as pd
 
 from src import config
 from src.data_processing import get_processed_data
+from src.i18n import t, normalize_lang
 
 # Preenchido em runtime por get_defaults() — mantido aqui só como referência histórica.
 DEFAULT_FIELDS_INFO = None
@@ -153,21 +154,41 @@ def full_prediction(user_input: dict) -> dict:
 # subconjunto de "hábitos" já exposto no simulador da interface — não faz
 # sentido explicar com variáveis que o utilizador nem consegue ajustar lá).
 EXPLAIN_FEATURES = ["studytime", "absences", "failures", "goout", "Dalc", "Walc", "internet", "higher", "schoolsup"]
-# Nomes amigáveis destes fatores, mostrados na explicação da previsão.
+# Nomes amigáveis destes fatores, mostrados na explicação da previsão, por
+# idioma. Também consumidos pelo chatbot (_answer_student_explain em
+# src/chatbot.py) através de explain_labels(lang) abaixo.
 EXPLAIN_LABELS = {
-    "studytime": "Tempo de estudo semanal",
-    "absences": "Número de faltas",
-    "failures": "Reprovações anteriores",
-    "goout": "Sair com amigos",
-    "Dalc": "Consumo de álcool em dias úteis",
-    "Walc": "Consumo de álcool ao fim de semana",
-    "internet": "Acesso a internet em casa",
-    "higher": "Deseja estudar no ensino superior",
-    "schoolsup": "Apoio educativo extra",
+    "pt": {
+        "studytime": "Tempo de estudo semanal",
+        "absences": "Número de faltas",
+        "failures": "Reprovações anteriores",
+        "goout": "Sair com amigos",
+        "Dalc": "Consumo de álcool em dias úteis",
+        "Walc": "Consumo de álcool ao fim de semana",
+        "internet": "Acesso a internet em casa",
+        "higher": "Deseja estudar no ensino superior",
+        "schoolsup": "Apoio educativo extra",
+    },
+    "en": {
+        "studytime": "Weekly study time",
+        "absences": "Number of absences",
+        "failures": "Prior failures",
+        "goout": "Going out with friends",
+        "Dalc": "Weekday alcohol consumption",
+        "Walc": "Weekend alcohol consumption",
+        "internet": "Internet access at home",
+        "higher": "Wants to pursue higher education",
+        "schoolsup": "Extra educational support",
+    },
 }
 
 
-def explain_prediction(user_input: dict) -> dict:
+def explain_labels(lang: str | None = None) -> dict:
+    """Devolve o dicionário feature->rótulo de EXPLAIN_LABELS no idioma pedido."""
+    return EXPLAIN_LABELS[normalize_lang(lang)]
+
+
+def explain_prediction(user_input: dict, lang: str | None = None) -> dict:
     """
     Explica a previsão de UM estudante em concreto, não a importância
     genérica do modelo (essa é sempre igual para toda a gente e já existe em
@@ -184,6 +205,8 @@ def explain_prediction(user_input: dict) -> dict:
     honesto sobre o que mede: o efeito isolado de trocar UM fator de cada
     vez, mantendo os outros fixos.
     """
+    lang = normalize_lang(lang)
+    labels = explain_labels(lang)
     # Previsão real, com todos os valores que o estudante forneceu.
     baseline = predict_grade(user_input, use_previous_grades=False)["predicted_grade"]
     defaults = get_defaults()
@@ -206,7 +229,7 @@ def explain_prediction(user_input: dict) -> dict:
             continue  # impacto residual, não vale a pena listar
         contributions.append({
             "feature": feat,
-            "label": EXPLAIN_LABELS.get(feat, feat),
+            "label": labels.get(feat, feat),
             "student_value": user_input[feat],
             "typical_value": typical_value,
             "impact": impact,
@@ -225,7 +248,7 @@ def explain_prediction(user_input: dict) -> dict:
 OUTLIER_Z_THRESHOLD = 2.0
 
 
-def detect_outliers(df: pd.DataFrame, z_threshold: float = OUTLIER_Z_THRESHOLD, limit: int = 20) -> list[dict]:
+def detect_outliers(df: pd.DataFrame, z_threshold: float = OUTLIER_Z_THRESHOLD, limit: int = 20, lang: str | None = None) -> list[dict]:
     """
     Identifica estudantes cujo resultado foge do que seria esperado dado o
     seu próprio perfil — não "quem tem nota baixa" (isso já é `at_risk`),
@@ -241,6 +264,7 @@ def detect_outliers(df: pd.DataFrame, z_threshold: float = OUTLIER_Z_THRESHOLD, 
     resíduo muito negativo (z < 0) é o oposto — pode ser um caso a
     investigar, mesmo que a nota em si não seja das piores da turma.
     """
+    lang = normalize_lang(lang)
     artifact = _load_artifact("regression_completo.joblib")
     pipe, feature_cols = artifact["pipeline"], artifact["features"]
 
@@ -270,7 +294,7 @@ def detect_outliers(df: pd.DataFrame, z_threshold: float = OUTLIER_Z_THRESHOLD, 
             "predicted_grade": round(float(predicted[i]), 2),
             "residual": round(float(residual[i]), 2),
             "z_score": round(z, 2),
-            "direction": "acima do esperado" if z > 0 else "abaixo do esperado",
+            "direction": t(lang, "acima do esperado", "above expected") if z > 0 else t(lang, "abaixo do esperado", "below expected"),
         })
 
     # Ordena pelos casos mais extremos primeiro, e limita ao número pedido.

@@ -93,11 +93,11 @@ function renderDataTable(students) {
       <td>${s.G2}</td>
       <td><strong>${s.G3}</strong></td>
       <td><span class="band-pill band-${s.perf_band}">${s.perf_band}</span></td>
-      <td>${s.at_risk ? '<span class="pill pill-no">Em risco</span>' : '<span class="pill pill-yes">OK</span>'}</td>
+      <td>${s.at_risk ? `<span class="pill pill-no">${escapeHtml(t("data_pill_at_risk"))}</span>` : `<span class="pill pill-yes">${escapeHtml(t("data_pill_ok"))}</span>`}</td>
     </tr>
   `).join("");
   // Sem resultados: mostra uma linha única explicativa em vez de tabela vazia.
-  tbody.innerHTML = rows || `<tr><td colspan="12">Nenhum estudante corresponde aos filtros.</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="12">${escapeHtml(t("data_no_results"))}</td></tr>`;
 }
 
 function renderPagination(data) {
@@ -108,14 +108,14 @@ function renderPagination(data) {
   // para ir diretamente a uma página escrevendo o número — útil quando o
   // dataset tem muitas páginas e clicar "Seguinte" repetidamente seria lento.
   container.innerHTML = `
-    <button id="page-prev" ${page <= 1 ? "disabled" : ""}>← Anterior</button>
-    <span class="pagination-info">Página ${page} de ${total_pages} (${total} estudantes)</span>
+    <button id="page-prev" ${page <= 1 ? "disabled" : ""}>${escapeHtml(t("data_pagination_prev"))}</button>
+    <span class="pagination-info">${escapeHtml(t("data_pagination_info").replace("{page}", page).replace("{total_pages}", total_pages).replace("{total}", total))}</span>
     <form class="pagination-goto" id="pagination-goto-form">
-      <label for="page-goto-input">Ir para a página</label>
+      <label for="page-goto-input">${escapeHtml(t("data_pagination_goto_label"))}</label>
       <input type="number" id="page-goto-input" min="1" max="${total_pages}" value="${page}" ${total_pages <= 1 ? "disabled" : ""}>
-      <button type="submit" class="btn-small" ${total_pages <= 1 ? "disabled" : ""}>Ir</button>
+      <button type="submit" class="btn-small" ${total_pages <= 1 ? "disabled" : ""}>${escapeHtml(t("data_pagination_goto_btn"))}</button>
     </form>
-    <button id="page-next" ${page >= total_pages ? "disabled" : ""}>Seguinte →</button>
+    <button id="page-next" ${page >= total_pages ? "disabled" : ""}>${escapeHtml(t("data_pagination_next"))}</button>
   `;
 
   // "?." evita erro se o botão não existir (ex.: já desativado/removido).

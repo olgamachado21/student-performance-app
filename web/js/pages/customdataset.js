@@ -23,12 +23,12 @@
 // através dos listeners extra registados no fim deste ficheiro.
 // ============================================================
 
-// Formata uma data ISO (ex.: "2026-08-20T15:05:52") para o formato curto português.
+// Formata uma data ISO (ex.: "2026-08-20T15:05:52") para o formato curto local.
 function fmtDateTime(isoString) {
   if (!isoString) return "";
   const d = new Date(isoString);
   if (Number.isNaN(d.getTime())) return isoString;
-  return d.toLocaleString("pt-PT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(getLanguage() === "en" ? "en-GB" : "pt-PT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 // Navega para a página de importação — usado nos botões "Importar agora" das
@@ -82,35 +82,35 @@ async function refreshCustomImportStatus() {
 function renderCustomImportStatusCard(status) {
   const card = document.getElementById("ci-status-card");
   if (!status || !status.imported) {
-    card.innerHTML = `<p class="form-help-text">Ainda não importaste nenhum dataset personalizado — carrega um ficheiro abaixo para começar.</p>`;
+    card.innerHTML = `<p class="form-help-text">${escapeHtml(t("cd_no_dataset"))}</p>`;
     return;
   }
   const columnsList = status.columns.join(", ");
   const detectedCount = Object.keys(status.detected_student_fields || {}).length;
   card.innerHTML = `
-    <h3>Dataset ativo</h3>
-    <p><strong>${escapeHtml(status.filename || "Sem nome")}</strong> — ${status.n_rows} linha(s), ${status.n_columns} coluna(s), importado em ${fmtDateTime(status.imported_at)}.</p>
-    <p class="form-help-text">Colunas: ${escapeHtml(columnsList)}.</p>
+    <h3>${escapeHtml(t("cd_active_dataset"))}</h3>
+    <p><strong>${escapeHtml(status.filename || t("cd_no_name"))}</strong>${escapeHtml(t("cd_file_summary").replace("{n}", status.n_rows).replace("{m}", status.n_columns).replace("{date}", fmtDateTime(status.imported_at)))}</p>
+    <p class="form-help-text">${escapeHtml(t("cd_columns_label").replace("{list}", columnsList))}</p>
     ${
       detectedCount > 0
-        ? `<p class="form-help-text">${detectedCount} coluna(s) detetada(s) automaticamente como parecidas com dados de estudantes da StudentPerfomance — a página Previsões está disponível.</p>`
-        : `<p class="form-help-text">Nenhuma coluna parecida com dados de estudantes foi detetada — a página Previsões não está disponível para este dataset, mas Estatísticas, Fórmulas e Treinar Modelo continuam a funcionar normalmente.</p>`
+        ? `<p class="form-help-text">${escapeHtml(t("cd_detected_fields").replace("{n}", detectedCount))}</p>`
+        : `<p class="form-help-text">${escapeHtml(t("cd_no_detected_fields"))}</p>`
     }
-    <button type="button" class="btn-small btn-small-danger" id="ci-delete-btn">Remover dataset personalizado</button>
+    <button type="button" class="btn-small btn-small-danger" id="ci-delete-btn">${escapeHtml(t("cd_remove_dataset_btn"))}</button>
   `;
   document.getElementById("ci-delete-btn").addEventListener("click", handleCustomImportDelete);
 }
 
 async function handleCustomImportDelete() {
   const ok = await appConfirm(
-    "Remover o dataset personalizado importado (dados, estatísticas, previsões e modelo treinado)? Esta ação não pode ser desfeita.",
-    { title: "Remover dataset personalizado", confirmLabel: "Remover", danger: true }
+    t("cd_remove_confirm_msg"),
+    { title: t("cd_remove_confirm_title"), confirmLabel: t("cd_remove_confirm_label"), danger: true }
   );
   if (!ok) return;
   try {
     await Api.customDatasetDelete();
     renderCustomImportStatusCard({ imported: false });
-    showToast("Dataset personalizado removido.", { type: "info" });
+    showToast(t("cd_removed_toast"), { type: "info" });
   } catch (err) {
     showToast(err.message, { type: "error" });
   }
@@ -124,13 +124,13 @@ async function handleCustomImportUpload() {
 
   if (!file) {
     msgBox.classList.remove("hidden");
-    msgBox.textContent = "Escolhe um ficheiro (.csv, .xlsx ou .xls) primeiro.";
+    msgBox.textContent = t("cd_choose_file_first");
     return;
   }
 
   const originalText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "A carregar…";
+  btn.textContent = t("cd_uploading_btn");
   try {
     const staged = await Api.customDatasetUpload(file);
     msgBox.classList.add("hidden");
@@ -150,9 +150,11 @@ async function handleCustomImportUpload() {
 function renderCustomImportPending(staged) {
   const card = document.getElementById("ci-mapping-card");
   card.classList.remove("hidden");
-  document.getElementById("ci-mapping-help").textContent =
-    `Ficheiro "${staged.filename}" — ${staged.n_rows} linha(s), ${staged.columns.length} coluna(s): ${staged.columns.join(", ")}. ` +
-    `As colunas ficam tal como estão no ficheiro — não é preciso mapear nada.`;
+  document.getElementById("ci-mapping-help").textContent = t("cd_pending_file_summary")
+    .replace("{filename}", staged.filename)
+    .replace("{n}", staged.n_rows)
+    .replace("{m}", staged.columns.length)
+    .replace("{cols}", staged.columns.join(", "));
 
   renderCustomImportPreview(staged);
   document.getElementById("ci-import-message").classList.add("hidden");
@@ -183,14 +185,14 @@ async function confirmCustomImport() {
 
   const originalText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "A importar…";
+  btn.textContent = t("cd_importing_btn");
   try {
     const status = await Api.customDatasetImport();
     msgBox.classList.add("hidden");
     document.getElementById("ci-mapping-card").classList.add("hidden");
     document.getElementById("ci-file-input").value = "";
     renderCustomImportStatusCard(status);
-    showToast(`Dataset personalizado importado: ${status.n_rows} linha(s).`, { type: "success" });
+    showToast(t("cd_imported_toast").replace("{n}", status.n_rows), { type: "success" });
   } catch (err) {
     msgBox.classList.remove("hidden");
     msgBox.textContent = err.message;
@@ -242,14 +244,14 @@ async function loadCustomStatsPage() {
 
 function renderCustomStatsKpis(stats) {
   const items = [
-    { label: "Linhas", value: stats.n_rows },
-    { label: "Colunas", value: stats.n_columns },
+    { label: t("cd_kpi_rows"), value: stats.n_rows },
+    { label: t("cd_kpi_columns"), value: stats.n_columns },
   ];
   if (stats.average_grade !== undefined && stats.average_grade !== null) {
-    items.push({ label: "Nota média (G3)", value: `${fmtNum(stats.average_grade)} / 20` });
+    items.push({ label: t("cd_kpi_avg_grade"), value: `${fmtNum(stats.average_grade)} / 20` });
   }
   if (stats.pass_rate !== undefined && stats.pass_rate !== null) {
-    items.push({ label: "Taxa de aprovação", value: fmtPct(stats.pass_rate) });
+    items.push({ label: t("cd_kpi_pass_rate"), value: fmtPct(stats.pass_rate) });
   }
   renderKpiCards("cs-kpis", items);
 }
@@ -271,7 +273,7 @@ function renderCustomStatsCharts(stats) {
     data: {
       labels: stats.grade_distribution.labels,
       datasets: [{
-        label: "Nº de linhas",
+        label: t("cd_chart_rows_count_label"),
         data: stats.grade_distribution.counts,
         backgroundColor: COLORS.primary,
         borderRadius: 4,
@@ -293,7 +295,7 @@ function renderCustomStatsCharts(stats) {
     csPassFailChart = new Chart(document.getElementById("cs-chart-pass-fail"), {
       type: "doughnut",
       data: {
-        labels: ["Aprovado", "Reprovado"],
+        labels: [t("cd_chart_passed"), t("cd_chart_failed")],
         datasets: [{
           data: [stats.pass_fail_counts.aprovados, stats.pass_fail_counts.reprovados],
           backgroundColor: [COLORS.positive, COLORS.negative],
@@ -310,24 +312,26 @@ function renderCustomStatsColumnsTable(stats) {
   const rows = Object.entries(stats.columns).map(([col, info]) => {
     let summary;
     if (info.type === "numeric") {
-      summary = `média ${fmtNum(info.mean)} · mediana ${fmtNum(info.median)} · desvio-padrão ${fmtNum(info.std)} · min ${fmtNum(info.min)} · max ${fmtNum(info.max)}`;
+      summary = t("cd_col_summary_numeric")
+        .replace("{mean}", fmtNum(info.mean)).replace("{median}", fmtNum(info.median))
+        .replace("{std}", fmtNum(info.std)).replace("{min}", fmtNum(info.min)).replace("{max}", fmtNum(info.max));
     } else {
       summary = Object.entries(info.counts)
         .map(([cat, count]) => `${escapeHtml(cat)}: ${count}`)
         .join(" · ");
       if (info.n_distinct > Object.keys(info.counts).length) {
-        summary += ` · (+${info.n_distinct - Object.keys(info.counts).length} categorias)`;
+        summary += t("cd_col_summary_more_categories").replace("{n}", info.n_distinct - Object.keys(info.counts).length);
       }
     }
     return `
       <tr>
         <td>${escapeHtml(col)}</td>
-        <td>${info.type === "numeric" ? "Numérico" : "Categórico"}</td>
+        <td>${info.type === "numeric" ? escapeHtml(t("cd_col_type_numeric")) : escapeHtml(t("cd_col_type_categorical"))}</td>
         <td>${summary}</td>
       </tr>
     `;
   });
-  tbody.innerHTML = rows.join("") || `<tr><td colspan="3">Sem colunas para mostrar.</td></tr>`;
+  tbody.innerHTML = rows.join("") || `<tr><td colspan="3">${escapeHtml(t("cd_no_columns"))}</td></tr>`;
 }
 
 // ============================================================
@@ -376,20 +380,20 @@ function renderCustomPredictTable(data) {
       <td>${p.row_id}</td>
       <td>${fmtNum(p.predicted_grade)}</td>
       <td>${fmtPct(p.pass_probability)}</td>
-      <td>${p.aprovado_previsto ? '<span class="pill pill-yes">Sim</span>' : '<span class="pill pill-no">Não</span>'}</td>
+      <td>${p.aprovado_previsto ? `<span class="pill pill-yes">${escapeHtml(t("cat_yes"))}</span>` : `<span class="pill pill-no">${escapeHtml(t("cat_no"))}</span>`}</td>
       <td>${p.actual_grade !== undefined ? fmtNum(p.actual_grade) : "—"}</td>
     </tr>
   `).join("");
-  tbody.innerHTML = rows || `<tr><td colspan="5">Sem linhas para mostrar.</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="5">${escapeHtml(t("cd_no_rows"))}</td></tr>`;
 }
 
 function renderCustomPredictPagination(data) {
   const container = document.getElementById("cp-pagination");
   const { page, total_pages, total } = data;
   container.innerHTML = `
-    <button id="cp-page-prev" ${page <= 1 ? "disabled" : ""}>← Anterior</button>
-    <span class="pagination-info">Página ${page} de ${total_pages} (${total} linha(s))</span>
-    <button id="cp-page-next" ${page >= total_pages ? "disabled" : ""}>Seguinte →</button>
+    <button id="cp-page-prev" ${page <= 1 ? "disabled" : ""}>${escapeHtml(t("data_pagination_prev"))}</button>
+    <span class="pagination-info">${escapeHtml(t("cd_pagination_rows_info").replace("{page}", page).replace("{total_pages}", total_pages).replace("{total}", total))}</span>
+    <button id="cp-page-next" ${page >= total_pages ? "disabled" : ""}>${escapeHtml(t("data_pagination_next"))}</button>
   `;
   document.getElementById("cp-page-prev")?.addEventListener("click", () => loadCustomPredictPage(Math.max(1, page - 1)));
   document.getElementById("cp-page-next")?.addEventListener("click", () => loadCustomPredictPage(Math.min(total_pages, page + 1)));
@@ -433,14 +437,14 @@ async function loadCustomTrainPage() {
 
   if (!status.imported) {
     empty.classList.remove("hidden");
-    empty.innerHTML = `Ainda não importaste nenhum dataset personalizado. <button type="button" class="link-button" id="ct-goto-import">Importar agora</button>`;
+    empty.innerHTML = `${escapeHtml(t("cd_no_dataset_with_import"))} <button type="button" class="link-button" id="ct-goto-import">${escapeHtml(t("cd_import_now_btn"))}</button>`;
     content.classList.add("hidden");
     wireGotoImportButton("ct-goto-import");
     return;
   }
   if (!status.can_train) {
     empty.classList.remove("hidden");
-    empty.textContent = `Para treinar um modelo com este dataset, é preciso ter pelo menos ${status.min_rows_for_train} linhas e 2 colunas (tens ${status.n_rows} linha(s) e ${status.n_columns} coluna(s)).`;
+    empty.textContent = t("cd_train_min_rows").replace("{min}", status.min_rows_for_train).replace("{n}", status.n_rows).replace("{m}", status.n_columns);
     content.classList.add("hidden");
     return;
   }
@@ -496,7 +500,7 @@ function refreshCustomTrainFeatureChoices() {
         </label>
       `;
     })
-    .join("") || `<p class="form-help-text">Não há mais colunas disponíveis como recurso.</p>`;
+    .join("") || `<p class="form-help-text">${escapeHtml(t("cd_no_more_feature_columns"))}</p>`;
 }
 
 async function runCustomTrain() {
@@ -509,23 +513,23 @@ async function runCustomTrain() {
 
   if (!targetCol) {
     msgBox.classList.remove("hidden");
-    msgBox.textContent = "Escolhe a coluna a prever.";
+    msgBox.textContent = t("cd_choose_target_column");
     return;
   }
   if (featureCols.length === 0) {
     msgBox.classList.remove("hidden");
-    msgBox.textContent = "Escolhe pelo menos uma coluna-recurso.";
+    msgBox.textContent = t("cd_choose_feature_column");
     return;
   }
 
   const originalText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "A treinar…";
+  btn.textContent = t("cd_training_btn");
   try {
     const metrics = await Api.customDatasetTrain(targetCol, featureCols);
     msgBox.classList.add("hidden");
     renderCustomTrainResults(metrics);
-    showToast("Modelo treinado com sucesso.", { type: "success" });
+    showToast(t("cd_trained_toast"), { type: "success" });
   } catch (err) {
     msgBox.classList.remove("hidden");
     msgBox.textContent = err.message;
@@ -545,7 +549,7 @@ function renderCustomMetricsTable(results, bestModel) {
   `).join("");
   return `
     <table>
-      <thead><tr><th>Modelo</th>${metricNames.map((k) => `<th>${escapeHtml(k)}</th>`).join("")}</tr></thead>
+      <thead><tr><th>${escapeHtml(t("cd_model_header"))}</th>${metricNames.map((k) => `<th>${escapeHtml(k)}</th>`).join("")}</tr></thead>
       <tbody>${rows}</tbody>
     </table>
   `;
@@ -555,12 +559,14 @@ function renderCustomTrainResults(metrics) {
   const container = document.getElementById("ct-results");
   const featureLabels = metrics.feature_cols.join(", ");
   const isRegression = metrics.task === "regression";
-  const taskLabel = isRegression ? `Regressão — prever "${metrics.target}"` : `Classificação — prever "${metrics.target}"`;
+  const taskLabel = isRegression
+    ? t("cd_task_regression").replace("{target}", metrics.target)
+    : t("cd_task_classification").replace("{target}", metrics.target);
   const results = isRegression ? metrics.regression : metrics.classification;
   container.innerHTML = `
     <div class="card">
       <h3>${escapeHtml(taskLabel)}</h3>
-      <p class="form-help-text">Variáveis usadas: ${escapeHtml(featureLabels)} — ${metrics.n_rows} linha(s).</p>
+      <p class="form-help-text">${escapeHtml(t("cd_features_used").replace("{list}", featureLabels).replace("{n}", metrics.n_rows))}</p>
       <div class="table-wrap">${renderCustomMetricsTable(results.results, results.best_model)}</div>
     </div>
   `;
@@ -639,11 +645,11 @@ function renderCustomFormulaColumnChips(columns) {
       .map((c) => {
         const hasSpaces = /\s/.test(c);
         const title = hasSpaces
-          ? ' title="Nomes de coluna com espaços não podem ser usados diretamente numa fórmula."'
+          ? ` title="${escapeAttr(t("cd_column_spaces_title"))}"`
           : "";
         return `<button type="button" class="cluster-student-chip" data-field="${escapeAttr(c)}" ${hasSpaces ? "disabled" : ""}${title}>${escapeHtml(c)}${hasSpaces ? " ⚠" : ""}</button>`;
       })
-      .join("") || `<p class="form-help-text">Sem colunas disponíveis.</p>`;
+      .join("") || `<p class="form-help-text">${escapeHtml(t("cd_no_columns_available"))}</p>`;
   wrap.querySelectorAll(".cluster-student-chip:not([disabled])").forEach((chip) => {
     chip.addEventListener("click", () => insertFieldIntoFormula(chip.dataset.field));
   });
@@ -674,14 +680,14 @@ async function runCustomFormula(page) {
   const formula = input.value.trim();
   if (!formula) {
     msgBox.classList.remove("hidden");
-    msgBox.textContent = "Escreve uma fórmula antes de calcular.";
+    msgBox.textContent = t("cd_write_formula_first");
     return;
   }
   cfState.page = page;
 
   const originalText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "A calcular…";
+  btn.textContent = t("cd_calculating_btn");
   try {
     const data = await Api.customDatasetFormula(formula, cfState.page, cfState.page_size);
     msgBox.classList.add("hidden");
@@ -702,13 +708,13 @@ function renderCustomFormulaResult(data) {
   if (data.type === "scalar") {
     wrap.innerHTML = `
       <div class="card">
-        <h3>Resultado</h3>
+        <h3>${escapeHtml(t("cd_result_header"))}</h3>
         <div class="kpi-row" id="cf-scalar-kpi"></div>
-        <p class="form-help-text">Calculado sobre ${data.n_rows_considered} de ${data.n_rows_total_dataset} linha(s).</p>
+        <p class="form-help-text">${escapeHtml(t("cd_calculated_over").replace("{n}", data.n_rows_considered).replace("{m}", data.n_rows_total_dataset))}</p>
       </div>
     `;
     renderKpiCards("cf-scalar-kpi", [
-      { label: "Resultado", value: data.result === null ? "—" : formatFormulaValue(data.result) },
+      { label: t("cd_result_header"), value: data.result === null ? "—" : formatFormulaValue(data.result) },
     ]);
     return;
   }
@@ -724,19 +730,19 @@ function renderCustomFormulaResult(data) {
       </tr>
     `
       )
-      .join("") || `<tr><td colspan="2">Sem resultados.</td></tr>`;
+      .join("") || `<tr><td colspan="2">${escapeHtml(t("cd_no_results"))}</td></tr>`;
 
   const summaryHtml = data.summary
-    ? `<p class="form-help-text">Média: ${fmtNum(data.summary.mean)} · Mínimo: ${fmtNum(data.summary.min)} · Máximo: ${fmtNum(data.summary.max)}</p>`
+    ? `<p class="form-help-text">${escapeHtml(t("cd_summary_stats").replace("{mean}", fmtNum(data.summary.mean)).replace("{min}", fmtNum(data.summary.min)).replace("{max}", fmtNum(data.summary.max)))}</p>`
     : "";
 
   wrap.innerHTML = `
     <div class="card">
-      <h3>Coluna calculada (${data.n_rows} de ${data.n_rows_total_dataset} linha(s))</h3>
+      <h3>${escapeHtml(t("cd_calculated_column_header").replace("{n}", data.n_rows).replace("{m}", data.n_rows_total_dataset))}</h3>
       ${summaryHtml}
       <div class="table-wrap">
         <table>
-          <thead><tr><th>ID</th><th>Resultado</th></tr></thead>
+          <thead><tr><th>${escapeHtml(t("cd_id_header"))}</th><th>${escapeHtml(t("cd_result_header_col"))}</th></tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
       </div>
@@ -751,7 +757,7 @@ function renderCustomFormulaResult(data) {
 // natural do que "true"/"false" em português), texto tal como veio.
 function formatFormulaValue(v) {
   if (v === null || v === undefined) return "—";
-  if (typeof v === "boolean") return v ? "Sim" : "Não";
+  if (typeof v === "boolean") return v ? t("cat_yes") : t("cat_no");
   if (typeof v === "number") return fmtNum(v);
   return escapeHtml(String(v));
 }
@@ -760,9 +766,9 @@ function renderCustomFormulaPagination(data) {
   const container = document.getElementById("cf-pagination");
   const { page, total_pages, n_rows } = data;
   container.innerHTML = `
-    <button id="cf-page-prev" ${page <= 1 ? "disabled" : ""}>← Anterior</button>
-    <span class="pagination-info">Página ${page} de ${total_pages} (${n_rows} linha(s))</span>
-    <button id="cf-page-next" ${page >= total_pages ? "disabled" : ""}>Seguinte →</button>
+    <button id="cf-page-prev" ${page <= 1 ? "disabled" : ""}>${escapeHtml(t("data_pagination_prev"))}</button>
+    <span class="pagination-info">${escapeHtml(t("cd_pagination_rows_info").replace("{page}", page).replace("{total_pages}", total_pages).replace("{total}", n_rows))}</span>
+    <button id="cf-page-next" ${page >= total_pages ? "disabled" : ""}>${escapeHtml(t("data_pagination_next"))}</button>
   `;
   document.getElementById("cf-page-prev")?.addEventListener("click", () => runCustomFormula(Math.max(1, page - 1)));
   document.getElementById("cf-page-next")?.addEventListener("click", () => runCustomFormula(Math.min(total_pages, page + 1)));

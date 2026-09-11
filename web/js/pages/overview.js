@@ -18,10 +18,10 @@ registerPage("overview", async () => {
     ]);
 
     renderKpiCards("overview-kpis", [
-      { label: "Estudantes", value: stats.n_students },
-      { label: "Nota média (G3)", value: `${fmtNum(stats.average_grade)} / 20` },
-      { label: "Taxa de aprovação", value: fmtPct(stats.pass_rate) },
-      { label: "Faltas médias", value: fmtNum(stats.average_absences) },
+      { label: t("overview_kpi_students"), value: stats.n_students },
+      { label: t("overview_kpi_avg_grade"), value: `${fmtNum(stats.average_grade)} / 20` },
+      { label: t("overview_kpi_pass_rate"), value: fmtPct(stats.pass_rate) },
+      { label: t("overview_kpi_avg_absences"), value: fmtNum(stats.average_absences) },
     ]);
 
     // Resumo automático em linguagem natural (Ideia 5) — ver
@@ -35,7 +35,7 @@ registerPage("overview", async () => {
   } catch (err) {
     console.error(err);
     document.getElementById("overview-kpis").innerHTML =
-      `<div class="info-box">Não foi possível carregar os dados. Confirma que a API está a correr (uvicorn src.api:app --reload).</div>`;
+      `<div class="info-box">${escapeHtml(t("overview_load_error"))}</div>`;
   }
 });
 
@@ -63,7 +63,7 @@ function renderGradeDistributionChart(data) {
     data: {
       labels: data.labels, // ex.: ["0-1", "1-2", ..., "19-20"]
       datasets: [{
-        label: "Nº de estudantes",
+        label: t("chart_students_count_label"),
         data: data.counts,
         backgroundColor: COLORS.primary,
         borderRadius: 4,
@@ -99,7 +99,7 @@ function renderPassFailChart(data) {
   new Chart(ctx, {
     type: "doughnut",
     data: {
-      labels: ["Aprovado", "Reprovado"],
+      labels: [t("chart_pass_label"), t("chart_fail_label")],
       datasets: [{
         data: [data.aprovados, data.reprovados],
         backgroundColor: [COLORS.positive, COLORS.negative],
@@ -150,7 +150,7 @@ function renderStudytimeRateChart(stats) {
     data: {
       labels: entries.map(([k]) => labels[k] || k),
       datasets: [{
-        label: "Taxa de aprovação",
+        label: t("overview_kpi_pass_rate"),
         data: entries.map(([, v]) => v),
         backgroundColor: COLORS.primary,
         borderRadius: 6,

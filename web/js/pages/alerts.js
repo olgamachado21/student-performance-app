@@ -17,15 +17,15 @@ registerPage("alerts", async () => {
   } catch (err) {
     console.error(err);
     document.getElementById("alerts-kpis").innerHTML =
-      `<div class="info-box">Não foi possível carregar os avisos. Confirma que a API está a correr.</div>`;
+      `<div class="info-box">${escapeHtml(t("alerts_load_error"))}</div>`;
   }
 });
 
 function renderAlertsKpis(data) {
   // Dois cartões de resumo: contagem absoluta e percentagem de estudantes em risco.
   renderKpiCards("alerts-kpis", [
-    { label: "Estudantes em risco", value: data.n_at_risk },
-    { label: "Taxa de risco", value: fmtPct(data.risk_rate) },
+    { label: t("alerts_kpi_at_risk"), value: data.n_at_risk },
+    { label: t("alerts_kpi_risk_rate"), value: fmtPct(data.risk_rate) },
   ]);
 }
 
@@ -35,7 +35,7 @@ function renderAlertsList(alerts) {
   const visible = alerts.filter((a) => !isAlertDismissed(alertDismissKey(a.title + a.description)));
 
   if (visible.length === 0) {
-    container.innerHTML = `<div class="info-box">Sem avisos por agora.</div>`;
+    container.innerHTML = `<div class="info-box">${escapeHtml(t("alerts_empty"))}</div>`;
     return;
   }
 
@@ -52,7 +52,7 @@ function renderAlertsList(alerts) {
           ${a.action_page ? `<button class="alert-action" data-target="${a.action_page}">${a.action_label} →</button>` : ""}
         </div>
         <span class="severity-pill severity-${a.severity}">${a.severity}</span>
-        <button class="alert-dismiss-btn" data-dismiss-alert="${key}" type="button" title="Eliminar notificação" aria-label="Eliminar notificação">&times;</button>
+        <button class="alert-dismiss-btn" data-dismiss-alert="${key}" type="button" title="${escapeAttr(t("alerts_dismiss_title"))}" aria-label="${escapeAttr(t("alerts_dismiss_title"))}">&times;</button>
       </div>
     `;
   }).join("");
@@ -71,7 +71,7 @@ function renderAlertsList(alerts) {
       const card = btn.closest(".alert-card");
       if (card) card.remove();
       if (!container.querySelector(".alert-card")) {
-        container.innerHTML = `<div class="info-box">Sem avisos por agora.</div>`;
+        container.innerHTML = `<div class="info-box">${escapeHtml(t("alerts_empty"))}</div>`;
       }
     });
   });
@@ -89,16 +89,16 @@ function renderAtRiskTable(students) {
       <td>${s.absences}</td>
       <td>${s.failures}</td>
       <td>${s.G3}</td>
-      <td><button type="button" class="table-note-btn" data-note-student="${s.student_id}">+ nota</button></td>
+      <td><button type="button" class="table-note-btn" data-note-student="${s.student_id}">${escapeHtml(t("table_add_note_btn"))}</button></td>
     </tr>
   `).join("");
   // Se não houver estudantes em risco, mostra uma linha única de aviso em vez de tabela vazia.
-  tbody.innerHTML = rows || `<tr><td colspan="8">Sem estudantes em risco.</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="8">${escapeHtml(t("alerts_table_empty"))}</td></tr>`;
   // Comentários (ver openStudentNotesModal em main.js): abre o modal já com
   // o contexto "Estudantes em risco", para se saber que o comentário nasceu
   // aqui e não de uma anotação livre no Perfil do Estudante.
   tbody.querySelectorAll("[data-note-student]").forEach((btn) => {
-    btn.addEventListener("click", () => openStudentNotesModal(btn.dataset.noteStudent, "Estudantes em risco (Avisos e Alertas)"));
+    btn.addEventListener("click", () => openStudentNotesModal(btn.dataset.noteStudent, t("alerts_notes_context")));
   });
 }
 

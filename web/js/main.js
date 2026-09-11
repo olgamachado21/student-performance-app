@@ -42,9 +42,9 @@ function genericTimeName(prefix) {
 // ------------------------------------------------------------
 function appConfirm(message, options = {}) {
   const {
-    title = "Confirmar",
-    confirmLabel = "Confirmar",
-    cancelLabel = "Cancelar",
+    title = t("modal_confirm_title"),
+    confirmLabel = t("modal_confirm_label"),
+    cancelLabel = t("modal_cancel_label"),
     danger = true,
   } = options;
 
@@ -102,18 +102,18 @@ function openStudentNotesModal(studentId, context = null) {
   overlay.className = "app-modal-overlay";
   overlay.innerHTML = `
     <div class="app-modal student-notes-modal" role="dialog" aria-modal="true" aria-labelledby="notes-modal-title">
-      <div class="app-modal-title" id="notes-modal-title">Comentários — Estudante #${escapeHtml(studentId)}</div>
-      ${context ? `<p class="card-subtitle">A partir do alerta: <strong>${escapeHtml(context)}</strong></p>` : ""}
+      <div class="app-modal-title" id="notes-modal-title">${escapeHtml(t("notes_modal_title_prefix"))}${escapeHtml(studentId)}</div>
+      ${context ? `<p class="card-subtitle">${escapeHtml(t("notes_modal_from_alert"))} <strong>${escapeHtml(context)}</strong></p>` : ""}
       <div class="student-notes-list" id="student-notes-list">
-        <div class="info-box">A carregar comentários…</div>
+        <div class="info-box">${escapeHtml(t("notes_loading"))}</div>
       </div>
       <form class="student-notes-form" id="student-notes-form">
         <textarea class="student-notes-textarea" id="student-notes-textarea" rows="2"
-          placeholder="Escreve um comentário sobre este estudante…" required></textarea>
-        <button type="submit" class="btn-small btn-primary">Guardar comentário</button>
+          placeholder="${escapeAttr(t("notes_placeholder"))}" required></textarea>
+        <button type="submit" class="btn-small btn-primary">${escapeHtml(t("notes_save_btn"))}</button>
       </form>
       <div class="app-modal-actions">
-        <button type="button" class="btn-small student-notes-close">Fechar</button>
+        <button type="button" class="btn-small student-notes-close">${escapeHtml(t("notes_close_btn"))}</button>
       </div>
     </div>
   `;
@@ -132,29 +132,30 @@ function openStudentNotesModal(studentId, context = null) {
 
   function renderNotesList(items) {
     if (!items.length) {
-      listEl.innerHTML = `<div class="info-box">Ainda sem comentários para este estudante.</div>`;
+      listEl.innerHTML = `<div class="info-box">${escapeHtml(t("notes_empty"))}</div>`;
       return;
     }
+    const dateLocale = getLanguage() === "en" ? "en-GB" : "pt-PT";
     listEl.innerHTML = items.map((n) => `
       <div class="student-note-item">
         <div class="student-note-item-header">
           ${n.context ? `<span class="pill pill-context" title="${escapeAttr(n.context)}">${escapeHtml(n.context)}</span>` : ""}
-          <span class="student-note-date">${new Date(n.created_at).toLocaleString("pt-PT", { dateStyle: "short", timeStyle: "short" })}</span>
-          <button type="button" class="student-note-delete" data-note-id="${n.id}" title="Apagar comentário" aria-label="Apagar comentário">&times;</button>
+          <span class="student-note-date">${new Date(n.created_at).toLocaleString(dateLocale, { dateStyle: "short", timeStyle: "short" })}</span>
+          <button type="button" class="student-note-delete" data-note-id="${n.id}" title="${escapeAttr(t("notes_delete_title"))}" aria-label="${escapeAttr(t("notes_delete_title"))}">&times;</button>
         </div>
         <p class="student-note-text">${escapeHtml(n.text)}</p>
       </div>
     `).join("");
     listEl.querySelectorAll("[data-note-id]").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        const ok = await appConfirm("Apagar este comentário? Não é possível desfazer.", { title: "Apagar comentário", confirmLabel: "Apagar" });
+        const ok = await appConfirm(t("notes_delete_confirm_msg"), { title: t("notes_delete_title"), confirmLabel: t("notes_delete_confirm_btn") });
         if (!ok) return;
         try {
           await Api.deleteStudentNote(btn.dataset.noteId);
           await reload();
-          showToast("Comentário apagado.", { type: "success" });
+          showToast(t("notes_deleted_toast"), { type: "success" });
         } catch (err) {
-          showToast(err.message || "Não foi possível apagar o comentário.", { type: "error" });
+          showToast(err.message || t("notes_delete_error"), { type: "error" });
         }
       });
     });
@@ -174,14 +175,14 @@ function openStudentNotesModal(studentId, context = null) {
       await Api.addStudentNote(studentId, text, context);
       textarea.value = "";
       await reload();
-      showToast("Comentário guardado.", { type: "success" });
+      showToast(t("notes_saved_toast"), { type: "success" });
     } catch (err) {
-      showToast(err.message || "Não foi possível guardar o comentário.", { type: "error" });
+      showToast(err.message || t("notes_save_error"), { type: "error" });
     }
   });
 
   reload().catch((err) => {
-    listEl.innerHTML = `<div class="info-box">Não foi possível carregar os comentários.</div>`;
+    listEl.innerHTML = `<div class="info-box">${escapeHtml(t("notes_load_error"))}</div>`;
     console.error(err);
   });
 }
@@ -215,31 +216,35 @@ function markOnboardingResolved() {
 // Conteúdo de cada passo: ícone (reaproveita os mesmos traços dos ícones do
 // menu/cartões da Início, para o tour parecer parte da mesma app), título e
 // texto. Mantido como dados simples para ser fácil acrescentar/editar passos.
+// Cada passo guarda a CHAVE de tradução do título/texto (não o texto já
+// resolvido), para que o tour continue correto mesmo que o idioma mude
+// entre uma abertura e a seguinte — t() só é chamado ao desenhar o passo
+// (ver renderOnboardingStep), nunca aqui.
 const ONBOARDING_STEPS = [
   {
     icon: `<svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.2"></circle><path d="M5.5 8.3 7.3 10.2 10.8 6"></path></svg>`,
-    title: "Bem-vindo(a) à StudentPerfomance",
-    text: "A StudentPerfomance ajuda-te a perceber o desempenho académico de um conjunto de estudantes: analisa os dados, deteta sinais de risco, prevê notas a partir de hábitos de estudo e sugere o que fazer a seguir — tudo a correr localmente no teu computador, sem ligação à internet.",
+    titleKey: "onboarding_step1_title",
+    textKey: "onboarding_step1_text",
   },
   {
     icon: `<svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="13" x2="3" y2="8"></line><line x1="8" y1="13" x2="8" y2="4"></line><line x1="13" y1="13" x2="13" y2="10"></line></svg>`,
-    title: "Começa por analisar os dados",
-    text: "Visão Geral mostra os indicadores gerais da turma. Fatores de Risco revela que hábitos pesam mais no desempenho. Perfil do Estudante deixa-te filtrar um subgrupo e comparar com a média. E em Dados podes explorar e exportar o conjunto completo.",
+    titleKey: "onboarding_step2_title",
+    textKey: "onboarding_step2_text",
   },
   {
     icon: `<svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"></circle><circle cx="8" cy="8" r="2.4"></circle><circle cx="8" cy="8" r="0.6" fill="currentColor" stroke="none"></circle></svg>`,
-    title: "Simula e prevê",
-    text: "Em Previsão de Notas ajustas hábitos de estudo e vês a nota prevista a atualizar-se em tempo real — o simulador “e se”. O Otimizador de Estudo faz o percurso inverso: indicas uma nota-alvo e ele sugere que hábitos mudar para lá chegar.",
+    titleKey: "onboarding_step3_title",
+    textKey: "onboarding_step3_text",
   },
   {
     icon: `<svg viewBox="0 0 16 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.4c-2 0-3.3 1.6-3.3 3.6v2.4c0 .8-.3 1.6-.9 2.2l-.7.7h9.8l-.7-.7c-.6-.6-.9-1.4-.9-2.2V6c0-2-1.3-3.6-3.3-3.6Z"></path><path d="M6.4 13.3a1.6 1.6 0 003.2 0"></path></svg>`,
-    title: "Age sobre o que encontrares",
-    text: "Avisos e Alertas assinala estudantes em risco automaticamente. Segmentação de Perfis agrupa estudantes semelhantes. Adicionar Dados regista novos estudantes (um a um ou em lote por CSV). E em Fichas de Desempenho geras um PDF individual ou da turma toda.",
+    titleKey: "onboarding_step4_title",
+    textKey: "onboarding_step4_text",
   },
   {
     icon: `<svg viewBox="0 0 16 16" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="4.3"></circle><line x1="10.1" y1="10.1" x2="13.5" y2="13.5"></line></svg>`,
-    title: "Atalhos que valem a pena conhecer",
-    text: "Usa a pesquisa no topo do menu lateral para saltar logo para qualquer página. Se tiveres dúvidas, o assistente (canto inferior direito) responde com base nos dados reais da app, sem internet. E podes rever este tour a qualquer momento em Configurações.",
+    titleKey: "onboarding_step5_title",
+    textKey: "onboarding_step5_text",
     isLast: true,
   },
 ];
@@ -259,14 +264,14 @@ function showOnboarding(force = false) {
   overlay.className = "app-modal-overlay onboarding-overlay";
   overlay.innerHTML = `
     <div class="app-modal onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
-      <button type="button" class="onboarding-close" aria-label="Fechar tour">&times;</button>
+      <button type="button" class="onboarding-close" aria-label="${escapeAttr(t("onboarding_close_aria"))}">&times;</button>
       <div class="onboarding-step-icon" id="onboarding-icon"></div>
       <div class="app-modal-title" id="onboarding-title"></div>
       <p class="onboarding-text" id="onboarding-text"></p>
       <div class="onboarding-dots" id="onboarding-dots"></div>
       <div class="onboarding-actions">
-        <button type="button" class="btn-small onboarding-skip">Saltar</button>
-        <button type="button" class="btn-primary onboarding-next" id="onboarding-next-btn">Seguinte</button>
+        <button type="button" class="btn-small onboarding-skip">${escapeHtml(t("onboarding_skip_btn"))}</button>
+        <button type="button" class="btn-primary onboarding-next" id="onboarding-next-btn">${escapeHtml(t("onboarding_next_btn"))}</button>
       </div>
     </div>
   `;
@@ -305,8 +310,8 @@ function goToNextOnboardingStep(overlay, finish) {
 function renderOnboardingStep(overlay) {
   const step = ONBOARDING_STEPS[onboardingStepIndex];
   overlay.querySelector("#onboarding-icon").innerHTML = step.icon;
-  overlay.querySelector("#onboarding-title").textContent = step.title;
-  overlay.querySelector("#onboarding-text").textContent = step.text;
+  overlay.querySelector("#onboarding-title").textContent = t(step.titleKey);
+  overlay.querySelector("#onboarding-text").textContent = t(step.textKey);
 
   // Pontos de progresso: um por passo, o atual fica destacado — dá a noção
   // de "estou a meio de X passos" sem precisar de escrever "3 de 5".
@@ -314,7 +319,7 @@ function renderOnboardingStep(overlay) {
     .map((_, i) => `<span class="onboarding-dot ${i === onboardingStepIndex ? "active" : ""}"></span>`)
     .join("");
 
-  overlay.querySelector("#onboarding-next-btn").textContent = step.isLast ? "Começar" : "Seguinte";
+  overlay.querySelector("#onboarding-next-btn").textContent = step.isLast ? t("onboarding_start_btn") : t("onboarding_next_btn");
 }
 
 // ------------------------------------------------------------
@@ -346,7 +351,7 @@ function showToast(message, options = {}) {
   toast.innerHTML = `
     <span class="toast-dot"></span>
     <span class="toast-message">${escapeHtml(message)}</span>
-    <button type="button" class="toast-close" aria-label="Fechar notificação">&times;</button>
+    <button type="button" class="toast-close" aria-label="${escapeAttr(t("toast_close_aria"))}">&times;</button>
   `;
   container.appendChild(toast);
 
@@ -526,7 +531,17 @@ document.addEventListener("DOMContentLoaded", () => {
   initPageHeaderInfo();
   checkApiHealth();
   loadAndApplyTheme();
-  goToPage("home"); // página inicial ao abrir a app
+
+  // Página inicial ao abrir a app — "home", exceto logo a seguir a uma
+  // mudança de idioma (ver setLanguage em i18n.js), que recarrega a app
+  // inteira e guarda aqui a página onde a pessoa estava, para reabrir no
+  // mesmo sítio em vez de voltar sempre ao Início.
+  let restorePage = null;
+  try {
+    restorePage = sessionStorage.getItem("studentperfomanceRestorePage");
+    sessionStorage.removeItem("studentperfomanceRestorePage");
+  } catch (_) { /* sessionStorage indisponível — segue para o Início, sem partir nada */ }
+  goToPage(restorePage && PAGE_LOADERS[restorePage] ? restorePage : "home");
   startAutoRefresh();
 });
 
@@ -554,7 +569,9 @@ function updateLastRefreshedLabel() {
   const el = document.getElementById("sidebar-last-refresh");
   if (!el) return;
   const now = new Date();
-  el.textContent = `Atualizado às ${now.toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" })}`;
+  const dateLocale = getLanguage() === "en" ? "en-GB" : "pt-PT";
+  const time = now.toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
+  el.textContent = t("last_refreshed_label").replace("{time}", time);
 }
 
 async function autoRefreshTick() {
@@ -570,7 +587,8 @@ async function autoRefreshTick() {
     const urgentCount = alertsData.alerts ? alertsData.alerts.filter((a) => a.severity !== "info").length : 0;
     if (lastUrgentAlertCount !== null && urgentCount > lastUrgentAlertCount) {
       const novos = urgentCount - lastUrgentAlertCount;
-      showToast(`${novos} novo${novos === 1 ? "" : "s"} aviso${novos === 1 ? "" : "s"} desde a última verificação.`, { type: "warning" });
+      const key = novos === 1 ? "autorefresh_toast_one" : "autorefresh_toast_many";
+      showToast(t(key).replace("{n}", novos), { type: "warning" });
     }
     lastUrgentAlertCount = urgentCount;
 
@@ -602,24 +620,27 @@ function startAutoRefresh() {
 // Índice de pesquisa: cada página tem um nome legível e uma lista de
 // palavras-chave associadas (sinónimos, termos relacionados), para
 // encontrar a página mesmo sem escrever o nome exato.
+// "labelKey" aponta para a mesma chave nav_* usada no menu lateral (ver
+// i18n.js), para o resultado de pesquisa mostrar sempre o nome traduzido
+// da página, no idioma atual — nunca um "label" fixo em português.
 const SEARCH_INDEX = [
-  { page: "home", label: "Início", keywords: "inicio home dashboard principal bem-vindo boas-vindas menu" },
-  { page: "overview", label: "Visão Geral", keywords: "visao geral overview indicadores kpi notas distribuicao aprovacao reprovacao graficos estatisticas" },
-  { page: "risk", label: "Fatores de Risco", keywords: "fatores risco risk habitos caracteristicas desempenho" },
-  { page: "profile", label: "Perfil do Estudante", keywords: "perfil estudante profile filtro filtrar comparar subgrupo media" },
-  { page: "prediction", label: "Previsão de Notas", keywords: "previsao notas prediction machine learning habitos estudo simular" },
-  { page: "adddata", label: "Adicionar Dados", keywords: "adicionar dados novo estudante inserir registar" },
-  { page: "data", label: "Dados", keywords: "dados data explorador tabela filtros dataset" },
-  { page: "alerts", label: "Avisos e Alertas", keywords: "avisos alertas warnings sinais atencao notificacoes" },
-  { page: "segmentation", label: "Segmentação de Perfis", keywords: "segmentacao perfis kmeans clusters agrupamento grupos" },
-  { page: "fichas", label: "Fichas de Desempenho", keywords: "fichas desempenho pdf ficha individual relatorio recomendacao" },
-  { page: "optimizer", label: "Otimizador de Estudo", keywords: "otimizador estudo optimizer nota alvo simulacao mudancas habitos" },
-  { page: "customimport", label: "Importar Dataset", keywords: "importar dataset personalizado csv excel upload mapear colunas" },
-  { page: "customstats", label: "Estatísticas & Gráficos", keywords: "estatisticas graficos dataset personalizado colunas resumo" },
-  { page: "custompredict", label: "Previsões", keywords: "previsoes dataset personalizado modelo notas aprovacao" },
-  { page: "customtrain", label: "Treinar Modelo", keywords: "treinar modelo dataset personalizado machine learning" },
-  { page: "customformula", label: "Fórmulas Personalizadas", keywords: "formulas personalizadas dataset calculo expressao media soma coluna calculada excel" },
-  { page: "settings", label: "Configurações", keywords: "configuracoes settings tema cor fonte letra" },
+  { page: "home", labelKey: "nav_home", keywords: "inicio home dashboard principal bem-vindo boas-vindas menu" },
+  { page: "overview", labelKey: "nav_overview", keywords: "visao geral overview indicadores kpi notas distribuicao aprovacao reprovacao graficos estatisticas" },
+  { page: "risk", labelKey: "nav_risk", keywords: "fatores risco risk habitos caracteristicas desempenho" },
+  { page: "profile", labelKey: "nav_profile", keywords: "perfil estudante profile filtro filtrar comparar subgrupo media" },
+  { page: "prediction", labelKey: "nav_prediction", keywords: "previsao notas prediction machine learning habitos estudo simular" },
+  { page: "adddata", labelKey: "nav_adddata", keywords: "adicionar dados novo estudante inserir registar" },
+  { page: "data", labelKey: "nav_data", keywords: "dados data explorador tabela filtros dataset" },
+  { page: "alerts", labelKey: "nav_alerts", keywords: "avisos alertas warnings sinais atencao notificacoes" },
+  { page: "segmentation", labelKey: "nav_segmentation", keywords: "segmentacao perfis kmeans clusters agrupamento grupos" },
+  { page: "fichas", labelKey: "nav_fichas", keywords: "fichas desempenho pdf ficha individual relatorio recomendacao" },
+  { page: "optimizer", labelKey: "nav_optimizer", keywords: "otimizador estudo optimizer nota alvo simulacao mudancas habitos" },
+  { page: "customimport", labelKey: "nav_customimport", keywords: "importar dataset personalizado csv excel upload mapear colunas" },
+  { page: "customstats", labelKey: "nav_customstats", keywords: "estatisticas graficos dataset personalizado colunas resumo" },
+  { page: "custompredict", labelKey: "nav_custompredict", keywords: "previsoes dataset personalizado modelo notas aprovacao" },
+  { page: "customtrain", labelKey: "nav_customtrain", keywords: "treinar modelo dataset personalizado machine learning" },
+  { page: "customformula", labelKey: "nav_customformula", keywords: "formulas personalizadas dataset calculo expressao media soma coluna calculada excel" },
+  { page: "settings", labelKey: "nav_settings", keywords: "configuracoes settings tema cor fonte letra" },
 ];
 
 // Compara sem distinguir maiúsculas/minúsculas nem acentos (ex.: "previsao"
@@ -639,14 +660,15 @@ function searchPages(query) {
   if (!q) return [];
   return SEARCH_INDEX
     .map((entry) => {
-      const label = normalizeSearchText(entry.label);
+      const resolvedLabel = t(entry.labelKey);
+      const label = normalizeSearchText(resolvedLabel);
       const keywords = normalizeSearchText(entry.keywords);
       let score = -1;
       if (label.startsWith(q)) score = 3;
       else if (label.includes(q)) score = 2;
       else if (keywords.split(" ").some((w) => w.startsWith(q))) score = 1.5;
       else if (keywords.includes(q)) score = 1;
-      return { ...entry, score };
+      return { ...entry, label: resolvedLabel, score };
     })
     .filter((entry) => entry.score > -1)
     .sort((a, b) => b.score - a.score)
@@ -691,7 +713,7 @@ function initGlobalSearch() {
     activeIndex = matches.length ? 0 : -1; // pré-seleciona sempre o primeiro resultado
 
     if (!matches.length) {
-      results.innerHTML = `<div class="sidebar-search-empty">Sem páginas encontradas</div>`;
+      results.innerHTML = `<div class="sidebar-search-empty">${escapeHtml(t("search_no_results"))}</div>`;
       results.classList.remove("hidden");
       return;
     }
@@ -749,6 +771,11 @@ function initPageHeaderInfo() {
     const h1 = header.querySelector("h1");
     const p = header.querySelector("p");
     if (!h1 || !p) return;
+    // Guarda a CHAVE de tradução do subtítulo (data-i18n, já presente no
+    // HTML) em vez do texto já resolvido — assim o popover continua a
+    // mostrar o texto certo mesmo que o idioma mude depois deste momento
+    // (ver buildInfoButton, que passa a chamar t() no clique).
+    const helpKey = p.getAttribute("data-i18n");
     const helpText = p.textContent;
     p.remove(); // remove o texto de ajuda original (fixo), passa a viver só no popover
 
@@ -757,7 +784,7 @@ function initPageHeaderInfo() {
     row.className = "page-header-title-row";
     h1.replaceWith(row);
     row.appendChild(h1);
-    row.appendChild(buildInfoButton(helpText, "O que é esta página"));
+    row.appendChild(buildInfoButton(helpText, t("page_info_btn_label"), helpKey));
   });
 }
 
@@ -771,7 +798,7 @@ function initPageHeaderInfo() {
 // de mudar o "overflow" do cabeçalho (que faz parte do visual a manter), o
 // popover passa a ser um único elemento partilhado, fora de qualquer
 // cabeçalho, posicionado por posição fixa junto ao botão que foi clicado.
-function buildInfoButton(helpText, label) {
+function buildInfoButton(helpText, label, helpKey) {
   const wrap = document.createElement("div");
   wrap.className = "page-info-wrap";
 
@@ -783,10 +810,12 @@ function buildInfoButton(helpText, label) {
   // Ícone SVG de um "i" dentro de um círculo, desenhado inline (sem depender de biblioteca de ícones).
   btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.4"></circle><line x1="8" y1="7.2" x2="8" y2="11.3"></line><circle cx="8" cy="4.9" r="0.75" fill="currentColor" stroke="none"></circle></svg>`;
   btn.dataset.infoText = helpText;
+  if (helpKey) btn.dataset.infoKey = helpKey; // permite reavaliar o texto no idioma atual a cada clique
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation(); // não deixa este clique fechar imediatamente o popover pelo listener global
-    toggleGlobalInfoPopover(btn, helpText);
+    const text = btn.dataset.infoKey ? t(btn.dataset.infoKey) : btn.dataset.infoText;
+    toggleGlobalInfoPopover(btn, text);
   });
 
   wrap.appendChild(btn);
@@ -930,7 +959,7 @@ function initSidebarToggle() {
   // Aplica o estado colapsado/expandido e atualiza o texto acessível do botão.
   const applyState = (collapsed) => {
     sidebar.classList.toggle("collapsed", collapsed);
-    const label = collapsed ? "Abrir menu" : "Fechar menu";
+    const label = collapsed ? t("sidebar_open_label") : t("sidebar_close_label");
     btn.title = label;
     btn.setAttribute("aria-label", label);
   };
@@ -1189,7 +1218,7 @@ function initSidebarReorder() {
       // Adiciona a pega de arrastar (ícone de 6 pontos) no início de cada item de menu.
       const handle = document.createElement("span");
       handle.className = "nav-drag-handle";
-      handle.title = "Arrastar para reordenar";
+      handle.title = t("nav_drag_handle_title");
       handle.setAttribute("aria-hidden", "true");
       handle.innerHTML = `<svg viewBox="0 0 10 16"><circle cx="2.5" cy="3" r="1.1"></circle><circle cx="7.5" cy="3" r="1.1"></circle><circle cx="2.5" cy="8" r="1.1"></circle><circle cx="7.5" cy="8" r="1.1"></circle><circle cx="2.5" cy="13" r="1.1"></circle><circle cx="7.5" cy="13" r="1.1"></circle></svg>`;
       item.insertBefore(handle, item.firstChild);
@@ -1303,9 +1332,9 @@ function updateDarkModeButton(mode) {
   const btn = document.getElementById("dark-mode-toggle-btn");
   if (!btn) return;
   const isDark = mode === "escuro";
-  btn.textContent = isDark ? "Claro" : "Escuro"; // mostra a ação seguinte, não o estado atual
+  btn.textContent = isDark ? t("darkmode_to_light_btn") : t("darkmode_to_dark_btn"); // mostra a ação seguinte, não o estado atual
   btn.classList.toggle("active", isDark);
-  const label = isDark ? "Mudar para modo claro" : "Mudar para modo escuro";
+  const label = isDark ? t("darkmode_to_light_title") : t("darkmode_to_dark_title");
   btn.title = label;
   btn.setAttribute("aria-label", label);
 }
@@ -1395,12 +1424,12 @@ async function checkApiHealth() {
   try {
     await Api.health();
     const stats = await cached("stats", Api.stats);
-    badge.textContent = `● API ligada · ${stats.n_students} estudantes`;
+    badge.textContent = t("api_health_connected").replace("{n}", stats.n_students);
     badge.className = "status-badge status-ok";
   } catch (err) {
-    badge.textContent = "● API não encontrada";
+    badge.textContent = t("api_health_error");
     badge.className = "status-badge status-error";
-    badge.title = "Corre 'uvicorn src.api:app --reload' na pasta do projeto.";
+    badge.title = t("api_health_error_title");
   }
 }
 

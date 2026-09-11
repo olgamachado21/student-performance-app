@@ -118,23 +118,23 @@ function renderProfileResults(data) {
 
   // 4 KPIs do subgrupo filtrado, cada um com a diferença (delta) face à turma toda.
   renderKpiCards("profile-kpis", [
-    { label: "Estudantes no grupo", value: data.n_students },
+    { label: t("profile_kpi_group_students"), value: data.n_students },
     {
-      label: "Nota média do grupo",
+      label: t("profile_kpi_group_avg_grade"),
       value: fmtNum(data.average_grade),
-      delta: data.average_grade !== null ? `${(data.average_grade - data.overall_average_grade >= 0 ? "+" : "")}${fmtNum(data.average_grade - data.overall_average_grade)} vs geral` : null,
+      delta: data.average_grade !== null ? `${(data.average_grade - data.overall_average_grade >= 0 ? "+" : "")}${fmtNum(data.average_grade - data.overall_average_grade)} ${t("profile_vs_overall_suffix")}` : null,
       deltaPositive: data.average_grade >= data.overall_average_grade,
     },
     {
-      label: "Taxa de aprovação do grupo",
+      label: t("profile_kpi_group_pass_rate"),
       value: fmtPct(data.pass_rate),
-      delta: data.pass_rate !== null ? `${((data.pass_rate - data.overall_pass_rate) * 100 >= 0 ? "+" : "")}${((data.pass_rate - data.overall_pass_rate) * 100).toFixed(1)} p.p. vs geral` : null,
+      delta: data.pass_rate !== null ? `${((data.pass_rate - data.overall_pass_rate) * 100 >= 0 ? "+" : "")}${((data.pass_rate - data.overall_pass_rate) * 100).toFixed(1)} ${t("profile_pp_vs_overall_suffix")}` : null,
       deltaPositive: data.pass_rate >= data.overall_pass_rate,
     },
     {
-      label: "Faltas médias do grupo",
+      label: t("profile_kpi_group_avg_absences"),
       value: fmtNum(data.average_absences),
-      delta: data.average_absences !== null ? `${(data.average_absences - data.overall_average_absences >= 0 ? "+" : "")}${fmtNum(data.average_absences - data.overall_average_absences)} vs geral` : null,
+      delta: data.average_absences !== null ? `${(data.average_absences - data.overall_average_absences >= 0 ? "+" : "")}${fmtNum(data.average_absences - data.overall_average_absences)} ${t("profile_vs_overall_suffix")}` : null,
       deltaPositive: data.average_absences <= data.overall_average_absences, // menos faltas é melhor -> sinal invertido
     },
   ]);
@@ -175,7 +175,7 @@ function renderProfileTrend(students) {
   if (students.length === 0) {
     // Sem estudantes no grupo: destrói qualquer gráfico anterior e mostra mensagem.
     if (profileTrendChart) { profileTrendChart.destroy(); profileTrendChart = null; }
-    if (summary) summary.textContent = "Sem estudantes no grupo filtrado para calcular a evolução.";
+    if (summary) summary.textContent = t("profile_trend_no_students");
     return;
   }
 
@@ -191,9 +191,9 @@ function renderProfileTrend(students) {
   profileTrendChart = new Chart(ctx, {
     type: "line",
     data: {
-      labels: ["1º período", "2º período", "3º período", "Projeção seguinte"],
+      labels: [t("profile_period_1"), t("profile_period_2"), t("profile_period_3"), t("profile_period_projection")],
       datasets: [{
-        label: "Nota média do grupo",
+        label: t("profile_kpi_group_avg_grade"),
         data: [avgG1, avgG2, avgG3, projected],
         borderColor: COLORS.primary,
         backgroundColor: COLORS.primaryLighter,
@@ -214,19 +214,19 @@ function renderProfileTrend(students) {
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { display: false } },
-        y: { min: 0, max: 20, title: { display: true, text: "Nota (0-20)" }, grid: { color: COLORS.border } },
+        y: { min: 0, max: 20, title: { display: true, text: t("profile_grade_scale_axis") }, grid: { color: COLORS.border } },
       },
     },
   });
 
   if (summary) {
     // Classifica a tendência em 3 categorias, com uma margem morta (-0.05 a 0.05) para "estável".
-    const direction = slope > 0.05 ? "a melhorar" : slope < -0.05 ? "a piorar" : "estável";
-    summary.innerHTML = `
-      Tendência do grupo: <strong>${direction}</strong>, cerca de
-      <strong>${slope >= 0 ? "+" : ""}${slope.toFixed(2)} valores por período</strong>.
-      A continuar este ritmo, o período seguinte ficaria perto de <strong>${projected.toFixed(1)}</strong>.
-    `;
+    const direction = slope > 0.05 ? t("trend_improving") : slope < -0.05 ? t("trend_worsening") : t("trend_stable");
+    summary.innerHTML = t("profile_trend_summary")
+      .replace("{direction}", direction)
+      .replace("{sign}", slope >= 0 ? "+" : "")
+      .replace("{slope}", slope.toFixed(2))
+      .replace("{projected}", projected.toFixed(1));
   }
 }
 
@@ -270,8 +270,8 @@ function renderProfileScatter(students) {
     type: "scatter",
     data: {
       datasets: [
-        { label: "Aprovado", data: aprovados, backgroundColor: COLORS.positive },
-        { label: "Reprovado", data: reprovados, backgroundColor: COLORS.negative },
+        { label: t("chart_pass_label"), data: aprovados, backgroundColor: COLORS.positive },
+        { label: t("chart_fail_label"), data: reprovados, backgroundColor: COLORS.negative },
       ],
     },
     options: {
@@ -279,8 +279,8 @@ function renderProfileScatter(students) {
       maintainAspectRatio: false,
       plugins: { legend: { position: "bottom" } },
       scales: {
-        x: { title: { display: true, text: "Faltas" }, grid: { color: COLORS.border } },
-        y: { title: { display: true, text: "Nota final (G3)" }, grid: { color: COLORS.border } },
+        x: { title: { display: true, text: habitLabel("absences") }, grid: { color: COLORS.border } },
+        y: { title: { display: true, text: habitLabel("G3") }, grid: { color: COLORS.border } },
       },
     },
   });
@@ -301,13 +301,13 @@ function renderProfileTable(students) {
       <td>${s.G1}</td>
       <td>${s.G2}</td>
       <td>${s.G3}</td>
-      <td><span class="pill ${s.aprovado ? "pill-yes" : "pill-no"}">${s.aprovado ? "Sim" : "Não"}</span></td>
+      <td><span class="pill ${s.aprovado ? "pill-yes" : "pill-no"}">${s.aprovado ? t("cat_yes") : t("cat_no")}</span></td>
       <td>${progressBadgeHtml(s.progress_badge)}</td>
       <td>${percentileCellHtml(s)}</td>
-      <td><button type="button" class="table-note-btn" data-note-student="${s.student_id}">+ nota</button></td>
+      <td><button type="button" class="table-note-btn" data-note-student="${s.student_id}">${escapeHtml(t("table_add_note_btn"))}</button></td>
     </tr>
   `).join("");
-  tbody.innerHTML = rows || `<tr><td colspan="14">Nenhum estudante corresponde aos filtros.</td></tr>`;
+  tbody.innerHTML = rows || `<tr><td colspan="14">${escapeHtml(t("profile_table_empty"))}</td></tr>`;
   // Comentários (ver openStudentNotesModal em main.js): cada linha abre o
   // modal de comentários do respetivo estudante, sem contexto de alerta
   // (o utilizador está aqui a escrever livremente sobre o estudante).
@@ -338,7 +338,7 @@ function renderProfileRadar(data) {
       datasets: [
         {
           // Série do subgrupo filtrado, preenchida com cor principal e transparência.
-          label: `Grupo filtrado (${data.n_subgroup})`,
+          label: t("radar_filtered_group_label").replace("{n}", data.n_subgroup),
           data: data.subgroup_values,
           borderColor: COLORS.primary,
           backgroundColor: COLORS.primaryLighter + "80",
@@ -346,7 +346,7 @@ function renderProfileRadar(data) {
         },
         {
           // Série de referência (turma toda), sem preenchimento e com contorno tracejado.
-          label: "Turma toda",
+          label: t("radar_whole_class_label"),
           data: data.overall_values,
           borderColor: COLORS.muted,
           backgroundColor: "transparent",
@@ -372,7 +372,7 @@ function renderProfileRadar(data) {
 // não precisar de mais uma coluna/painel só para isso.
 function percentileCellHtml(s) {
   const pct = s.percentile_g3;
-  const tooltip = `Nota: percentil ${pct} · Tempo de estudo: percentil ${s.percentile_studytime} · Faltas: percentil ${s.percentile_absences} (mais alto = mais faltas)`;
+  const tooltip = t("percentile_tooltip").replace("{g3}", pct).replace("{st}", s.percentile_studytime).replace("{abs}", s.percentile_absences);
   return `
     <div class="percentile-cell" title="${escapeAttr(tooltip)}">
       <span class="percentile-label">${Math.round(pct)}º</span>

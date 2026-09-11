@@ -16,7 +16,7 @@ registerPage("fichas", async () => {
     const studentId = parseInt(input.value, 10);
     if (!studentId || studentId < 1) {
       // ID inválido (vazio, não numérico ou <= 0): mostra mensagem de erro em vez de tentar descarregar.
-      preview.textContent = "Indica um número de estudante válido.";
+      preview.textContent = t("ficha_invalid_id");
       preview.classList.remove("hidden");
       return;
     }

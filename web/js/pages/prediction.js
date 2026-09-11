@@ -24,19 +24,21 @@ let savedScenarios = [];
 let scenarioIdCounter = 0; // gera ids únicos para os cenários guardados nesta sessão
 const MAX_SCENARIOS = 3;
 // Rótulos legíveis para os campos mostrados na tabela de comparação de cenários.
-const SCENARIO_FIELD_LABELS = {
-  studytime: "Tempo de estudo",
-  absences: "Nº de faltas",
-  failures: "Reprovações anteriores",
-  goout: "Sair com amigos",
-  freetime: "Tempo livre",
-  Dalc: "Álcool (dias úteis)",
-  Walc: "Álcool (fim de semana)",
-  internet: "Internet em casa",
-  higher: "Deseja estudo superior",
-  schoolsup: "Apoio educativo extra",
-  romantic: "Relação amorosa",
-};
+function scenarioFieldLabels() {
+  return {
+    studytime: habitLabel("studytime"),
+    absences: habitLabel("absences"),
+    failures: habitLabel("failures"),
+    goout: habitLabel("goout"),
+    freetime: habitLabel("freetime"),
+    Dalc: habitLabel("Dalc"),
+    Walc: habitLabel("Walc"),
+    internet: t("prediction_field_internet"),
+    higher: t("prediction_field_higher"),
+    schoolsup: t("prediction_field_schoolsup"),
+    romantic: t("prediction_field_romantic"),
+  };
+}
 
 registerPage("prediction", async () => {
   // Ligar os "outputs" dos sliders ao valor atual
@@ -85,7 +87,7 @@ registerPage("prediction", async () => {
 // Agenda um recálculo com atraso (debounce de 350ms), mostrando um indicador "A atualizar…" entretanto.
 function scheduleRunPrediction() {
   const hint = document.getElementById("prediction-live-status");
-  if (hint) { hint.textContent = "A atualizar…"; hint.classList.add("visible"); }
+  if (hint) { hint.textContent = t("prediction_updating"); hint.classList.add("visible"); }
   clearTimeout(predictionDebounceTimer);
   predictionDebounceTimer = setTimeout(runPrediction, 350);
 }
@@ -129,7 +131,7 @@ async function runPrediction() {
     // Um recálculo automático que falhe (ex.: rede instável a meio de um
     // arrasto) não deve interromper com um alerta — só se ainda não houver
     // nenhum resultado no ecrã é que se mostra o aviso, uma vez.
-    if (hint) { hint.textContent = "Não foi possível atualizar a previsão."; hint.classList.add("visible"); }
+    if (hint) { hint.textContent = t("prediction_update_error"); hint.classList.add("visible"); }
     if (lastPredictedGrade === null) {
       document.getElementById("prediction-placeholder").classList.remove("hidden");
     }
@@ -149,7 +151,7 @@ function displayPredictionResult(result, payload) {
   const gradeColor = grade >= 14 ? COLORS.positive : grade >= 10 ? COLORS.primary : COLORS.negative;
   setGauge("gauge-grade", "gauge-grade-value", gradePct, gradeColor);
   animateNumberText(document.getElementById("gauge-grade-value"), fmtNum(grade, 1), 500);
-  renderPredictionDelta("gauge-grade-delta", grade, lastPredictedGrade, 1, "valores");
+  renderPredictionDelta("gauge-grade-delta", grade, lastPredictedGrade, 1, t("prediction_unit_grades"));
   flashGaugeOnChange("gauge-grade", grade, lastPredictedGrade);
   lastPredictedGrade = grade;
 
@@ -160,7 +162,7 @@ function displayPredictionResult(result, payload) {
   if (marginNote) {
     const mae = result.nota_prevista_habitos.mae;
     marginNote.textContent = mae != null
-      ? `Margem de erro típica do modelo: ± ${fmtNum(mae, 1)} valores`
+      ? t("prediction_margin_note").replace("{mae}", fmtNum(mae, 1))
       : "";
   }
 
@@ -169,7 +171,7 @@ function displayPredictionResult(result, payload) {
   const probaColor = result.aprovacao.aprovado_previsto ? COLORS.positive : COLORS.negative;
   setGauge("gauge-proba", "gauge-proba-value", proba, probaColor);
   animateNumberText(document.getElementById("gauge-proba-value"), fmtNum(proba, 0), 500);
-  renderPredictionDelta("gauge-proba-delta", proba, lastPredictedProba, 0, "pontos");
+  renderPredictionDelta("gauge-proba-delta", proba, lastPredictedProba, 0, t("prediction_unit_points"));
   flashGaugeOnChange("gauge-proba", proba, lastPredictedProba);
   lastPredictedProba = proba;
 
@@ -210,12 +212,12 @@ function renderPredictionDelta(elementId, current, previous, decimals, unitLabel
   const diff = current - previous;
   if (Math.abs(diff) < Math.pow(10, -decimals) / 2) {
     // Diferença abaixo da precisão mostrada (ex.: <0.05 com 1 casa decimal) -> considera-se "sem alteração".
-    el.textContent = "Sem alteração desde o último ajuste";
+    el.textContent = t("prediction_no_change");
     el.className = "kpi-delta";
     return;
   }
   const sign = diff > 0 ? "+" : "";
-  el.textContent = `${sign}${fmtNum(diff, decimals)} ${unitLabel} desde o último ajuste`;
+  el.textContent = t("prediction_delta_text").replace("{sign}", sign).replace("{diff}", fmtNum(diff, decimals)).replace("{unit}", unitLabel);
   el.className = `kpi-delta ${diff > 0 ? "positive" : "negative"}`;
 }
 
@@ -224,12 +226,17 @@ function renderPredictionDelta(elementId, current, previous, decimals, unitLabel
 // formulário do simulador, para não haver duas traduções diferentes do
 // mesmo valor em sítios diferentes da página.
 const EXPLAIN_YES_NO_FIELDS = ["internet", "higher", "schoolsup"];
-const EXPLAIN_STUDYTIME_LABELS = { 1: "< 2h/semana", 2: "2-5h/semana", 3: "5-10h/semana", 4: "> 10h/semana" };
+function explainStudytimeLabels() {
+  return {
+    1: t("prediction_studytime_1"), 2: t("prediction_studytime_2"),
+    3: t("prediction_studytime_3"), 4: t("prediction_studytime_4"),
+  };
+}
 
 // Converte um valor bruto (feature/value) num texto legível, consoante o tipo de campo.
 function formatExplainValue(feature, value) {
-  if (EXPLAIN_YES_NO_FIELDS.includes(feature)) return value === "yes" ? "Sim" : "Não";
-  if (feature === "studytime") return EXPLAIN_STUDYTIME_LABELS[Math.round(value)] || value;
+  if (EXPLAIN_YES_NO_FIELDS.includes(feature)) return value === "yes" ? t("cat_yes") : t("cat_no");
+  if (feature === "studytime") return explainStudytimeLabels()[Math.round(value)] || value;
   const num = Number(value);
   if (Number.isNaN(num)) return String(value);
   return Number.isInteger(num) ? String(num) : num.toFixed(1);
@@ -245,7 +252,7 @@ function renderExplainCard(result) {
   if (!list) return;
   const contributions = result.contributions || [];
   if (contributions.length === 0) {
-    list.innerHTML = `<li class="explain-item-neutral">Os valores indicados estão perto do típico do dataset — nenhum fator isolado se destaca nesta previsão.</li>`;
+    list.innerHTML = `<li class="explain-item-neutral">${escapeHtml(t("prediction_explain_empty"))}</li>`;
     return;
   }
   // Mostra só os 5 fatores com maior impacto (já vêm ordenados por magnitude a partir do backend).
@@ -257,8 +264,8 @@ function renderExplainCard(result) {
     return `
       <li class="explain-item ${helping ? "positive" : "negative"}">
         <span class="explain-item-label">${c.label}</span>
-        <span class="explain-item-detail">O teu valor (${studentVal}) vs. típico do dataset (${typicalVal})</span>
-        <span class="explain-item-impact">${sign}${fmtNum(c.impact, 2)} valores</span>
+        <span class="explain-item-detail">${escapeHtml(t("prediction_explain_detail").replace("{student}", studentVal).replace("{typical}", typicalVal))}</span>
+        <span class="explain-item-impact">${escapeHtml(t("prediction_explain_impact").replace("{sign}", sign).replace("{impact}", fmtNum(c.impact, 2)))}</span>
       </li>
     `;
   }).join("");
@@ -286,7 +293,7 @@ function renderPeerComparison(peers, result, payload) {
     // Sem nenhum estudante real com este nível de estudo -> não há grupo para comparar.
     document.getElementById("peer-avg-grade").textContent = "–";
     document.getElementById("peer-pass-rate").textContent = "–";
-    note.textContent = "Não há estudantes reais suficientes no dataset com este perfil de estudo para comparar.";
+    note.textContent = t("prediction_peer_no_data");
     return;
   }
 
@@ -294,13 +301,16 @@ function renderPeerComparison(peers, result, payload) {
   const proba = result.aprovacao.probabilidade_aprovacao * 100;
 
   document.getElementById("peer-avg-grade").textContent = fmtNum(peers.average_grade, 1);
-  renderPeerDiff("peer-avg-grade-diff", grade, peers.average_grade, 1, "valores");
+  renderPeerDiff("peer-avg-grade-diff", grade, peers.average_grade, 1, t("prediction_unit_grades"));
 
   document.getElementById("peer-pass-rate").textContent = fmtPct(peers.pass_rate, 0);
-  renderPeerDiff("peer-pass-rate-diff", proba, peers.pass_rate * 100, 0, "pontos");
+  renderPeerDiff("peer-pass-rate-diff", proba, peers.pass_rate * 100, 0, t("prediction_unit_points"));
 
-  const studytimeLabel = EXPLAIN_STUDYTIME_LABELS[payload.studytime] || payload.studytime;
-  note.textContent = `Com base em ${peers.n_students} estudante${peers.n_students === 1 ? "" : "s"} reais do dataset com tempo de estudo "${studytimeLabel}".`;
+  const studytimeLabel = explainStudytimeLabels()[payload.studytime] || payload.studytime;
+  note.textContent = t("prediction_peer_note")
+    .replace("{n}", peers.n_students)
+    .replace("{plural}", peers.n_students === 1 ? "" : "s")
+    .replace("{label}", studytimeLabel);
 }
 
 // Mostra a diferença entre a previsão do utilizador e a média do grupo de pares, com sinal e cor.
@@ -309,7 +319,7 @@ function renderPeerDiff(elementId, mine, group, decimals, unitLabel) {
   if (!el) return;
   const diff = mine - group;
   const sign = diff > 0 ? "+" : "";
-  el.textContent = `${sign}${fmtNum(diff, decimals)} ${unitLabel} face à tua previsão`;
+  el.textContent = t("prediction_peer_diff_text").replace("{sign}", sign).replace("{diff}", fmtNum(diff, decimals)).replace("{unit}", unitLabel);
   el.className = `peer-compare-diff ${diff >= 0 ? "positive" : "negative"}`;
 }
 
@@ -327,22 +337,16 @@ async function buildStudytimeTip(payload) {
     : tests.studytime_regression_no_failures;
 
   if (!reg) {
-    return "Aumentar o tempo de estudo semanal está associado, em média, a notas mais altas.";
+    return t("prediction_studytime_tip_default");
   }
 
   if (hasFailures) {
-    return (
-      `Aumentar o tempo de estudo semanal costuma ajudar, mas com reprovações anteriores o ` +
-      `efeito medido nos dados é bem mais fraco (+${fmtNum(reg.coeficiente, 2)} valores por nível` +
-      `${reg.significativo_5pct ? "" : ", sem significância estatística neste grupo mais pequeno"}) — ` +
-      `vale a pena combinar com apoio adicional (explicações, acompanhamento pedagógico), não só mais tempo sozinho.`
-    );
+    return t("prediction_studytime_tip_failures")
+      .replace("{coef}", fmtNum(reg.coeficiente, 2))
+      .replace("{sig}", reg.significativo_5pct ? "" : t("prediction_studytime_tip_no_sig"));
   }
 
-  return (
-    `Aumentar o tempo de estudo semanal está associado, em média, a notas mais altas ` +
-    `(+${fmtNum(reg.coeficiente, 2)} valores por nível, estatisticamente significativo).`
-  );
+  return t("prediction_studytime_tip_significant").replace("{coef}", fmtNum(reg.coeficiente, 2));
 }
 
 async function renderRecommendations(payload) {
@@ -354,20 +358,20 @@ async function renderRecommendations(payload) {
     tips.push(await buildStudytimeTip(payload));
   }
   if (payload.failures > 0) {
-    tips.push("Reprovações anteriores têm o maior impacto negativo identificado na análise (~-1,98 valores por reprovação).");
+    tips.push(t("prediction_tip_failures"));
   }
   if (payload.absences > stats.average_absences) {
-    tips.push("O número de faltas está acima da média do grupo — reduzir faltas está associado a melhores notas.");
+    tips.push(t("prediction_tip_absences"));
   }
   if (payload.Dalc > 2 || payload.Walc > 2) {
-    tips.push("Um consumo de álcool mais elevado está associado a notas mais baixas na análise estatística realizada.");
+    tips.push(t("prediction_tip_alcohol"));
   }
   if (payload.internet === "no") {
-    tips.push("Estudantes com acesso a internet em casa têm, em média, notas superiores (diferença estatisticamente significativa).");
+    tips.push(t("prediction_tip_internet"));
   }
   if (tips.length === 0) {
     // Nenhuma condição disparou: hábitos já estão alinhados com o que a análise considera positivo.
-    tips.push("Os hábitos indicados estão alinhados com os fatores associados a bom desempenho nesta análise.");
+    tips.push(t("prediction_tip_none"));
   }
 
   const list = document.getElementById("recommendations-list");
@@ -381,17 +385,19 @@ async function renderRecommendations(payload) {
 // calculado no browser), a mesma garantia que /predict e /predict/explain
 // já dão.
 // ------------------------------------------------------------
-const PREDICTION_STATUS_LABELS = {
-  melhor_que_previsto: "Melhor que previsto",
-  pior_que_previsto: "Pior que previsto",
-  como_previsto: "Como previsto",
-  pendente: "Pendente",
-};
+function predictionStatusLabels() {
+  return {
+    melhor_que_previsto: t("prediction_status_better"),
+    pior_que_previsto: t("prediction_status_worse"),
+    como_previsto: t("prediction_status_asexpected"),
+    pendente: t("prediction_status_pending"),
+  };
+}
 
-// Formata uma data ISO para o formato curto português (ex.: "05 ago. 2026").
+// Formata uma data ISO para o formato curto local (ex.: "05 ago. 2026").
 function fmtSnapshotDate(isoString) {
   const d = new Date(isoString);
-  return d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short", year: "numeric" });
+  return d.toLocaleDateString(getLanguage() === "en" ? "en-GB" : "pt-PT", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 async function savePredictionSnapshot() {
@@ -400,27 +406,27 @@ async function savePredictionSnapshot() {
 
   if (!lastPredictionPayload) {
     messageBox.classList.remove("hidden");
-    messageBox.textContent = "Ainda não há nenhuma previsão calculada para guardar.";
+    messageBox.textContent = t("prediction_save_no_prediction");
     return;
   }
 
   const label = document.getElementById("prediction-save-label").value.trim();
   const originalText = btn.textContent;
-  btn.textContent = "A guardar…";
+  btn.textContent = t("prediction_saving_btn");
   btn.disabled = true;
 
   try {
     await Api.savePredictionSnapshot({ ...lastPredictionPayload, label });
     messageBox.classList.remove("hidden");
-    messageBox.textContent = "Previsão guardada. Regista a nota real mais tarde no histórico abaixo.";
+    messageBox.textContent = t("prediction_saved_message");
     document.getElementById("prediction-save-label").value = "";
     await loadPredictionHistory();
-    showToast("Previsão guardada com sucesso.", { type: "success" });
+    showToast(t("prediction_saved_toast"), { type: "success" });
   } catch (err) {
     console.error(err);
     messageBox.classList.remove("hidden");
-    messageBox.textContent = err.message || "Não foi possível guardar esta previsão.";
-    showToast("Não foi possível guardar esta previsão.", { type: "error" });
+    messageBox.textContent = err.message || t("prediction_save_error");
+    showToast(t("prediction_save_error"), { type: "error" });
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
@@ -434,16 +440,17 @@ async function loadPredictionHistory() {
     renderPredictionHistory(tbody, data.snapshots);
   } catch (err) {
     console.error(err);
-    tbody.innerHTML = `<tr><td colspan="6">Não foi possível carregar o histórico.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(t("prediction_history_load_error"))}</td></tr>`;
   }
 }
 
 function renderPredictionHistory(tbody, snapshots) {
   if (!snapshots || snapshots.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6">Ainda não guardaste nenhuma previsão.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6">${escapeHtml(t("prediction_history_empty"))}</td></tr>`;
     return;
   }
 
+  const statusLabels = predictionStatusLabels();
   tbody.innerHTML = snapshots.map((s) => {
     // Classe CSS de cor conforme o status da previsão (melhor/pior/como previsto/pendente).
     const statusClass = {
@@ -452,7 +459,7 @@ function renderPredictionHistory(tbody, snapshots) {
       como_previsto: "status-igual",
       pendente: "status-pendente",
     }[s.status];
-    const badge = `<span class="prediction-status-badge ${statusClass}">${PREDICTION_STATUS_LABELS[s.status]}</span>`;
+    const badge = `<span class="prediction-status-badge ${statusClass}">${escapeHtml(statusLabels[s.status])}</span>`;
 
     // Se ainda não há nota real registada, mostra um pequeno formulário inline em vez do valor.
     const actualCell = s.actual_grade !== null
@@ -460,7 +467,7 @@ function renderPredictionHistory(tbody, snapshots) {
       : `
         <div class="prediction-actual-input-row">
           <input type="number" min="0" max="20" step="0.1" class="prediction-actual-input" data-snapshot-id="${s.id}" placeholder="0-20">
-          <button type="button" class="btn-small" data-record-actual="${s.id}">Registar</button>
+          <button type="button" class="btn-small" data-record-actual="${s.id}">${escapeHtml(t("prediction_record_btn"))}</button>
         </div>
       `;
 
@@ -471,7 +478,7 @@ function renderPredictionHistory(tbody, snapshots) {
         <td>${fmtNum(s.predicted_grade, 1)}</td>
         <td>${actualCell}</td>
         <td>${badge}</td>
-        <td><button type="button" class="btn-small btn-small-danger" data-delete-snapshot="${s.id}">Remover</button></td>
+        <td><button type="button" class="btn-small btn-small-danger" data-delete-snapshot="${s.id}">${escapeHtml(t("prediction_remove_btn"))}</button></td>
       </tr>
     `;
   }).join("");
@@ -481,7 +488,7 @@ function renderPredictionHistory(tbody, snapshots) {
   });
   tbody.querySelectorAll("[data-delete-snapshot]").forEach((btn) => {
     btn.addEventListener("click", async () => {
-      if (!(await appConfirm("Remover esta previsão guardada? Fica guardada na Lixeira."))) return;
+      if (!(await appConfirm(t("prediction_delete_snapshot_confirm")))) return;
       await Api.deletePredictionSnapshot(btn.dataset.deleteSnapshot);
       // Recarrega os 3 painéis dependentes do histórico após remover um registo.
       await Promise.all([loadPredictionHistory(), loadValidationSummary(), loadAccuracyOverTime()]);
@@ -514,14 +521,14 @@ async function recordSnapshotActual(snapshotId) {
     // conquistas a sério, só reconhecer visualmente uma boa surpresa.
     if (updated && updated.status === "melhor_que_previsto") {
       celebrateAt(anchorX, anchorY);
-      showToast("Melhor do que o previsto! A nota real superou a previsão do modelo.", { type: "success" });
+      showToast(t("prediction_better_toast"), { type: "success" });
     } else {
-      showToast("Nota real registada.", { type: "success" });
+      showToast(t("prediction_actual_recorded_toast"), { type: "success" });
     }
   } catch (err) {
     console.error(err);
     input.classList.add("input-error");
-    showToast("Não foi possível registar a nota real.", { type: "error" });
+    showToast(t("prediction_actual_record_error"), { type: "error" });
   }
 }
 
@@ -535,21 +542,23 @@ function renderValidationSummary(summary) {
   if (!wrap) return;
 
   if (!summary || !summary.has_data) {
-    wrap.innerHTML = `<p class="card-subtitle">${summary ? escapeHtml(summary.message) : "Não foi possível carregar a validação do modelo."}</p>`;
+    wrap.innerHTML = `<p class="card-subtitle">${summary ? escapeHtml(summary.message) : escapeHtml(t("prediction_validation_load_error"))}</p>`;
     return;
   }
 
   const counts = summary.status_counts || {};
+  const plural = summary.n_validated === 1 ? "" : (getLanguage() === "en" ? "s" : "ões");
+  const plural2 = summary.n_validated === 1 ? "" : "s";
   wrap.innerHTML = `
     <div class="validation-summary-box">
       <div class="validation-summary-stat">
         <span class="validation-summary-value">${fmtNum(summary.real_world_mae, 2)}</span>
-        <span class="validation-summary-label">Erro médio real (${summary.n_validated} previsão${summary.n_validated === 1 ? "" : "ões"} validada${summary.n_validated === 1 ? "" : "s"})</span>
+        <span class="validation-summary-label">${escapeHtml(t("prediction_validation_mae_label").replace("{n}", summary.n_validated).replace("{plural}", plural).replace("{plural2}", plural2))}</span>
       </div>
       <div class="validation-summary-breakdown">
-        <span class="badge badge-positive">${counts.melhor_que_previsto || 0} melhor que previsto</span>
-        <span class="badge badge-neutral">${counts.como_previsto || 0} como previsto</span>
-        <span class="badge badge-negative">${counts.pior_que_previsto || 0} pior que previsto</span>
+        <span class="badge badge-positive">${escapeHtml(t("prediction_status_better_badge").replace("{n}", counts.melhor_que_previsto || 0))}</span>
+        <span class="badge badge-neutral">${escapeHtml(t("prediction_status_asexpected_badge").replace("{n}", counts.como_previsto || 0))}</span>
+        <span class="badge badge-negative">${escapeHtml(t("prediction_status_worse_badge").replace("{n}", counts.pior_que_previsto || 0))}</span>
       </div>
     </div>
   `;
@@ -588,7 +597,7 @@ function renderAccuracyOverTime(accuracy) {
   // Converte cada data de registo para o formato local português; se a data for inválida, usa o valor bruto.
   const labels = points.map((p) => {
     const date = new Date(p.recorded_at);
-    return Number.isNaN(date.getTime()) ? p.recorded_at : date.toLocaleDateString("pt-PT");
+    return Number.isNaN(date.getTime()) ? p.recorded_at : date.toLocaleDateString(getLanguage() === "en" ? "en-GB" : "pt-PT");
   });
 
   if (accuracyTrendChart) accuracyTrendChart.destroy();
@@ -597,7 +606,7 @@ function renderAccuracyOverTime(accuracy) {
     data: {
       labels,
       datasets: [{
-        label: "Erro médio acumulado (MAE)",
+        label: t("prediction_accuracy_chart_label"),
         data: points.map((p) => p.cumulative_mae),
         borderColor: COLORS.primary,
         backgroundColor: COLORS.primaryLighter,
@@ -616,14 +625,14 @@ function renderAccuracyOverTime(accuracy) {
           callbacks: {
             afterLabel: (ctx) => {
               const p = points[ctx.dataIndex];
-              return `Previsão: ${fmtNum(p.predicted_grade)} · Real: ${fmtNum(p.actual_grade)}`;
+              return t("prediction_accuracy_tooltip").replace("{predicted}", fmtNum(p.predicted_grade)).replace("{actual}", fmtNum(p.actual_grade));
             },
           },
         },
       },
       scales: {
         x: { grid: { display: false } },
-        y: { beginAtZero: true, title: { display: true, text: "MAE (valores)" }, grid: { color: COLORS.border } },
+        y: { beginAtZero: true, title: { display: true, text: t("prediction_accuracy_yaxis") }, grid: { color: COLORS.border } },
       },
     },
   });
@@ -654,7 +663,7 @@ function renderExamWeekChecklist(result) {
   const items = result.items || [];
   if (items.length === 0) {
     list.innerHTML = "";
-    message.textContent = result.message || "Não há mudanças rápidas com impacto relevante identificadas nesta previsão.";
+    message.textContent = result.message || t("examweek_no_changes");
     return;
   }
 
@@ -663,7 +672,7 @@ function renderExamWeekChecklist(result) {
   list.innerHTML = items.map((item) => `
     <li class="examweek-item">
       <span class="examweek-item-action">${escapeHtml(item.action)}</span>
-      <span class="examweek-item-gain">+${fmtNum(item.estimated_gain, 2)} valores</span>
+      <span class="examweek-item-gain">+${fmtNum(item.estimated_gain, 2)} ${escapeHtml(t("examweek_gain_unit"))}</span>
     </li>
   `).join("");
 }
@@ -678,16 +687,16 @@ function saveScenarioForComparison() {
   messageBox.classList.remove("hidden");
 
   if (!lastPredictionPayload || !lastPredictionResult) {
-    messageBox.textContent = "Ainda não há nenhuma previsão calculada para guardar.";
+    messageBox.textContent = t("scenario_no_prediction");
     return;
   }
   if (savedScenarios.length >= MAX_SCENARIOS) {
-    messageBox.textContent = `Já tens ${MAX_SCENARIOS} cenários guardados — remove um antes de adicionar outro.`;
+    messageBox.textContent = t("scenario_max_reached").replace("{max}", MAX_SCENARIOS);
     return;
   }
 
   const labelInput = document.getElementById("scenario-save-label");
-  const label = labelInput.value.trim() || `Cenário ${savedScenarios.length + 1}`;
+  const label = labelInput.value.trim() || t("scenario_default_label").replace("{n}", savedScenarios.length + 1);
 
   // Guarda uma cópia "congelada" dos hábitos e do resultado atuais (não referências vivas).
   savedScenarios.push({
@@ -720,7 +729,7 @@ function renderScenarioComparison() {
   if (!wrap) return;
 
   if (savedScenarios.length === 0) {
-    wrap.innerHTML = `<p class="card-subtitle">Ainda não guardaste nenhum cenário para comparar.</p>`;
+    wrap.innerHTML = `<p class="card-subtitle">${escapeHtml(t("scenario_empty"))}</p>`;
     return;
   }
 
@@ -729,16 +738,17 @@ function renderScenarioComparison() {
   const bestGrade = Math.max(...savedScenarios.map((s) => s.grade));
 
   // Linhas da tabela: primeiro nota e probabilidade, depois um valor por cada campo de hábito.
+  const fieldLabels = scenarioFieldLabels();
   const rows = [
     {
       key: "grade",
-      label: "Nota prevista",
+      label: t("scenario_row_grade"),
       render: (s) => `${fmtNum(s.grade, 1)} / 20${s.mae != null ? ` (± ${fmtNum(s.mae, 1)})` : ""}`,
     },
-    { key: "proba", label: "Probabilidade de aprovação", render: (s) => `${fmtNum(s.proba, 0)}%` },
-    ...Object.keys(SCENARIO_FIELD_LABELS).map((field) => ({
+    { key: "proba", label: t("scenario_row_proba"), render: (s) => `${fmtNum(s.proba, 0)}%` },
+    ...Object.keys(fieldLabels).map((field) => ({
       key: field,
-      label: SCENARIO_FIELD_LABELS[field],
+      label: fieldLabels[field],
       render: (s) => formatExplainValue(field, s.payload[field]),
     })),
   ];
@@ -748,7 +758,7 @@ function renderScenarioComparison() {
     <th class="${s.grade === bestGrade ? "scenario-best-col" : ""}">
       <div class="scenario-col-header">
         <span>${escapeHtml(s.label)}</span>
-        <button type="button" class="btn-small btn-small-danger" data-remove-scenario="${s.id}">Remover</button>
+        <button type="button" class="btn-small btn-small-danger" data-remove-scenario="${s.id}">${escapeHtml(t("prediction_remove_btn"))}</button>
       </div>
     </th>
   `).join("");
@@ -764,7 +774,7 @@ function renderScenarioComparison() {
 
   wrap.innerHTML = `
     <table>
-      <thead><tr><th>Cenário</th>${headerCells}</tr></thead>
+      <thead><tr><th>${escapeHtml(t("scenario_col_header"))}</th>${headerCells}</tr></thead>
       <tbody>${bodyRows}</tbody>
     </table>
   `;
@@ -784,7 +794,7 @@ function exportScenariosJson() {
   const messageBox = document.getElementById("scenario-save-message");
   if (savedScenarios.length === 0) {
     messageBox.classList.remove("hidden");
-    messageBox.textContent = "Ainda não guardaste nenhum cenário para exportar.";
+    messageBox.textContent = t("scenario_export_empty");
     return;
   }
 
@@ -818,7 +828,7 @@ function importScenariosFromFile(file) {
       items = Array.isArray(data) ? data : data.scenarios;
       if (!Array.isArray(items)) throw new Error("formato inválido");
     } catch (err) {
-      messageBox.textContent = "Não foi possível ler o ficheiro de cenários (formato inválido).";
+      messageBox.textContent = t("scenario_import_invalid_format");
       return;
     }
 
@@ -828,7 +838,7 @@ function importScenariosFromFile(file) {
       if (!item || typeof item.payload !== "object" || typeof item.grade !== "number") continue; // ignora itens malformados
       savedScenarios.push({
         id: ++scenarioIdCounter,
-        label: item.label || `Cenário importado ${savedScenarios.length + 1}`,
+        label: item.label || t("scenario_imported_label").replace("{n}", savedScenarios.length + 1),
         payload: { ...item.payload },
         grade: item.grade,
         mae: typeof item.mae === "number" ? item.mae : null,
@@ -839,12 +849,12 @@ function importScenariosFromFile(file) {
     }
 
     messageBox.textContent = added > 0
-      ? `${added} cenário(s) importado(s).`
-      : "Nenhum cenário válido encontrado no ficheiro (ou já tens o máximo de 3 cenários guardados).";
+      ? t("scenario_imported_toast").replace("{n}", added)
+      : t("scenario_import_none_valid").replace("{max}", MAX_SCENARIOS);
     renderScenarioComparison();
   };
   reader.onerror = () => {
-    messageBox.textContent = "Não foi possível ler o ficheiro selecionado.";
+    messageBox.textContent = t("scenario_import_read_error");
   };
   reader.readAsText(file);
 }

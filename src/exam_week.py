@@ -20,26 +20,56 @@ from __future__ import annotations
 # get_defaults: valores típicos para preencher hábitos não indicados.
 # predict_grade: usa o modelo de ML para prever a nota a partir dos hábitos.
 from src.predict import get_defaults, predict_grade
+from src.i18n import t, plural_en, normalize_lang
 
 # Mesmo texto explicativo por alavanca, para o checklist ser concreto em vez
 # de só dizer "melhora X" — diz exatamente de que valor para que valor.
-# Cada valor é uma função (lambda) que recebe o valor atual e o novo valor e
-# devolve a frase de ação correspondente.
+# Cada valor é uma função (lambda) que recebe o idioma, o valor atual e o
+# novo valor, e devolve a frase de ação correspondente nesse idioma.
 ACTION_TEMPLATES = {
-    "studytime": lambda frm, to: f"Aumenta o tempo de estudo esta semana (nível {int(frm)} → {int(to)}).",
-    "goout": lambda frm, to: f"Reduz um pouco as saídas com amigos esta semana (nível {int(frm)} → {int(to)}).",
-    "absences": lambda frm, to: "Evita faltar às próximas aulas — cada falta a menos ajuda.",
-    "Dalc": lambda frm, to: f"Reduz o consumo de álcool em dias úteis (nível {int(frm)} → {int(to)}).",
-    "Walc": lambda frm, to: f"Reduz o consumo de álcool ao fim de semana (nível {int(frm)} → {int(to)}).",
+    "studytime": lambda lang, frm, to: t(
+        lang,
+        f"Aumenta o tempo de estudo esta semana (nível {int(frm)} → {int(to)}).",
+        f"Increase your study time this week (level {int(frm)} → {int(to)}).",
+    ),
+    "goout": lambda lang, frm, to: t(
+        lang,
+        f"Reduz um pouco as saídas com amigos esta semana (nível {int(frm)} → {int(to)}).",
+        f"Cut back a little on going out with friends this week (level {int(frm)} → {int(to)}).",
+    ),
+    "absences": lambda lang, frm, to: t(
+        lang,
+        "Evita faltar às próximas aulas — cada falta a menos ajuda.",
+        "Avoid missing the next classes — every absence less helps.",
+    ),
+    "Dalc": lambda lang, frm, to: t(
+        lang,
+        f"Reduz o consumo de álcool em dias úteis (nível {int(frm)} → {int(to)}).",
+        f"Reduce weekday alcohol consumption (level {int(frm)} → {int(to)}).",
+    ),
+    "Walc": lambda lang, frm, to: t(
+        lang,
+        f"Reduz o consumo de álcool ao fim de semana (nível {int(frm)} → {int(to)}).",
+        f"Reduce weekend alcohol consumption (level {int(frm)} → {int(to)}).",
+    ),
 }
 
-# Nomes amigáveis de cada alavanca, mostrados no checklist.
+# Nomes amigáveis de cada alavanca, mostrados no checklist, por idioma.
 QUICK_WIN_LABELS = {
-    "studytime": "Tempo de estudo semanal",
-    "goout": "Sair com amigos",
-    "absences": "Faltas",
-    "Dalc": "Álcool (dias úteis)",
-    "Walc": "Álcool (fim de semana)",
+    "pt": {
+        "studytime": "Tempo de estudo semanal",
+        "goout": "Sair com amigos",
+        "absences": "Faltas",
+        "Dalc": "Álcool (dias úteis)",
+        "Walc": "Álcool (fim de semana)",
+    },
+    "en": {
+        "studytime": "Weekly study time",
+        "goout": "Going out with friends",
+        "absences": "Absences",
+        "Dalc": "Alcohol (weekdays)",
+        "Walc": "Alcohol (weekend)",
+    },
 }
 
 # Mesmas alavancas e limites do optimizer.py (LEVERS) — não duplicam por
@@ -70,7 +100,7 @@ def _within_bounds(value: float, lever: dict) -> bool:
     return value > lever["bound"]
 
 
-def gerar_checklist_ultima_semana(habits: dict, limit: int = DEFAULT_LIMIT) -> dict:
+def gerar_checklist_ultima_semana(habits: dict, limit: int = DEFAULT_LIMIT, lang: str | None = None) -> dict:
     """
     Para cada alavanca ainda dentro dos limites (ex.: já não pode reduzir
     mais faltas se já estiver em 0), testa UM passo de melhoria e mede o
@@ -78,6 +108,7 @@ def gerar_checklist_ultima_semana(habits: dict, limit: int = DEFAULT_LIMIT) -> d
     — depois ordena do maior para o menor ganho, mostrando só o que
     realmente vale a pena priorizar primeiro.
     """
+    lang = normalize_lang(lang)
     # Valores típicos do dataset, para preencher hábitos que não tenham sido indicados.
     defaults = get_defaults()
     # Nota prevista com os hábitos atuais, sem qualquer mudança — ponto de
@@ -113,11 +144,11 @@ def gerar_checklist_ultima_semana(habits: dict, limit: int = DEFAULT_LIMIT) -> d
 
         items.append({
             "feature": col,
-            "label": QUICK_WIN_LABELS[col],
+            "label": QUICK_WIN_LABELS[lang][col],
             "from": current,
             "to": new_value,
             "estimated_gain": gain,
-            "action": ACTION_TEMPLATES[col](current, new_value),
+            "action": ACTION_TEMPLATES[col](lang, current, new_value),
         })
 
     # Ordena do maior para o menor ganho estimado, e mantém só os "limit" primeiros.
@@ -126,9 +157,17 @@ def gerar_checklist_ultima_semana(habits: dict, limit: int = DEFAULT_LIMIT) -> d
 
     # Mensagem de resumo, diferente consoante haja ou não itens a mostrar.
     if items:
-        message = f"{len(items)} ação(ões) prioritária(s) para os próximos dias, ordenadas pelo impacto estimado."
+        message = t(
+            lang,
+            f"{len(items)} ação(ões) prioritária(s) para os próximos dias, ordenadas pelo impacto estimado.",
+            f"{len(items)} priority {plural_en(len(items), 'action')} for the next few days, ordered by estimated impact.",
+        )
     else:
-        message = "Não há mudanças rápidas com impacto relevante identificadas nesta previsão — os valores atuais já estão perto do limite considerado ajustável."
+        message = t(
+            lang,
+            "Não há mudanças rápidas com impacto relevante identificadas nesta previsão — os valores atuais já estão perto do limite considerado ajustável.",
+            "No quick changes with meaningful impact were identified for this prediction — the current values are already close to the limit considered adjustable.",
+        )
 
     return {
         "baseline_grade": baseline,

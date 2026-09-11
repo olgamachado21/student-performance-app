@@ -23,14 +23,14 @@ async function runOptimizer() {
 
   if (!studentId || studentId < 1) {
     // ID inválido: mostra mensagem de erro e esconde o resultado anterior (se houver).
-    placeholder.textContent = "Indica um número de estudante válido.";
+    placeholder.textContent = t("ficha_invalid_id");
     placeholder.classList.remove("hidden");
     resultBox.classList.add("hidden");
     return;
   }
   if (Number.isNaN(targetGrade) || targetGrade < 0 || targetGrade > 20) {
     // Nota-alvo fora da escala válida (0-20) ou não numérica.
-    placeholder.textContent = "Indica uma nota-alvo válida (entre 0 e 20).";
+    placeholder.textContent = t("optimizer_invalid_target");
     placeholder.classList.remove("hidden");
     resultBox.classList.add("hidden");
     return;
@@ -39,7 +39,7 @@ async function runOptimizer() {
   // Feedback visual de "a processar" no botão, para o utilizador saber que o pedido está em curso.
   const btn = document.getElementById("optimizer-generate-btn");
   const originalText = btn.textContent;
-  btn.textContent = "A calcular…";
+  btn.textContent = t("optimizer_calculating_btn");
   btn.disabled = true;
 
   try {
@@ -47,7 +47,7 @@ async function runOptimizer() {
     displayOptimizerResult(result);
   } catch (err) {
     console.error(err);
-    placeholder.textContent = "Não foi possível calcular o plano. Confirma que o número do estudante existe no dataset.";
+    placeholder.textContent = t("optimizer_calc_error");
     placeholder.classList.remove("hidden");
     resultBox.classList.add("hidden");
   } finally {
@@ -138,7 +138,7 @@ async function runCohortSimulation() {
 
   const btn = document.getElementById("cohort-simulate-btn");
   const originalText = btn.textContent;
-  btn.textContent = "A simular…";
+  btn.textContent = t("optimizer_simulating_btn");
   btn.disabled = true;
 
   try {
@@ -146,7 +146,7 @@ async function runCohortSimulation() {
     displayCohortSimulationResult(result);
   } catch (err) {
     console.error(err);
-    placeholder.textContent = err.message || "Não foi possível calcular a simulação em lote.";
+    placeholder.textContent = err.message || t("cohort_simulation_error");
     placeholder.classList.remove("hidden");
     resultBox.classList.add("hidden");
   } finally {
@@ -163,15 +163,15 @@ function displayCohortSimulationResult(result) {
   // 4 KPIs: quantos estudantes simulados, nota média antes/depois, aprovados
   // antes/depois (com a variação em destaque) e taxa de aprovação final.
   renderKpiCards("cohort-simulation-kpis", [
-    { label: "Estudantes em risco simulados", value: result.n_students },
-    { label: "Nota média (antes → depois)", value: `${fmtNum(result.avg_grade_before)} → ${fmtNum(result.avg_grade_after)}` },
+    { label: t("cohort_kpi_students"), value: result.n_students },
+    { label: t("cohort_kpi_avg_grade"), value: `${fmtNum(result.avg_grade_before)} → ${fmtNum(result.avg_grade_after)}` },
     {
-      label: "Aprovados no grupo (antes → depois)",
+      label: t("cohort_kpi_passing"),
       value: `${result.n_passing_before} → ${result.n_passing_after}`,
       delta: result.newly_passing !== 0 ? `${result.newly_passing > 0 ? "+" : ""}${result.newly_passing}` : null,
       deltaPositive: result.newly_passing >= 0,
     },
-    { label: "Taxa de aprovação do grupo (depois)", value: fmtPct(result.pass_rate_after) },
+    { label: t("cohort_kpi_pass_rate_after"), value: fmtPct(result.pass_rate_after) },
   ]);
 
   document.getElementById("cohort-simulation-message").textContent = result.message;

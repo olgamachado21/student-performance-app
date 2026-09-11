@@ -71,7 +71,7 @@ async function loadSegmentation(nClusters, features) {
     renderSegments(data);
   } catch (err) {
     console.error(err);
-    grid.innerHTML = `<div class="info-box">Não foi possível carregar a segmentação. Confirma que a API está a correr.</div>`;
+    grid.innerHTML = `<div class="info-box">${escapeHtml(t("segmentation_load_error"))}</div>`;
   }
 }
 
@@ -80,32 +80,32 @@ function renderSegments(data) {
   // Um cartão por grupo/cluster, com nome, tamanho, traços característicos,
   // 4 estatísticas resumidas e sugestões de micro-hábitos (se existirem).
   grid.innerHTML = data.groups.map((g, i) => `
-    <div class="segment-card segment-card-clickable" data-cluster-index="${i}" role="button" tabindex="0" aria-label="Ver estudantes do grupo ${escapeAttr(g.name)}">
+    <div class="segment-card segment-card-clickable" data-cluster-index="${i}" role="button" tabindex="0" aria-label="${escapeAttr(t("segment_card_aria").replace("{name}", g.name))}">
       <div class="segment-name">${g.name}</div>
-      <div class="segment-size">${g.size} estudantes (${g.size_pct}% do total)</div>
+      <div class="segment-size">${t("segment_size_line").replace("{size}", g.size).replace("{pct}", g.size_pct)}</div>
       <div class="segment-traits">
-        ${g.traits.map((t) => `<span class="segment-trait">${t}</span>`).join("")}
+        ${g.traits.map((tr) => `<span class="segment-trait">${tr}</span>`).join("")}
       </div>
       <div class="segment-stats">
         <div>
-          <div class="segment-stat-label">Nota média</div>
+          <div class="segment-stat-label">${escapeHtml(t("segment_stat_avg_grade"))}</div>
           <div class="segment-stat-value">${fmtNum(g.avg_grade)}</div>
         </div>
         <div>
-          <div class="segment-stat-label">Taxa de risco</div>
+          <div class="segment-stat-label">${escapeHtml(t("segment_stat_risk_rate"))}</div>
           <div class="segment-stat-value">${g.risk_pct}%</div>
         </div>
         <div>
-          <div class="segment-stat-label">Estudo médio</div>
+          <div class="segment-stat-label">${escapeHtml(t("segment_stat_avg_studytime"))}</div>
           <div class="segment-stat-value">${fmtNum(g.avg_studytime)}</div>
         </div>
         <div>
-          <div class="segment-stat-label">Faltas médias</div>
+          <div class="segment-stat-label">${escapeHtml(t("segment_stat_avg_absences"))}</div>
           <div class="segment-stat-value">${fmtNum(g.avg_absences)}</div>
         </div>
       </div>
       ${renderSegmentSuggestions(g.suggestions)}
-      <div class="segment-card-hint">Ver os ${g.size} estudantes deste grupo →</div>
+      <div class="segment-card-hint">${escapeHtml(t("segment_card_hint").replace("{size}", g.size))}</div>
     </div>
   `).join("");
 
@@ -140,16 +140,15 @@ function openClusterStudentsModal(group) {
     <div class="app-modal cluster-students-modal" role="dialog" aria-modal="true" aria-labelledby="cluster-modal-title">
       <div class="app-modal-title" id="cluster-modal-title">${escapeHtml(group.name)}</div>
       <p class="card-subtitle">
-        ${group.size} estudantes (${group.size_pct}% do total) · nota média ${fmtNum(group.avg_grade)} ·
-        risco ${group.risk_pct}%
+        ${t("segment_modal_subtitle").replace("{size}", group.size).replace("{pct}", group.size_pct).replace("{avg}", fmtNum(group.avg_grade)).replace("{risk}", group.risk_pct)}
       </p>
       <div class="cluster-students-list">
         ${group.student_ids.map((id) => `
-          <button type="button" class="cluster-student-chip" data-ficha="${id}" title="Descarregar ficha de desempenho">#${id}</button>
+          <button type="button" class="cluster-student-chip" data-ficha="${id}" title="${escapeAttr(t("segment_download_ficha_title"))}">#${id}</button>
         `).join("")}
       </div>
       <div class="app-modal-actions">
-        <button type="button" class="btn-small cluster-modal-close">Fechar</button>
+        <button type="button" class="btn-small cluster-modal-close">${escapeHtml(t("notes_close_btn"))}</button>
       </div>
     </div>
   `;
@@ -179,7 +178,7 @@ function renderSegmentSuggestions(suggestions) {
   if (!suggestions || suggestions.length === 0) return "";
   return `
     <div class="segment-suggestions">
-      <div class="segment-suggestions-title">Sugestões para este perfil</div>
+      <div class="segment-suggestions-title">${escapeHtml(t("segment_suggestions_title"))}</div>
       <ul>
         ${suggestions.map((s) => `<li>${s}</li>`).join("")}
       </ul>

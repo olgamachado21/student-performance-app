@@ -14,6 +14,7 @@ from scipy import stats
 
 from src import config
 from src.data_processing import get_processed_data
+from src.i18n import t, normalize_lang
 
 
 def compare_two_groups(df: pd.DataFrame, group_col: str, value_col: str = "G3") -> dict:
@@ -67,11 +68,12 @@ def compare_multiple_groups(df: pd.DataFrame, group_col: str, value_col: str = "
     }
 
 
-def simple_linear_regression(df: pd.DataFrame, x_col: str, y_col: str = "G3") -> dict:
+def simple_linear_regression(df: pd.DataFrame, x_col: str, y_col: str = "G3", lang: str | None = None) -> dict:
     """
     Regressão linear simples (uma única variável preditora), usando statsmodels
     para obter coeficientes, R² e significância estatística (p-value).
     """
+    lang = normalize_lang(lang)
     # add_constant acrescenta a coluna do termo independente (intercept) ao modelo.
     X = sm.add_constant(df[[x_col]].astype(float))
     y = df[y_col].astype(float)
@@ -90,40 +92,61 @@ def simple_linear_regression(df: pd.DataFrame, x_col: str, y_col: str = "G3") ->
         "r2": round(float(model.rsquared), 4),
         "p_value": round(float(model.pvalues[x_col]), 6),
         "significativo_5pct": bool(model.pvalues[x_col] < 0.05),
-        "interpretacao": (
+        "interpretacao": t(
+            lang,
             f"Cada unidade adicional em '{x_col}' está associada a uma variação de "
-            f"{model.params[x_col]:.2f} pontos em '{y_col}' (R²={model.rsquared:.3f})."
+            f"{model.params[x_col]:.2f} pontos em '{y_col}' (R²={model.rsquared:.3f}).",
+            f"Each additional unit in '{x_col}' is associated with a change of "
+            f"{model.params[x_col]:.2f} points in '{y_col}' (R²={model.rsquared:.3f}).",
         ),
     }
 
 
-# Rótulos em português para os fatores numéricos que podem ser destacados no
+# Rótulos, por idioma, para os fatores numéricos que podem ser destacados no
 # resumo automático da Visão Geral — só os que fazem sentido como frase
 # ("quanto maior for X, ..."), por isso não inclui id/notas em si.
 OVERVIEW_FACTOR_LABELS = {
-    "failures": "as reprovações anteriores",
-    "studytime": "o tempo de estudo semanal",
-    "absences": "o número de faltas",
-    "goout": "sair com amigos",
-    "Dalc": "o consumo de álcool em dias úteis",
-    "Walc": "o consumo de álcool ao fim de semana",
-    "famrel": "a relação familiar",
-    "freetime": "o tempo livre",
-    "health": "a saúde",
-    "age": "a idade",
-    "traveltime": "o tempo de deslocação até à escola",
-    "Medu": "a educação da mãe",
-    "Fedu": "a educação do pai",
+    "pt": {
+        "failures": "as reprovações anteriores",
+        "studytime": "o tempo de estudo semanal",
+        "absences": "o número de faltas",
+        "goout": "sair com amigos",
+        "Dalc": "o consumo de álcool em dias úteis",
+        "Walc": "o consumo de álcool ao fim de semana",
+        "famrel": "a relação familiar",
+        "freetime": "o tempo livre",
+        "health": "a saúde",
+        "age": "a idade",
+        "traveltime": "o tempo de deslocação até à escola",
+        "Medu": "a educação da mãe",
+        "Fedu": "a educação do pai",
+    },
+    "en": {
+        "failures": "prior failures",
+        "studytime": "weekly study time",
+        "absences": "the number of absences",
+        "goout": "going out with friends",
+        "Dalc": "weekday alcohol consumption",
+        "Walc": "weekend alcohol consumption",
+        "famrel": "family relationship quality",
+        "freetime": "free time",
+        "health": "health",
+        "age": "age",
+        "traveltime": "travel time to school",
+        "Medu": "mother's education",
+        "Fedu": "father's education",
+    },
 }
 
 
-def generate_overview_summary(df: pd.DataFrame) -> str:
+def generate_overview_summary(df: pd.DataFrame, lang: str | None = None) -> str:
     """
     Parágrafo automático para o topo da Visão Geral: taxa de aprovação, nota
     média, taxa de risco, e o fator numérico com maior correlação (em valor
     absoluto) com a nota final — recalculado sempre a partir do dataset
     ATUAL (inclui estudantes adicionados manualmente), nunca texto fixo.
     """
+    lang = normalize_lang(lang)
     # Estatísticas-base, em percentagem onde faz sentido.
     pass_rate = df["aprovado"].mean() * 100
     avg_grade = df["G3"].mean()
@@ -137,23 +160,36 @@ def generate_overview_summary(df: pd.DataFrame) -> str:
     top_factor = correlations.abs().idxmax()
     top_corr = correlations[top_factor]
     # Nome amigável do fator, ou o nome técnico se não existir tradução.
-    factor_label = OVERVIEW_FACTOR_LABELS.get(top_factor, top_factor)
+    factor_label = OVERVIEW_FACTOR_LABELS[lang].get(top_factor, top_factor)
     # Frase final depende do sinal da correlação: negativa = "quanto maior, menor a nota".
-    relation = "menor" if top_corr < 0 else "maior"
+    lower_when_higher = top_corr < 0
 
     # Constrói o parágrafo, frase a frase.
     parts = [
-        f"Do conjunto de {len(df)} estudantes analisados, {pass_rate:.1f}% estão aprovados "
-        f"(nota final ≥ {config.PASS_THRESHOLD} valores), com uma nota média de {avg_grade:.1f} valores."
+        t(
+            lang,
+            f"Do conjunto de {len(df)} estudantes analisados, {pass_rate:.1f}% estão aprovados "
+            f"(nota final ≥ {config.PASS_THRESHOLD} valores), com uma nota média de {avg_grade:.1f} valores.",
+            f"Out of {len(df)} students analyzed, {pass_rate:.1f}% are passing "
+            f"(final grade ≥ {config.PASS_THRESHOLD} points), with an average grade of {avg_grade:.1f} points.",
+        )
     ]
     # Só menciona a taxa de risco se houver pelo menos um estudante em risco.
     if risk_rate > 0:
-        parts.append(f"{risk_rate:.1f}% dos estudantes estão sinalizados como em risco.")
-    parts.append(
+        parts.append(t(
+            lang,
+            f"{risk_rate:.1f}% dos estudantes estão sinalizados como em risco.",
+            f"{risk_rate:.1f}% of students are flagged as at risk.",
+        ))
+    parts.append(t(
+        lang,
         f"Entre os hábitos e o contexto analisados, {factor_label} é o fator com maior associação "
         f"linear individual à nota final (correlação de {top_corr:.2f}): quanto maior o seu valor, "
-        f"{relation} tende a ser a nota final."
-    )
+        f"{'menor' if lower_when_higher else 'maior'} tende a ser a nota final.",
+        f"Among the habits and context analyzed, {factor_label} is the factor with the strongest "
+        f"individual linear association with the final grade (correlation of {top_corr:.2f}): the "
+        f"higher its value, the {'lower' if lower_when_higher else 'higher'} the final grade tends to be.",
+    ))
     # Junta todas as frases num único parágrafo.
     return " ".join(parts)
 
